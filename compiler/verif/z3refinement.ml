@@ -1811,6 +1811,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
     
     Applies a specified procedure to the element in the zelus AST list
 *)
+
       match impl.desc with
       (* Add to Z3 an equality constraint that looks like: n == (Z3 parsed version of e) *)
       (* | Erefinementdecl(f, is_static, e) -> debug(Printf.sprintf "Econstdecl %s\n" f); 
@@ -1837,7 +1838,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
          print_env env
 
       | Erefinementfundecl(n, { f_kind = k; f_atomic = is_atomic; f_args = p_list;
-		      f_body = e; f_loc = loc }) -> debug(Printf.sprintf "Efundecl %s\n" n); 
+		      f_body = e; f_loc = loc }) -> debug(Printf.sprintf "Erefinementfundecl %s\n" n); 
             debug(Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
 
             (* let argc = (List.length p_list) in  *)
@@ -1868,8 +1869,13 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
       (* | Efundecl(n, { f_kind = k; f_atomic = is_atomic; f_args = p_list;
                       f_body = e; f_loc = loc; f_retrefine = rettype }) *)
       | Efundecl(n, { f_kind = k; f_atomic = is_atomic; f_args = p_list;
-          f_body = e; f_loc = loc; f_retrefine = rettype }) -> debug(Printf.sprintf "Erefinementfundecl %s\n" n);
-          
+          f_body = e; f_loc = loc; f_retrefine = rettype }) -> debug(Printf.sprintf "Efundecl %s\n" n);
+          debug(Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
+          let func_expression = (vc_gen_expression ctx env e None) in
+          debug(Printf.sprintf "Function body vc_gen_expression handling----------: %s\n" (Expr.to_string func_expression));
+          let local_env = copy_env env in
+          print_env local_env;
+          debug(Printf.sprintf "--------local_env\n");
           (* added to test parsing *)
           (* TODO: remove the following line later and call substituition function *)
           let rettype = match rettype.desc with | Erefinement(_, exp)-> exp in
@@ -1897,7 +1903,11 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
                           ) in
           if not isstream then (            
           (* add function input constraints to local environment *)
+          (* '''then print  *)
           (List.iter (vc_gen_pattern ctx local_env (Some typenv)) p_list);
+          Printf.printf "--------Printing local env \n";
+          print_env local_env;
+
           Hashtbl.iter (fun a b -> debug(Printf.sprintf "%s:%s;" a b.base_type)) typenv;
           (* implementation_list ff ctx e; *)
 
