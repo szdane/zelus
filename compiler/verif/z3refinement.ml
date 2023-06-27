@@ -546,6 +546,9 @@ let create_z3_var_typed ctx ({exp_env = e ; var_env = v}) s basetype : expr =
       | _ ->  debug (Printf.sprintf " I don't know what to make here\n"); make_void ctx
     ) in
     Hashtbl.add v s new_var;
+    (* '''print v value here''' *)
+    debug(Printf.sprintf "the value of v is %s\n"  (Expr.to_string (Hashtbl.find v s)));
+    debug(Printf.sprintf "-----Adding %s to variable environment\n" s);
     debug (Printf.sprintf "New variable, returning %s\n\n" (Expr.to_string new_var));
     new_var
 
@@ -1014,7 +1017,7 @@ and create_validation_check ctx env elem1 elem2 =
     constraints -> list of constraints to be satisfied by functions
     elem1 -> argument used as input in function call
     elem2 -> argument used during function definition
-
+  
     return specified input contrained to funciton argument variable
 *)
     debug (Printf.sprintf "\n --- CHECK INPUT VALIDITY ---\n");
@@ -1712,7 +1715,7 @@ and add_tuple_list_to_type_env ctx env pat_list typ_exp typenv =
           | _ -> debug(Printf.sprintf "Unspecified pat.p_desc match\n"));   
           ) pat_list
 
-and vc_gen_typ_exp_desc ctx env typenv t = 
+and vc_gen_typ_exp_desc ctx env typenv t n_source = 
 (*
       ctx    -> z3 context
       env    -> environment (list of z3 vc_gen_expressions)
@@ -1723,18 +1726,19 @@ and vc_gen_typ_exp_desc ctx env typenv t =
 *)
   match t.desc with
   | Etypevar(n) -> debug(Printf.sprintf "Etypevar %s\n" n)
-  | Etypeconstr(t, txp_list) -> debug(Printf.sprintf "Etypeconstr\n"); qualident t; (List.iter (vc_gen_typ_exp_desc ctx env typenv) txp_list) 
-  | Etypetuple(txp_list) -> debug(Printf.sprintf "Etypetuple\n"); (List.iter (vc_gen_typ_exp_desc ctx env typenv) txp_list)
+  | Etypeconstr(t, txp_list) -> debug(Printf.sprintf "Etypeconstr\n"); qualident t; (List.iter (vc_gen_typ_exp_desc ctx env typenv "") txp_list ) 
+  | Etypetuple(txp_list) -> debug(Printf.sprintf "Etypetuple\n"); (List.iter (vc_gen_typ_exp_desc ctx env typenv "") txp_list)
   | Etypevec(texp , si) -> debug(Printf.sprintf "Etypevec\n")
   | Etypefun(k, t, texp, texp2) -> debug(Printf.sprintf "Etypefun\n")
   | Etypefunrefinement(k, t, te, te2, e) -> debug(Printf.sprintf "Etypefunrefinement\n")
   | Erefinement(t, e) -> debug(Printf.sprintf "Erefinement\n");  
        let expr = (vc_gen_expression ctx env e typenv) in
+        (debug(Printf.sprintf "the n.source is %s\n" n_source));
        (debug(Printf.sprintf "Returning from e local: %s\n" (Expr.to_string expr));
        (debug(Printf.sprintf "t.name %s" (fst t)));
-       (* add_constraint env expr; *)
-       z3_solve ctx env expr;
-       )
+       add_constraint env expr;
+       (* z3_solve ctx env expr; *)
+          )
   | Erefinementpairfuntype(txp_list, exp) -> debug(Printf.sprintf "Erefinementfunpair \n")
        (* List.iter (fun elem ->         ) txp_list *)
 
@@ -1761,18 +1765,18 @@ and vc_gen_pattern ctx env typenv pat =
       | Etypeconstraintpat(pat, typ_exp) -> debug(Printf.sprintf "Etypeconstraintpat: "); 
         (match pat.p_desc with
         | Evarpat(n) -> debug(Printf.sprintf "Evarpat in Etypeconstraintpat: (%s : %d) \n" n.source n.num);
-          (*(vc_gen_pattern ctx env pat); *)
-          (match typ_exp.desc with
-          | Erefinement((n1,t), e) -> debug(Printf.sprintf "Adding to table: %s\n" n.source); 
+        (*(vc_gen_pattern ctx env pat); *)
+        (match typ_exp.desc with
+          | Erefinement((n1,t), e) -> debug(Printf.sprintf "Adding to table: %s\n" n.source);
             (
-              match typenv with
-                | Some(tbl) -> Hashtbl.add tbl n.source {base_type = (match t.desc with 
-                (* Find and then add base type to local typing environment *)
-                | Etypeconstr(l,_) -> (match l with
-                    | Name(s) -> s
-                    | Modname(q) -> q.id)
-                | _ -> "Unspecified typenv match\n"); reference_variable = n.source; phi = e}
-                | None -> ()
+            match typenv with
+              | Some(tbl) -> Hashtbl.add tbl n.source {base_type = (match t.desc with 
+              (* Find and then add base type to local typing environment *)
+              | Etypeconstr(l,_) -> (match l with
+                  | Name(s) -> s
+                  | Modname(q) -> q.id)
+              | _ -> "Unspecified typenv match\n"); reference_variable = n.source; phi = e}
+              | None -> ()
             )
           | Erefinementpairfuntype(t_exp_list, e) -> debug(Printf.sprintf "Erefinementpairfuntype\n")
           | Erefinementpair(n, t_exp) -> debug(Printf.sprintf "Erefinementpair\n")
@@ -1782,10 +1786,13 @@ and vc_gen_pattern ctx env typenv pat =
           | Etypevec(t_exp, sz) -> debug(Printf.sprintf "Etypevec \n")
           | Etypefun(k, n, t_exp, t_exp2) -> debug(Printf.sprintf "Etypefun \n")
           | Etypefunrefinement(k, n, t_exp, t_exp2, e) -> debug(Printf.sprintf "Etypefunrefinement \n")
-          | _ -> debug(Printf.sprintf "Unspecified type constraint match\n"))
-        | Etuplepat(pat_list) -> debug(Printf.sprintf "Etypetuple match: \n"); add_tuple_list_to_type_env ctx env pat_list typ_exp typenv
-        | _ -> debug(Printf.sprintf "Unspecified pat.p_desc match\n"));   
-        (vc_gen_typ_exp_desc ctx env (typenv) typ_exp)
+          | _ -> debug(Printf.sprintf "Unspecified type constraint match\n");
+          (vc_gen_typ_exp_desc ctx env (typenv) typ_exp n.source))
+        | _ -> debug(Printf.sprintf "Unspecified pat.p_desc match\n");
+              (match pat.p_desc with
+                | Etuplepat(pat_list) -> debug(Printf.sprintf "Etypetuple match: \n"); add_tuple_list_to_type_env ctx env pat_list typ_exp typenv
+                | _ -> debug(Printf.sprintf "Unspecified pat.p_desc match\n"));   
+    (vc_gen_typ_exp_desc ctx env (typenv) typ_exp ""))
 
 let get_argument_list typenv =
 (*
@@ -1871,11 +1878,14 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
       | Efundecl(n, { f_kind = k; f_atomic = is_atomic; f_args = p_list;
           f_body = e; f_loc = loc; f_retrefine = rettype }) -> debug(Printf.sprintf "Efundecl %s\n" n);
           debug(Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
-          let func_expression = (vc_gen_expression ctx env e None) in
-          debug(Printf.sprintf "Function body vc_gen_expression handling----------: %s\n" (Expr.to_string func_expression));
-          let local_env = copy_env env in
-          print_env local_env;
-          debug(Printf.sprintf "--------local_env\n");
+         debug(Printf.sprintf "Argument------: \n" );
+          Hashtbl.iter ( fun n f -> print_function n f ) (!function_space);
+
+          (* let func_expression = (vc_gen_expression ctx env e None) in *)
+          (* debug(Printf.sprintf "Function body vc_gen_expression handling----------: %s\n" (Expr.to_string func_expression)); *)
+          (* let local_env = copy_env env in *)
+          (* print_env local_env; *)
+          (* debug(Printf.sprintf "--------local_env\n"); *)
           (* added to test parsing *)
           (* TODO: remove the following line later and call substituition function *)
           let rettype = match rettype.desc with | Erefinement(_, exp)-> exp in
@@ -1903,11 +1913,10 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
                           ) in
           if not isstream then (            
           (* add function input constraints to local environment *)
-          (* '''then print  *)
           (List.iter (vc_gen_pattern ctx local_env (Some typenv)) p_list);
           Printf.printf "--------Printing local env \n";
           print_env local_env;
-
+          debug(Printf.sprintf "---------local_env\n");
           Hashtbl.iter (fun a b -> debug(Printf.sprintf "%s:%s;" a b.base_type)) typenv;
           (* implementation_list ff ctx e; *)
 
