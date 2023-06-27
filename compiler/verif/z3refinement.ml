@@ -1726,17 +1726,22 @@ and vc_gen_typ_exp_desc ctx env typenv t n_source =
 *)
   match t.desc with
   | Etypevar(n) -> debug(Printf.sprintf "Etypevar %s\n" n)
-  | Etypeconstr(t, txp_list) -> debug(Printf.sprintf "Etypeconstr\n"); qualident t; (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x "")) txp_list ) 
-  | Etypetuple(txp_list) -> debug(Printf.sprintf "Etypetuple\n"); (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x "")) txp_list)
+  | Etypeconstr(t, txp_list) -> debug(Printf.sprintf "Etypeconstr\n"); qualident t; (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x None)) txp_list ) 
+  | Etypetuple(txp_list) -> debug(Printf.sprintf "Etypetuple\n"); (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x None)) txp_list)
   | Etypevec(texp , si) -> debug(Printf.sprintf "Etypevec\n")
   | Etypefun(k, t, texp, texp2) -> debug(Printf.sprintf "Etypefun\n")
   | Etypefunrefinement(k, t, te, te2, e) -> debug(Printf.sprintf "Etypefunrefinement\n")
   | Erefinement(t, e) -> debug(Printf.sprintf "Erefinement\n");  
        let expr = (vc_gen_expression ctx env e typenv) in
-        (debug(Printf.sprintf "the n.source is %s\n" n_source));
-       (debug(Printf.sprintf "Returning from e local: %s\n" (Expr.to_string expr));
+       let expr2 = 
+       (match n_source with 
+       | None -> expr
+       | Some(n) -> (debug(Printf.sprintf "the n.source is %s\n" n));
+        (Expr.substitute_one expr (create_z3_var ctx env "v") (create_z3_var ctx env n))
+       ) in
+       (debug(Printf.sprintf "Returning from e local: %s\n" (Expr.to_string expr2));
        (debug(Printf.sprintf "t.name %s" (fst t)));
-       add_constraint env expr;
+       add_constraint env expr2;
        (* z3_solve ctx env expr; *)
           )
   | Erefinementpairfuntype(txp_list, exp) -> debug(Printf.sprintf "Erefinementfunpair \n")
@@ -1786,13 +1791,13 @@ and vc_gen_pattern ctx env typenv pat =
           | Etypevec(t_exp, sz) -> debug(Printf.sprintf "Etypevec \n")
           | Etypefun(k, n, t_exp, t_exp2) -> debug(Printf.sprintf "Etypefun \n")
           | Etypefunrefinement(k, n, t_exp, t_exp2, e) -> debug(Printf.sprintf "Etypefunrefinement \n")
-          | _ -> debug(Printf.sprintf "Unspecified type constraint match\n");
-          (vc_gen_typ_exp_desc ctx env (typenv) typ_exp n.source))
+          | _ -> debug(Printf.sprintf "Unspecified type constraint match\n"));
+          (vc_gen_typ_exp_desc ctx env (typenv) typ_exp (Some n.source))
         | _ -> debug(Printf.sprintf "Unspecified pat.p_desc match\n");
               (match pat.p_desc with
                 | Etuplepat(pat_list) -> debug(Printf.sprintf "Etypetuple match: \n"); add_tuple_list_to_type_env ctx env pat_list typ_exp typenv
                 | _ -> debug(Printf.sprintf "Unspecified pat.p_desc match\n"));   
-    (vc_gen_typ_exp_desc ctx env (typenv) typ_exp ""))
+    (vc_gen_typ_exp_desc ctx env (typenv) typ_exp None))
 
 let get_argument_list typenv =
 (*
