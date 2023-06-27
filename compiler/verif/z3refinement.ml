@@ -1726,8 +1726,8 @@ and vc_gen_typ_exp_desc ctx env typenv t n_source =
 *)
   match t.desc with
   | Etypevar(n) -> debug(Printf.sprintf "Etypevar %s\n" n)
-  | Etypeconstr(t, txp_list) -> debug(Printf.sprintf "Etypeconstr\n"); qualident t; (List.iter (vc_gen_typ_exp_desc ctx env typenv "") txp_list ) 
-  | Etypetuple(txp_list) -> debug(Printf.sprintf "Etypetuple\n"); (List.iter (vc_gen_typ_exp_desc ctx env typenv "") txp_list)
+  | Etypeconstr(t, txp_list) -> debug(Printf.sprintf "Etypeconstr\n"); qualident t; (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x "")) txp_list ) 
+  | Etypetuple(txp_list) -> debug(Printf.sprintf "Etypetuple\n"); (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x "")) txp_list)
   | Etypevec(texp , si) -> debug(Printf.sprintf "Etypevec\n")
   | Etypefun(k, t, texp, texp2) -> debug(Printf.sprintf "Etypefun\n")
   | Etypefunrefinement(k, t, te, te2, e) -> debug(Printf.sprintf "Etypefunrefinement\n")
