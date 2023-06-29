@@ -1724,28 +1724,32 @@ and vc_gen_typ_exp_desc ctx env typenv t n_source =
 
       Creates z3 vc_gen_expression from type vc_gen_expression and adds it to the environment
 *)
-  match t.desc with
+match t.desc with
   | Etypevar(n) -> debug(Printf.sprintf "Etypevar %s\n" n)
-  | Etypeconstr(t, txp_list) -> debug(Printf.sprintf "Etypeconstr\n"); qualident t; (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x None)) txp_list ) 
-  | Etypetuple(txp_list) -> debug(Printf.sprintf "Etypetuple\n"); (List.iter (fun x -> (vc_gen_typ_exp_desc ctx env typenv x None)) txp_list)
+  | Etypeconstr(t, txp_list) -> 
+      debug(Printf.sprintf "Etypeconstr\n"); qualident t; 
+      List.iter (fun x -> vc_gen_typ_exp_desc ctx env typenv x None) txp_list
+  | Etypetuple(txp_list) -> 
+      debug(Printf.sprintf "Etypetuple\n"); 
+      List.iter (fun x -> vc_gen_typ_exp_desc ctx env typenv x None) txp_list
   | Etypevec(texp , si) -> debug(Printf.sprintf "Etypevec\n")
   | Etypefun(k, t, texp, texp2) -> debug(Printf.sprintf "Etypefun\n")
   | Etypefunrefinement(k, t, te, te2, e) -> debug(Printf.sprintf "Etypefunrefinement\n")
-  | Erefinement(t, e) -> debug(Printf.sprintf "Erefinement\n");  
-       let expr = (vc_gen_expression ctx env e typenv) in
-       let expr2 = 
-       (match n_source with 
-       | None -> expr
-       | Some(n) -> (debug(Printf.sprintf "the n.source is %s\n" n));
-        (Expr.substitute_one expr (create_z3_var ctx env "v") (create_z3_var ctx env n))
-       ) in
-       (debug(Printf.sprintf "Returning from e local: %s\n" (Expr.to_string expr2));
-       (debug(Printf.sprintf "t.name %s" (fst t)));
-       add_constraint env expr2;
-       (* z3_solve ctx env expr; *)
-          )
-  | Erefinementpairfuntype(txp_list, exp) -> debug(Printf.sprintf "Erefinementfunpair \n")
-       (* List.iter (fun elem ->         ) txp_list *)
+  | Erefinement(t, e) -> 
+    debug(Printf.sprintf "Erefinement\n");
+    let expr = vc_gen_expression ctx env e typenv in
+    let expr2 =
+      match n_source with
+      | None -> expr
+      | Some(n) ->
+        debug(Printf.sprintf "Erefinement variable: %s\n" (fst t));
+        Expr.substitute_one expr (create_z3_var ctx env (fst t)) (create_z3_var ctx env n)
+    in
+      debug(Printf.sprintf "Returning from e local: %s\n" (Expr.to_string expr2));
+      debug(Printf.sprintf "t.name %s" (fst t));
+      add_constraint env expr2
+  | Erefinementpairfuntype(txp_list, exp) -> debug(Printf.sprintf "Erefinementfunpair \n");
+      (* List.iter (fun elem ->         ) txp_list *)
 
 and vc_gen_pattern ctx env typenv pat = 
 (*
@@ -1797,7 +1801,7 @@ and vc_gen_pattern ctx env typenv pat =
               (match pat.p_desc with
                 | Etuplepat(pat_list) -> debug(Printf.sprintf "Etypetuple match: \n"); add_tuple_list_to_type_env ctx env pat_list typ_exp typenv
                 | _ -> debug(Printf.sprintf "Unspecified pat.p_desc match\n"));   
-    (vc_gen_typ_exp_desc ctx env (typenv) typ_exp None))
+      (vc_gen_typ_exp_desc ctx env (typenv) typ_exp None))
 
 let get_argument_list typenv =
 (*
@@ -1893,8 +1897,24 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* debug(Printf.sprintf "--------local_env\n"); *)
           (* added to test parsing *)
           (* TODO: remove the following line later and call substituition function *)
-          let rettype = match rettype.desc with | Erefinement(_, exp)-> exp in
+          (* let rettyp = match rettype.desc with | Erefinement(t,e) -> (
+            debug(Printf.sprintf "Erefinement e2t");
+            match (snd t).desc with
+            | Etypeconstr(name, t_exp_list) -> 
+              (
+                match name with
+                  | Lident.Name(basetype) -> debug(basetype); debug(fst t); { base_type = basetype;
+                     reference_variable = fst t;
+                     phi = e; }
+              ) 
+            | _ -> debug(Printf.sprintf "Unknown e2t"); { base_type = "";
+                     reference_variable = "";
+                     phi = e; } 
+          ) in *)
           
+
+          let (rettype, var_req) = match rettype.desc with | Erefinement ((n,t), exp) -> (exp, n) in
+          debug(Printf.sprintf "var_req: %s\n" var_req);
           (* let argc = (List.length p_list) in  *)
           let typenv = Hashtbl.copy !type_space in
           let local_env = copy_env env in
@@ -1973,7 +1993,9 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           
           
           (*let return_var = (get_return_type ctx local_env rettype (Some typenv)) in*)
-          let return_var = build_return_var ctx local_env n istuple (Sort.get_sort_kind (Expr.get_sort (List.hd input_var))) in 
+          (* let return_var = build_return_var ctx local_env n istuple (Sort.get_sort_kind (Expr.get_sort (List.hd input_var))) in  *)
+          let return_var = [create_z3_var ctx env var_req] in
+          
           List.iter (fun return_elem -> debug(Printf.sprintf "Return var: %s\n" (Expr.to_string return_elem))) return_var;
           (*let input_var = (get_return_type ctx local_env e (Some typenv)) in
           Printf.printf "Return var in: %s\n" (Expr.to_string input_var);*)
