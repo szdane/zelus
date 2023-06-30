@@ -1738,6 +1738,7 @@ match t.desc with
   | Erefinement(t, e) -> 
     debug(Printf.sprintf "Erefinement\n");
     let expr = vc_gen_expression ctx env e typenv in
+    (* get the variable name from the constriant and replace them by the reference variable *)
     let expr2 =
       match n_source with
       | None -> expr
@@ -1747,6 +1748,7 @@ match t.desc with
     in
       debug(Printf.sprintf "Returning from e local: %s\n" (Expr.to_string expr2));
       debug(Printf.sprintf "t.name %s" (fst t));
+      (* add the constraint to the environment after substituting the reference variable *)
       add_constraint env expr2
   | Erefinementpairfuntype(txp_list, exp) -> debug(Printf.sprintf "Erefinementfunpair \n");
       (* List.iter (fun elem ->         ) txp_list *)
@@ -1897,22 +1899,8 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* debug(Printf.sprintf "--------local_env\n"); *)
           (* added to test parsing *)
           (* TODO: remove the following line later and call substituition function *)
-          (* let rettyp = match rettype.desc with | Erefinement(t,e) -> (
-            debug(Printf.sprintf "Erefinement e2t");
-            match (snd t).desc with
-            | Etypeconstr(name, t_exp_list) -> 
-              (
-                match name with
-                  | Lident.Name(basetype) -> debug(basetype); debug(fst t); { base_type = basetype;
-                     reference_variable = fst t;
-                     phi = e; }
-              ) 
-            | _ -> debug(Printf.sprintf "Unknown e2t"); { base_type = "";
-                     reference_variable = "";
-                     phi = e; } 
-          ) in *)
           
-
+          (* extracting the constraint variable from the return type *)
           let (rettype, var_req) = match rettype.desc with | Erefinement ((n,t), exp) -> (exp, n) in
           debug(Printf.sprintf "var_req: %s\n" var_req);
           (* let argc = (List.length p_list) in  *)
@@ -1993,7 +1981,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           
           
           (*let return_var = (get_return_type ctx local_env rettype (Some typenv)) in*)
-          (* let return_var = build_return_var ctx local_env n istuple (Sort.get_sort_kind (Expr.get_sort (List.hd input_var))) in  *)
+            (* changing the return type to be a list *)
           let return_var = [create_z3_var ctx env var_req] in
           
           List.iter (fun return_elem -> debug(Printf.sprintf "Return var: %s\n" (Expr.to_string return_elem))) return_var;
