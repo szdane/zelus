@@ -8,20 +8,32 @@ let main  =
   let main_reset self  =
     ((()):unit) in 
   let main_step self () =
-    ((let ((y_45:float): float) = 3. in
-      let (z_46:float) = (+.) 2.  y_45 in
-      let _ = print_float z_46 in
-      let ((y_43:float): float) = 3. in
-      let (z_44:float) = (-.) 2.  y_43 in
-      let _ = print_float z_44 in
-      let ((y_41:float): float) = 3. in
-      let (z_42:float) = ( *. ) 2.  y_41 in
-      let _ = print_float z_42 in
-      let ((y_39:float): float) = 3. in
-      let (z_40:float) = (/.) 2.  y_39 in
-      let _ = print_float z_40 in
-      let ((y_37:float): float) = (-3.) in
-      let (z_38:float) = (/.) (-2.)  y_37 in
-      let _ = print_float z_38 in
+    ((let ((y_79:float): float) = 3. in
+      let (z_80:float) = (+.) 2.  y_79 in
+      let _ = print_float z_80 in
+      let ((y_77:float): float) = 3. in
+      let (z_78:float) = (-.) 2.  y_77 in
+      let _ = print_float z_78 in
+      let ((y_75:float): float) = 3. in
+      let (z_76:float) = ( *. ) 2.  y_75 in
+      let _ = print_float z_76 in
+      let ((y_73:float): float) = 3. in
+      let (z_74:float) = (/.) 2.  y_73 in
+      let _ = print_float z_74 in
+      let ((y_71:float): float) = (-3.) in
+      let (z_72:float) = (/.) (-2.)  y_71 in
+      let _ = print_float z_72 in
+      let ((y_65:float): float) = 3. in
+      let (a_66:float) = (+.) 2.  y_65 in
+      let (b_67:float) = (+.) a_66  10. in
+      let (c_68:float) = ( *. ) b_67  2. in
+      let (d_69:float) = (/.) c_68  3. in
+      let (z_70:float) = (-.) d_69  2. in
+      let _ = print_float z_70 in
+      let ((y_63:float): float) = 3. in
+      let (z_64:float) =
+          (+.) (( *. ) 2.  2.) 
+               ((/.) (sqrt ((-.) (( *. ) 2.  2.)  (( *. ) 4.  y_63)))  2.) in
+      let _ = print_float z_64 in
       ()):unit) in
   Node { alloc = main_alloc; reset = main_reset ; step = main_step }

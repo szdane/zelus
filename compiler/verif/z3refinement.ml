@@ -589,6 +589,24 @@ let print_function_environment () =
 *)
     Hashtbl.iter ( fun n f -> print_function n f ) (!function_space)
 
+let substitute_var ctx env expr n_source t =
+(*
+    ctx -> z3 context
+    env -> environment (list of z3 vc_gen_expression)
+    expr -> z3 expression
+    n_source -> source name
+    t -> target name
+
+    Substitutes all instances of t with n_source in expr
+
+    Returns z3 expression
+*)
+  match n_source with
+  | None -> expr
+  | Some(n) -> 
+    debug(Printf.sprintf "Erefinement varibale: %s\n" (fst t));
+    Expr.substitute_one expr (create_z3_var ctx env (fst t)) (create_z3_var ctx env n)
+
 
 let immediate ctx i = 
 (*
@@ -1724,35 +1742,30 @@ and vc_gen_typ_exp_desc ctx env typenv t n_source =
 
       Creates z3 vc_gen_expression from type vc_gen_expression and adds it to the environment
 *)
+
 match t.desc with
-  | Etypevar(n) -> debug(Printf.sprintf "Etypevar %s\n" n)
-  | Etypeconstr(t, txp_list) -> 
-      debug(Printf.sprintf "Etypeconstr\n"); qualident t; 
-      List.iter (fun x -> vc_gen_typ_exp_desc ctx env typenv x None) txp_list
+| Etypevar(n) -> debug(Printf.sprintf "Etypevar %s\n" n)
+| Etypeconstr(t, txp_list) -> 
+  debug(Printf.sprintf "Etypeconstr\n"); qualident t; 
+  List.iter (fun x -> vc_gen_typ_exp_desc ctx env typenv x None) txp_list
   | Etypetuple(txp_list) -> 
-      debug(Printf.sprintf "Etypetuple\n"); 
-      List.iter (fun x -> vc_gen_typ_exp_desc ctx env typenv x None) txp_list
-  | Etypevec(texp , si) -> debug(Printf.sprintf "Etypevec\n")
-  | Etypefun(k, t, texp, texp2) -> debug(Printf.sprintf "Etypefun\n")
-  | Etypefunrefinement(k, t, te, te2, e) -> debug(Printf.sprintf "Etypefunrefinement\n")
-  | Erefinement(t, e) -> 
-    debug(Printf.sprintf "Erefinement\n");
-    let expr = vc_gen_expression ctx env e typenv in
-    (* get the variable name from the constriant and replace them by the reference variable *)
-    let expr2 =
-      match n_source with
-      | None -> expr
-      | Some(n) ->
-        debug(Printf.sprintf "Erefinement variable: %s\n" (fst t));
-        Expr.substitute_one expr (create_z3_var ctx env (fst t)) (create_z3_var ctx env n)
-    in
+    debug(Printf.sprintf "Etypetuple\n"); 
+    List.iter (fun x -> vc_gen_typ_exp_desc ctx env typenv x None) txp_list
+    | Etypevec(texp , si) -> debug(Printf.sprintf "Etypevec\n")
+    | Etypefun(k, t, texp, texp2) -> debug(Printf.sprintf "Etypefun\n")
+    | Etypefunrefinement(k, t, te, te2, e) -> debug(Printf.sprintf "Etypefunrefinement\n")
+    | Erefinement(t, e) -> 
+      debug(Printf.sprintf "Erefinement\n");
+      let expr = vc_gen_expression ctx env e typenv in
+      (* get the variable name from the constriant and replace them by the reference variable *)
+      let expr2 = substitute_var ctx env expr n_source t in
       debug(Printf.sprintf "Returning from e local: %s\n" (Expr.to_string expr2));
       debug(Printf.sprintf "t.name %s" (fst t));
       (* add the constraint to the environment after substituting the reference variable *)
       add_constraint env expr2
-  | Erefinementpairfuntype(txp_list, exp) -> debug(Printf.sprintf "Erefinementfunpair \n");
+      | Erefinementpairfuntype(txp_list, exp) -> debug(Printf.sprintf "Erefinementfunpair \n");
       (* List.iter (fun elem ->         ) txp_list *)
-
+      
 and vc_gen_pattern ctx env typenv pat = 
 (*
       ctx    ->  z3 context     
