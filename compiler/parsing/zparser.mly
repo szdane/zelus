@@ -349,7 +349,7 @@ implementation:
     (* basic refinement function *)
   /* | LET ide = ide fn = simple_pattern_list COLON obj = ide LBRACE seq1 = seq_expression RBRACE EQUAL seq2 = seq_expression */
   | LET ide = ide fn = simple_pattern_list COLON retrefine=type_expression EQUAL seq2=seq_expression
-      { Printf.printf "Efundecl\n"; Efundecl(ide, { 
+      { Printf.printf "Efundecl %s \n" ide; Efundecl(ide, { 
             f_kind = A; f_atomic = false;
             f_args = fn;
             f_body = seq2;
@@ -413,7 +413,7 @@ implementation:
   /* -> Now the verification is handled in Efundecl, see z3refinement.ml */
   (* kinded non-refinement function *)
   | is_let a = is_atomic k = kind ide = ide fn = simple_pattern_list EQUAL seq = seq_expression
-        { Printf.printf "Kinded non-refinement function\n"; 
+        { Printf.printf "Kinded non-refinement function %s \n " ide; 
             Efundecl(ide,
             { f_kind = k; f_atomic = a; f_args = fn; f_body = seq;
             f_loc = localise $startpos(fn) $endpos(seq);

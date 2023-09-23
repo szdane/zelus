@@ -1,0 +1,123 @@
+(* This is a test file for the function refinement type checker  *)
+
+(* Example 1: Add Function (pass) *)
+(*
+   The add function takes two positive float values, `x` and `y`,
+   and returns a float value `v` such that `x <= v` and `y <= v`.
+   This function should pass the refinement verification.
+    # (=>(and (= v z) (= z (+ x y)) (> y 0.0) (> x 0.0)) (and(>= v x) (>= v y))
+   Constraints:
+   - `x` and `y` must be positive floats.
+   - The return value `v` should satisfy the constraints `x <= v` and `y <= v`.
+*)
+let add (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | x <= v && y <= v } =
+  let z = x +. y in
+  z
+
+(* Example 2: Sub Function (pass*)
+(*
+   The sub function takes two float values, `x` and `y`,
+   where `x` is a positive float and `y` is a non-negative float.
+   It returns a float value `t` such that `t <= x`.
+   This function should pass the refinement verification.
+    # (=>(and (= t z) (= z (- x y)) (> x 0.0) (>= y 0.0)) (and(<= t x))
+   Constraints:
+   - `x` must be a positive float.
+   - `y` must be a non-negative float.
+   - The return value `t` should satisfy the constraint `t <= x`.
+*)
+let sub (x : {w:float|w>0.0} ) (y : {r:float|r>0.0} ) : { t:float | t <= x } =
+  let z = x -. y in
+  z
+
+(* Example 3: Multiply Function (fail) *)
+(*
+   The multiply function takes two float values, `x` and `y`,
+   and returns a float value `z` such that `z >= x` and `z >= y`.
+   This function is expected to fail the refinement verification.
+    # (=>(and (= r z) (= z (/*/ x y)) (> y 0.0) (> x 0.0)) (or(>= r x) (<=r x) (>= r y) (<=r x))
+   Constraints:
+   - `x` and `y` are integers.
+   - The return value `z` should satisfy the constraints `z >= x` and `z >= y`.
+*)
+let multiply (x : {w:float|w>0} ) (y : {v:float|v>0}) : {r:float | r >= x && r >= y } =
+  let z = x *. y in
+  z
+
+(* Example 4: Division Function (fail) *)
+(*
+   The divide function takes two non-zero integer values, `x` and `y`,
+   and returns a float value `z` such that `z = x / y`.
+   This function should pass the refinement verification.
+    # (=>(and (= r z) (= z (/ x y))  (>= y 0.0) (= x 0.0)) (or(<= r x) (>= r x))
+   Constraints:
+   - `x` and `y` are non-zero integers.
+   - The return value `z` is the division of `x` by `y`.
+*)
+let divide (x : {v:float | v > 0 }) (y : {v:float | v > 0 }) : {r: float | r <= x } =
+  let z = x /. y in
+  z
+
+(* Example 5: Division Function with negative values (fail) *)
+(*
+   The divide function takes two negative integer values, `x` and `y`,
+   and returns a float value `z` such that `z = x / y`.
+   This function should fail the refinement verification.
+    # (=>(and (= r z) (= z (/ x y))  (not (= y 0.0)) (not (= x 0.0))) (or (<= r x) (>= r x))
+   Constraints:
+   - `x` and `y` can be negative integers.
+   - The return value `z` is the division of `x` by `y`.
+*)
+let divide_pos_neg (x : {v:float | v > 0 || v < 0 }) (y : {v:float | v > 0  || v < 0}) : {r: float | r <= x} =
+  let z = x /. y in
+  z
+
+(* Entry Point *)
+(*
+   The node function serves as the entry point for the test.
+   It calls the `add` , `sub` and `multiply` functions with sample arguments,
+   prints the results, and returns unit ().
+*)
+
+(* Example 6: Function with some intermediate variables (fail) *)
+(*
+   The some_compute function takes two positive float values, `x` and `y`,
+   and returns a float value `z` such that `z = d - 2.0` and d = c / 3.0 and c = b * 2.0 and b = a + 10.0 and a = x + y.
+   This function should pass the refinement verification.
+    # (=>(and (= v z) (= z (- d 2.0)) (= d (/ c 3.0)) (= c (/* b 2.0)) (= b (+ a 10.0)) (= a (+ x y)) (> y 0.0) (> x 0.0)) (and(>= z x) (>= z y))
+   Constraints:
+   - `x` and `y` must be positive floats.
+   - The return value `z` should satisfy the constraints `x <= z` and `y <= z`.
+*)
+
+let some_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | x <= v && y <= v } =
+  let a = x +. y in
+  let b = a +. 10.0 in
+  let c = b *. 2.0 in
+  let d = c /. 3.0 in
+  let z = d -. 2.0 in
+  z
+
+(* Example 7: Function with multiple operations (pass) *)
+(*
+   The multi_opertation_compute function takes two positive float values, `x` and `y`,
+   and returns a float value `z` such that `z = 2.0 * x + sqrt(x * x - 4.0 * y) / 2.0`.
+   This function should pass the refinement verification.
+    # (=>(and (= v z) (= z (+ (/* 2.0 x) (/ (sqrt (- (/* x x) (/* 4.0 y))) 2.0))) (> y 0.0) (> x 0.0)) (and (>= z 0.0))
+   Constraints:
+   - `x` and `y` must be positive floats.
+   - The return value `z` should satisfy the constraint `z >= 0.0`.
+*)
+let multi_opertation_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | v >= 0.0 } =
+  let z = (2.0 *. x) +. (sqrt (x *. x -. 4.0 *. y)) /. 2.0 in
+  z
+  
+let node main () =
+    print_float (add (2.0) (3.0));    (* Expected output: 5.0 *)
+    print_float (sub (2.0) (3.0));    (* Expected output: -1.0 *)
+    print_float (multiply (2.0) (3.0));     (* Expected output: 6 *)
+    print_float (divide (2.0) (3.0));     (* Expected output: 0.66666666666666663 *)
+    print_float (divide_pos_neg (-2.0) (-3.0));    (* Expected output: 0.66666666666666663 *)
+    print_float (some_compute (2.0) (3.0));     (*Expected output: 6.0 *)
+    print_float (multi_opertation_compute (2.0) (3.0));     (* Expected output: 6.0 *)
+  ()
