@@ -108,7 +108,7 @@ let some_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | x <
    - `x` and `y` must be positive floats.
    - The return value `z` should satisfy the constraint `z >= 0.0`.
 *)
-let multi_opertation_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | v >= 0.0 } =
+let multi_operation_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | v >= 0.0 } =
   let z = (2.0 *. x) +. (sqrt (x *. x -. 4.0 *. y)) /. 2.0 in
   z
   
@@ -119,5 +119,5 @@ let node main () =
     print_float (divide (2.0) (3.0));     (* Expected output: 0.66666666666666663 *)
     print_float (divide_pos_neg (-2.0) (-3.0));    (* Expected output: 0.66666666666666663 *)
     print_float (some_compute (2.0) (3.0));     (*Expected output: 6.0 *)
-    print_float (multi_opertation_compute (2.0) (3.0));     (* Expected output: 6.0 *)
+    print_float (multi_operation_compute (2.0) (3.0));     (* Expected output: 6.0 *)
   ()

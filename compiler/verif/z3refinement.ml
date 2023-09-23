@@ -19,6 +19,7 @@ open Z3.BitVector
 open Z3enums
 
 exception Z3FailedException of string
+exception AstTranslationNotImplemented of string
 
 (*Open Zelus Interface*)
 open Zident
@@ -625,10 +626,10 @@ let immediate ctx i =
       (*TODO: in general reals and floating points are not the same*)
       | Efloat(i) -> debug ((Printf.sprintf "Z3 Float %f\n") i); Real.mk_numeral_s ctx (Printf.sprintf "%f" i)
       | Estring(c) -> debug (Printf.sprintf "string: %s\n" c); Expr.mk_const ctx (Symbol.mk_string ctx c) (Real.mk_sort ctx)
-      | Echar(c) -> debug (Printf.sprintf "%c" c); Integer.mk_numeral_s ctx "42"
+      | Echar(c) -> debug (Printf.sprintf "%c" c); raise (AstTranslationNotImplemented "immediate: Echar")
       | Evoid -> debug (Printf.sprintf "void"); make_void ctx
       (* | Evoid -> debug (Printf.sprintf "void"); Boolean.mk_true ctx *)
-      | _ -> debug (Printf.sprintf "Ignore immediate \n"); Integer.mk_numeral_s ctx "42"
+      | _ -> debug (Printf.sprintf "Ignore immediate \n"); raise (AstTranslationNotImplemented "immediate: umatched case")
 
 (* let rec local ctx env typenv l =
    let expr = vc_gen_expression ctx env (List.hd l.l_eq) typenv in
@@ -770,28 +771,28 @@ and vc_gen_equation_expression ctx env e typenv pat =
         | _ -> debug(Printf.sprintf "Eop pat\n"); vc_gen_equation_operation ctx env typenv op e_list pat
       )
   | Econst(i) ->  debug(Printf.sprintf "Econst\n"); immediate ctx i
-  | Eglobal {lname = ln} -> debug(Printf.sprintf "Eglobal\n");Integer.mk_numeral_s ctx "42"
+  | Eglobal {lname = ln} -> debug(Printf.sprintf "Eglobal\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eglobal")
   | Eapp({ app_inline = i; app_statefull = r }, e, e_list) -> debug(Printf.sprintf "Eapp\n");
     (* debug( Printf.sprintf "E: %s\n" (Expr.to_string (vc_gen_expression ctx env e typenv)));
     List.iter (fun a -> debug(Printf.sprintf "E_List: %s \n" (Expr.to_string (vc_gen_expression ctx env a typenv)))) e_list; *)
     let app_expr = vc_gen_operator ctx env typenv (operator_vc_gen_expression_to_string e) e_list in
     debug( Printf.sprintf "App expr: %s\n" (Expr.to_string app_expr)); app_expr
-  | Elocal(n) -> debug(Printf.sprintf "Elocal\n");(*Integer.mk_numeral_s ctx "42"*) create_z3_var_typed ctx env n.source "float"
-  | Elet(l, e) -> debug(Printf.sprintf "Elet\n");Integer.mk_numeral_s ctx "42"
-  | Econstr0 _ -> debug(Printf.sprintf "Econstr0\n");Integer.mk_numeral_s ctx "42"
-  | Econstr1(_ , _) -> debug(Printf.sprintf "Econstr1\n");Integer.mk_numeral_s ctx "42"
-  | Elast _ -> debug(Printf.sprintf "Elast\n");Integer.mk_numeral_s ctx "42"
-  | Etuple (e_tuple) -> debug(Printf.sprintf "Etuple\n");Integer.mk_numeral_s ctx "42"
-  | Erecord_access (_, _) -> debug(Printf.sprintf "Erecord_acess\n");Integer.mk_numeral_s ctx "42"
-  | Erecord _-> debug(Printf.sprintf "Erecord\n");Integer.mk_numeral_s ctx "42"
-  | Erecord_with (_, _)-> debug(Printf.sprintf "Erecord_with\n");Integer.mk_numeral_s ctx "42"
-  | Etypeconstraint (_, _)-> debug(Printf.sprintf "Etypeconstraint\n");Integer.mk_numeral_s ctx "42"
-  | Epresent (_, _)-> debug(Printf.sprintf "Epresent\n");Integer.mk_numeral_s ctx "42"
-  | Ematch (_, _, _)-> debug(Printf.sprintf "Ematch\n");Integer.mk_numeral_s ctx "42"
+  | Elocal(n) -> debug(Printf.sprintf "Elocal\n"); create_z3_var_typed ctx env n.source "float"
+  | Elet(l, e) -> debug(Printf.sprintf "Elet\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Elet")
+  | Econstr0 _ -> debug(Printf.sprintf "Econstr0\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Econstr0")
+  | Econstr1(_ , _) -> debug(Printf.sprintf "Econstr1\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Econstr1")
+  | Elast _ -> debug(Printf.sprintf "Elast\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Elast")
+  | Etuple (e_tuple) -> debug(Printf.sprintf "Etuple\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Etuple")
+  | Erecord_access (_, _) -> debug(Printf.sprintf "Erecord_acess\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Erecord_access")
+  | Erecord _-> debug(Printf.sprintf "Erecord\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Erecord")
+  | Erecord_with (_, _)-> debug(Printf.sprintf "Erecord_with\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Erecord_with")
+  | Etypeconstraint (_, _)-> debug(Printf.sprintf "Etypeconstraint\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Etypeconstraint")
+  | Epresent (_, _)-> debug(Printf.sprintf "Epresent\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Epresent")
+  | Ematch (_, _, _)-> debug(Printf.sprintf "Ematch\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Ematch")
   | Eseq ( e1, e2)-> debug(Printf.sprintf ("Eseq : (e1 = %s e2 = %s)\n") (Expr.to_string (vc_gen_expression ctx env e1 typenv)) (Expr.to_string (vc_gen_expression ctx env e2 typenv)));
-    Integer.mk_numeral_s ctx "42"
-  | Eperiod _-> debug(Printf.sprintf "Eperiod\n"); Integer.mk_numeral_s ctx "42"
-  | Eblock (_, _)-> debug(Printf.sprintf "Eblock\n"); Integer.mk_numeral_s ctx "42"  
+  raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eseq")
+  | Eperiod _-> debug(Printf.sprintf "Eperiod\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eperiod")
+  | Eblock (_, _)-> debug(Printf.sprintf "Eblock\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eblock")
   | _ -> vc_gen_expression ctx env e typenv
 
 and add_variable_to_table ctx env typenv var_name ref_exp lbl = 
@@ -1112,7 +1113,7 @@ and prove_function ctx n local_env arg_list typenv =
         (* dummy value since we don't need to handle non-refined vc_gen_expressions*)
         (* Figure out how to better ignore those vc_gen_expressions *)
       );
-    Integer.mk_numeral_s ctx "42"
+    raise (AstTranslationNotImplemented "vc_gen_equation_expression: Not sure why this line was here")
 
 
   (*let ref_fun = Hashtbl.find !function_space n in
@@ -1259,7 +1260,7 @@ and vc_gen_operator ctx env typenv e e_list =
     | "~-" | "~-." -> debug(Printf.sprintf "Unary minus:"); Arithmetic.mk_unary_minus ctx (vc_gen_expression ctx env op_l typenv)
     | s -> debug(Printf.sprintf "Non-standard vc_gen_operator s : %s\n" s); 
       prove_function ctx s env e_list typenv
-    | t -> debug(Printf.sprintf "Invalid vc_gen_expression symbol: %s\n" t); debug(Printf.sprintf "%d\n" (List.length e_list)); Integer.mk_numeral_s ctx "42"
+    | t -> debug(Printf.sprintf "Invalid vc_gen_expression symbol: %s\n" t); debug(Printf.sprintf "%d\n" (List.length e_list)); raise (AstTranslationNotImplemented "vc_gen_operator: Operator not implemented")
   end
   | op_l :: op_r :: [] -> begin (* Binary operator case *)
     match e with 
@@ -1276,7 +1277,7 @@ and vc_gen_operator ctx env typenv e e_list =
     | "&&" -> Boolean.mk_and ctx [(vc_gen_expression ctx env op_l typenv); (vc_gen_expression ctx env op_r typenv)]
     | "||" -> Boolean.mk_or ctx [(vc_gen_expression ctx env op_l typenv); (vc_gen_expression ctx env op_r typenv)]
     | s -> debug(Printf.sprintf "Non-standard vc_gen_operator s : %s\n" (s)); prove_function ctx s env e_list typenv
-    | t -> debug(Printf.sprintf "Invalid vc_gen_expression symbol: %s\n" t); debug(Printf.sprintf "%d\n" (List.length e_list)); Integer.mk_numeral_s ctx "42"
+    | t -> debug(Printf.sprintf "Invalid vc_gen_expression symbol: %s\n" t); debug(Printf.sprintf "%d\n" (List.length e_list)); raise (AstTranslationNotImplemented "vc_gen_operator: Operator not implemented")
   end
   | _ -> raise (Z3FailedException "vc_gen_operator e_list matching error (having more than 2 arguments)")
 
@@ -1302,9 +1303,9 @@ and vc_gen_operation ctx env typenv op e_list =
     Currently used to type check streams
 *)
     match op, e_list with
-    | Eunarypre, [e] -> debug(Printf.sprintf "Eunarypre\n"); Integer.mk_numeral_s ctx "42" 
-    | Efby, [e1;e2] -> debug(Printf.sprintf "Efby\n"); Integer.mk_numeral_s ctx "42"
-    | Eminusgreater, [e1;e2] -> debug(Printf.sprintf "Eminusgreater (->)\n"); Integer.mk_numeral_s ctx "42"
+    | Eunarypre, [e] -> debug(Printf.sprintf "Eunarypre\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eunarypre")
+    | Efby, [e1;e2] -> debug(Printf.sprintf "Efby\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Efby")
+    | Eminusgreater, [e1;e2] -> debug(Printf.sprintf "Eminusgreater (->)\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eminusgreater")
     (* e1 -> base case of stream*)
     (* e2 -> induction hypothesis of stream*)
     (* let new_stream = {initialization_var: e1; application_function: e2} in *)
@@ -1315,16 +1316,16 @@ and vc_gen_operation ctx env typenv op e_list =
       let expt = vc_gen_expression ctx env e2 typenv in
       let expf = vc_gen_expression ctx env e3 typenv in
       Boolean.mk_ite ctx expc expt expf
-    | Eup, [e] -> debug(Printf.sprintf "Eup\n"); Integer.mk_numeral_s ctx "42"
-    | Einitial, [] -> debug(Printf.sprintf "Einitial\n"); Integer.mk_numeral_s ctx "42"
-    | (Etest | Edisc | Ehorizon), [e] -> debug(Printf.sprintf "Etest | Edisc |Ehorizon\n"); Integer.mk_numeral_s ctx "42"
-    | Eaccess, [e1; e2] -> debug(Printf.sprintf "Eaccess\n"); Integer.mk_numeral_s ctx "42"
-    | Eupdate, [e1; i; e2] -> debug(Printf.sprintf "Eupdate\n"); Integer.mk_numeral_s ctx "42"
-    | Eslice _, [e] -> debug(Printf.sprintf "Eslice\n"); Integer.mk_numeral_s ctx "42"
-    | Econcat, [e1; e2] -> debug(Printf.sprintf "Econcat\n"); Integer.mk_numeral_s ctx "42"
-    | Eatomic, [e] -> debug(Printf.sprintf "Eatomic\n"); Integer.mk_numeral_s ctx "42"
+    | Eup, [e] -> debug(Printf.sprintf "Eup\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eup")
+    | Einitial, [] -> debug(Printf.sprintf "Einitial\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Einitial")
+    | (Etest | Edisc | Ehorizon), [e] -> debug(Printf.sprintf "Etest | Edisc |Ehorizon\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Etest | Edisc | Ehorizon")
+    | Eaccess, [e1; e2] -> debug(Printf.sprintf "Eaccess\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eaccess")
+    | Eupdate, [e1; i; e2] -> debug(Printf.sprintf "Eupdate\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eupdate")
+    | Eslice _, [e] -> debug(Printf.sprintf "Eslice\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eslice")
+    | Econcat, [e1; e2] -> debug(Printf.sprintf "Econcat\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Econcat")
+    | Eatomic, [e] -> debug(Printf.sprintf "Eatomic\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eatomic")
     | Emodels, [e1; e2] -> vc_gen_expression ctx env e1 typenv
-    | _ -> debug(Printf.sprintf "Operation undefined\n"); Integer.mk_numeral_s ctx "42"
+    | _ -> debug(Printf.sprintf "Operation undefined\n"); raise (AstTranslationNotImplemented "vc_gen_operation: unmatched operation")
     
 
 (* the alpha substitution function*)
@@ -1364,7 +1365,7 @@ and vc_gen_substitute (var : string) env ctx typenv : expr =
       debug(Printf.sprintf "A3:%s \n" (Expr.to_string a3));
       debug(Printf.sprintf "After sub test:%s \n" (Expr.to_string (Expr.substitute_one a1 (a2) (a3)))); *)
       after_subs
-  | None -> debug (Printf.sprintf "Something is wrong with typenv\n"); Integer.mk_numeral_s ctx "42"
+  | None -> debug (Printf.sprintf "Something is wrong with typenv\n"); raise (AstTranslationNotImplemented "vc_gen_substitute: unmatched typenv")
 
 and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
 (*
@@ -1425,9 +1426,9 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
         (* Printf.printf "Remainder: %s\n" (Expr.to_string remainder); *)
         (* res *)
 
-    | Econstr0 _ -> debug(Printf.sprintf "Econstr0\n"); Integer.mk_numeral_s ctx "42"
-    | Econstr1 (_, _) -> debug(Printf.sprintf "Econstr1\n");Integer.mk_numeral_s ctx "42"
-    | Elast _ -> debug(Printf.sprintf "Elast\n");Integer.mk_numeral_s ctx "42"
+    | Econstr0 _ -> debug(Printf.sprintf "Econstr0\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Econstr0")
+    | Econstr1 (_, _) -> debug(Printf.sprintf "Econstr1\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Econstr1")
+    | Elast _ -> debug(Printf.sprintf "Elast\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Elast")
     | Eop ( op, e_list) -> debug(Printf.sprintf "Eop\n"); vc_gen_operation ctx env typenv op e_list
     (* used to type check pairs *)
     | Etuple (e_list) -> debug(Printf.sprintf "Etuple : \n"); 
@@ -1453,7 +1454,7 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
     debug(Printf.sprintf "vc_gen_expression 2: %s\n" (Expr.to_string exp2));
     (* Printf.printf "Pair : [ "; *)
     (* List.iter (fun s -> Printf.printf "%s " (Expr.to_string s)) exp_list_temp; Printf.printf "]\n"; Integer.mk_numeral_s ctx "42" *)
-    Integer.mk_numeral_s ctx "42"
+    raise (AstTranslationNotImplemented "vc_gen_expression: Etuple")
     (* refinement tuples *)
     | Erefinementtuple(e_list, tuple_type, e) -> debug(Printf.sprintf "Erefinementtuple : \n");
      (*  5 , 5 + 3)
@@ -1469,19 +1470,19 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
      ) in
      debug(Printf.sprintf "Pair constraint : %s\n" (Expr.to_string pair_constraint));
      prove_pair ctx env e_list type_tuple_list (ref pair_constraint) typenv;
-     Integer.mk_numeral_s ctx "42"
-    | Erecord_access (_, _) -> debug(Printf.sprintf "Erecord_acess\n");Integer.mk_numeral_s ctx "42"
-    | Erecord _-> debug(Printf.sprintf "Erecord\n");Integer.mk_numeral_s ctx "42"
-    | Erecord_with (_, _)-> debug(Printf.sprintf "Erecord_with\n");Integer.mk_numeral_s ctx "42"
-    | Etypeconstraint (_, _)-> debug(Printf.sprintf "Etypeconstraint\n");Integer.mk_numeral_s ctx "42"
-    | Epresent (_, _)-> debug(Printf.sprintf "Epresent\n");Integer.mk_numeral_s ctx "42"
-    | Ematch (_, _, _)-> debug(Printf.sprintf "Ematch\n");Integer.mk_numeral_s ctx "42"
+     raise (AstTranslationNotImplemented "vc_gen_expression: Erefinementtuple")
+    | Erecord_access (_, _) -> debug(Printf.sprintf "Erecord_acess\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Erecord_access")
+    | Erecord _-> debug(Printf.sprintf "Erecord\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Erecord")
+    | Erecord_with (_, _)-> debug(Printf.sprintf "Erecord_with\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Erecord_with")
+    | Etypeconstraint (_, _)-> debug(Printf.sprintf "Etypeconstraint\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Etypeconstraint")
+    | Epresent (_, _)-> debug(Printf.sprintf "Epresent\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Epresent")
+    | Ematch (_, _, _)-> debug(Printf.sprintf "Ematch\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Ematch")
     | Eseq ( e1, e2)-> debug(Printf.sprintf ("Eseq : (e1 = %s e2 = %s)\n") (Expr.to_string (vc_gen_expression ctx env e1 typenv)) (Expr.to_string (vc_gen_expression ctx env e2 typenv)));
-     Integer.mk_numeral_s ctx "42"
-    | Eperiod _-> debug(Printf.sprintf "Eperiod\n"); Integer.mk_numeral_s ctx "42"
-    | Eblock (_, _)-> debug(Printf.sprintf "Eblock\n"); Integer.mk_numeral_s ctx "42"
+    raise (AstTranslationNotImplemented "vc_gen_expression: Eseq")
+    | Eperiod _-> debug(Printf.sprintf "Eperiod\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Eperiod")
+    | Eblock (_, _)-> debug(Printf.sprintf "Eblock\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Eblock")
     | Eget _-> raise (Z3FailedException "Error using robot_get while verifying")  
-    | _ -> (debug(Printf.sprintf "Ignore vc_gen_expression\n")); Integer.mk_numeral_s ctx "42"
+    | _ -> (debug(Printf.sprintf "Ignore vc_gen_expression\n")); raise (AstTranslationNotImplemented "vc_gen_expression: unmatched expression")
 
     (*| Econstr0(lname) -> Zelus.Econstr0(longname lname)
     | Evar(Name(n)) ->
@@ -1629,7 +1630,7 @@ and get_return_type ctx env ({ e_desc = desc; e_loc = loc }) typenv =
     | Elet (l, e)-> 
         let body_exp = vc_gen_expression ctx env e typenv in
         body_exp
-    | _ -> debug(Printf.sprintf "Not a function return type."); Integer.mk_numeral_s ctx "42"
+    | _ -> debug(Printf.sprintf "Not a function return type."); raise (AstTranslationNotImplemented "get_return_type: unmatched return type expression")
 
 and build_input_var ctx env e typenv istuple =
       if not istuple then (
