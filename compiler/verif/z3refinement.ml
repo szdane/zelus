@@ -1113,7 +1113,7 @@ and prove_function ctx n local_env arg_list typenv =
         (* dummy value since we don't need to handle non-refined vc_gen_expressions*)
         (* Figure out how to better ignore those vc_gen_expressions *)
       );
-    raise (AstTranslationNotImplemented "vc_gen_equation_expression: Not sure why this line was here")
+    raise (AstTranslationNotImplemented (sprintf "prove_function: external function called %s" n))
 
 
   (*let ref_fun = Hashtbl.find !function_space n in

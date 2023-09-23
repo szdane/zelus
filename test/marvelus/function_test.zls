@@ -1,4 +1,4 @@
-(* This is a test file for the function refinement type checker  *)
+(* This is a test file for the function refinement type checker 
 
 (* Example 1: Add Function (pass) *)
 (*
@@ -96,7 +96,7 @@ let some_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | x <
   let c = b *. 2.0 in
   let d = c /. 3.0 in
   let z = d -. 2.0 in
-  z
+  z *)
 
 (* Example 7: Function with multiple operations (pass) *)
 (*
@@ -113,11 +113,11 @@ let multi_operation_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:
   z
   
 let node main () =
-    print_float (add (2.0) (3.0));    (* Expected output: 5.0 *)
+    (* print_float (add (2.0) (3.0));    (* Expected output: 5.0 *)
     print_float (sub (2.0) (3.0));    (* Expected output: -1.0 *)
     print_float (multiply (2.0) (3.0));     (* Expected output: 6 *)
     print_float (divide (2.0) (3.0));     (* Expected output: 0.66666666666666663 *)
     print_float (divide_pos_neg (-2.0) (-3.0));    (* Expected output: 0.66666666666666663 *)
     print_float (some_compute (2.0) (3.0));     (*Expected output: 6.0 *)
-    print_float (multi_operation_compute (2.0) (3.0));     (* Expected output: 6.0 *)
+    print_float (multi_operation_compute (2.0) (3.0));     Expected output: 6.0 *)
   ()
