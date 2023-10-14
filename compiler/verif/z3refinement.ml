@@ -20,6 +20,7 @@ open Z3enums
 
 exception Z3FailedException of string
 exception AstTranslationNotImplemented of string
+exception RefinmentFunctionApplication of string
 
 (*Open Zelus Interface*)
 open Zident
@@ -116,6 +117,9 @@ type function_desc =
   variable_maps: (string, custom_t) Hashtbl.t;
   argument_list: string list;
   creation_env: env_structure;
+  z3f_decl: func_decl;
+  z3args: expr list;
+  z3constraint: expr; (* return constraint *)
 }
 
 (*TODO: make two variants for refinement functions and non-refinement functions *)
@@ -128,6 +132,15 @@ let type_space =
     let type_table : ((string, custom_t) Hashtbl.t) = (Hashtbl.create 1)
     in ref type_table
 
+let type_expression2string t =
+  match t.desc with
+  | Etypeconstr(name, t_exp_list) -> 
+    (
+      match name with
+        | Lident.Name(basetype) -> basetype
+    ) 
+  | _ -> raise (AstTranslationNotImplemented "type_expression2string")
+           
 let erefinement2customt erefinement ctx env typenv =
   match erefinement.desc with
   | Erefinement(t,e) -> (
@@ -187,127 +200,7 @@ let add_stream name stream_add =
   Hashtbl.add (!stream_space) name stream_add
 
 let proof_error_count = ref 0 (* count for proof errors *)
-(**
-(*Define refinement type vc_gen_pattern*)
-type z3op =
-    | Z3eval of string * string * exp * exp
-    
-type z3exp =
-    | Z3int of int
-    | Z3real of float
 
-(* convert immeiate type to respective string *)
-let immediate = function
-  | Ebool(b) -> if b then "true" else "false" 
-  | Eint(i) -> Printf.sprintf "%d" i
-  | Efloat(i) -> Printf.sprintf "%f" i
-  | Echar(c) -> Printf.sprintf "'%c'" c
-  | Estring(c) -> Printf.sprintf "'%s'" c
-  | Evoid -> Printf.sprintf ""
-  
-let qualident { Lident.qual = m; Lident.id = s } =
-  Printf.sprintf "%s.%s" m s
- 
-let print_elt f e = 
-	print_string (Printf.sprintf "List exp: '%s'\n" (f e)) 
-	
-let type_exp typ = 
-	match typ with
-	  | Vconst(i) -> immediate i (* constant *)
-	  | Vconstr0(ln) -> qualident ln (* constructor *)
-	  | Vabstract(ln) -> qualident ln (* no implementation is given *)
-
-let qualid_exp typ = 
-	match typ with
-	  | None  -> "None" (* constant *)
-	  | Some(ln) -> qualident ln (* constructor *)
-  
-let print_info info =
-	(*print_string (Printf.sprintf "Value typ: '%s' \n" (List.hd (info.value_typ.typ_vars)));*)
-	print_string (Printf.sprintf "Value static: '%b' \n" (info.value_static));
-	(*print_string (Printf.sprintf "Value caus: '%s' \n" info.value_caus);
-	print_string ("Value init: \n");
-	print_string (String.concat " " (List.map (Printf.sprintf "'%s'") info.value_init));*)
-	print_string (Printf.sprintf "Value code exp: '%s' \n"  ( type_exp info.value_code.value_exp));
-	print_string (Printf.sprintf "Value code name: '%s' \n" ( qualid_exp info.value_code.value_name)); "Info"
-	
-(* parse input vc_gen_expression into string and redirect to Z3 solver *)
-let rec parse_vc_gen_expression e = 
-  match e.e_desc with
-    | Elocal n -> print_string "Elocal\n"; "1.0"
-    | Eglobal { lname = ln } -> print_string "Eglobal\n"; let var_name = Lident.modname ln in print_string var_name; print_newline(); 
-    let var2 =
-    	try 
-    	   let { info = info } = Modules.find_value ln in print_info info
-    	with 
-    	   | Not_found -> "No info" in
-    var_name
-    | Eop(op, e_list) -> print_string "Eop\n"; "1.0"
-    | Elast x -> print_string "Elast\n"; "1.0"
-    | Econstr0(ln) -> print_string "Econstr0\n"; "1.0"
-    | Econst c -> print_string "Econst\n"; immediate c
-    | Eapp({ app_inline = i; app_statefull = r }, e, e_list) ->
-       print_string (Printf.sprintf "App inline: '%b'\n" i);
-       print_string (Printf.sprintf "App stateful: '%b'\n" r);
-       (*print_string (Printf.sprintf "Exp parsing: '%s' \n" (parse_vc_gen_expression e));
-       print_string "Map start\n";
-       let dummy = List.map (print_elt parse_vc_gen_expression) e_list in
-       print_string "Eapp\n"; "1.0"*)
-       let vc_gen_operator = Printf.sprintf "'%s'" (parse_vc_gen_expression e) in
-       let exp_list = List.map parse_vc_gen_expression e_list in
-       List.hd (List.tl exp_list)
-    | Econstr1(ln, e_list) ->
-        print_string "Econstr1\n"; "1.0"
-    | Etuple(e_list) ->
-        print_string "Etuple\n"; "1.0"
-    | Erecord_access(e, field) ->
-        print_string "Erecord_access\n"; "1.0"
-    | Erecord(ln_e_list) ->
-        print_string "Erecord\n"; "1.0"
-    | Erecord_with(e, ln_e_list) ->
-       print_string "Erecord_with\n"; "1.0"
-    | Elet(l, e) ->
-        print_string "Elet\n"; "1.0"
-    | Eblock(b, e) ->
-       print_string "Eblock\n"; "1.0"
-    | Etypeconstraint(e, typ) ->
-        print_string "Etypeconstraint\n"; "1.0"
-    | Eseq(e1, e2) ->
-        print_string "Eseq\n"; "1.0"
-    | Eperiod(p) ->
-        print_string "Eperiod\n"; "1.0"
-    | Ematch(total, e, match_handler_list) ->
-        print_string "Ematch\n"; "1.0"
-    | Epresent(present_handler_list, opt_e) ->
-        print_string "Epresent\n"; "1.0" 
-     
-
-let evaluate name ty e1 e2 : bool =
-	Printf.printf "Running Zelus evaluation verifier \n";
-	let cfg = [("model", "true"); ("proof", "false")] in
-	let ctx = (mk_context cfg) in
-	let var = Real.mk_numeral_s ctx e2 in
-	let threshold = Real.mk_numeral_s ctx e1 in
-	let phi variable refinement =
-		Arithmetic.mk_ge ctx variable refinement in
-	let correct = (Boolean.mk_and ctx
-			[(phi var threshold);]) in
-	let solver = (mk_solver ctx None) in
-	let s = (Solver.add solver [correct]) in
-	let q = check solver [] in
-	Printf.printf "Solver says: %s\n" (string_of_status q) ;
-    	if q == SATISFIABLE then true
-    	else 
-	     raise (Z3FailedException "Z3 verification failed")
-	     
-let rec prove_satisfiability op : bool =
-	match op with
-	| Z3eval(var, ty, e1, e2) -> 
-	let arg = parse_vc_gen_expression e1 in
-	let arg2 = parse_vc_gen_expression e2 in
-	print_string arg; print_newline(); print_string arg2; print_newline();
-	evaluate var ty (arg) (arg2)
-*)
 exception TestFailedException of string
 
 let print_assignments m = 
@@ -377,6 +270,7 @@ let print_function_temp n f =
       Printf.printf "\n";
       Printf.printf "Argument list:\n";
       List.iter (fun a -> (Printf.printf "%s; " a)) f.argument_list;
+      Printf.printf "\n";
       Printf.printf "Creation environment\n";
       print_env f.creation_env
   )
@@ -393,6 +287,15 @@ let sort2type sort_enum =
   |	FLOATING_POINT_SORT -> "float"
   |	CHAR_SORT -> "char"
   |	_ -> "NULL"
+
+let type2sort ctx basetype =
+  match basetype with
+  | "bool" -> Boolean.mk_sort ctx
+  | "int" -> Integer.mk_sort ctx
+  | "real" -> Real.mk_sort ctx
+  | "float" -> Real.mk_sort ctx  (* Use Real sort for float *)
+  | "double" -> FloatingPoint.mk_sort_double ctx
+  | _ -> failwith "Unsupported Z3 sort"
 
 let rec cloc ctx vc model truth = 
     let model_eval = Model.eval model vc false in
@@ -1039,7 +942,7 @@ and create_validation_check ctx env elem1 elem2 =
   
     return specified input contrained to funciton argument variable
 *)
-    debug (Printf.sprintf "\n --- CHECK INPUT VALIDITY ---\n");
+    debug (Printf.sprintf "\n --- CREATE VALIDATION CHECK ---\n");
     let input_binding = Boolean.mk_eq ctx (vc_gen_expression ctx env elem1 None) elem2 in
     (* Printf.printf "%s" (Expr.to_string input_binding); *)
     input_binding
@@ -1071,6 +974,18 @@ and get_environment_constraints ctx local_env typenv arg =
       Boolean.mk_true ctx
     )
 
+and check_function_input user_arguments declaration_arguments =
+(* Check if uder arguments to a function are consistent with function declaration *)
+  let num_user_args = List.length user_arguments in
+  let num_decl_args = List.length declaration_arguments in
+  let argument_check_msg = Printf.sprintf "# of Arguments in arg_list:%d arguments:%d\n" (num_user_args) (num_decl_args) in
+  if (num_user_args != num_decl_args) then (
+    (*if not equal, then user typed wrong inputs and map2 will fail in prove_function*)
+    raise (RefinmentFunctionApplication argument_check_msg)
+  ) else (
+    debug argument_check_msg
+  )
+
 and prove_function ctx n local_env arg_list typenv =
 (*  n        -> function name
     arg_list -> list containing vc_gen_expression arguments used during function call
@@ -1082,44 +997,39 @@ and prove_function ctx n local_env arg_list typenv =
     (* if (Hashtbl.mem !stream_space n) then ()
     (* if it is a stream *)
 
-    else ( *)(
+    else ( *)
       if (Hashtbl.mem !function_space n) 
         (* refinement function, make sure input list obeys constraints *)
         then (
           let ref_fun = Hashtbl.find !function_space n in
-          debug (Printf.sprintf "TODO -- check if arguments obey constraints\n");
+          debug (Printf.sprintf "checking if arguments obey constraints\n");
           print_function_temp n ref_fun;
           print_env local_env;
           (* let expr_test = vc_gen_expression ctx local_env (List.hd arg_list) None in
           Printf.printf "Arg_list[0]: %s\n" (Expr.to_string expr_test); *)
           let constraint_env = { exp_env = ref ref_fun.argument_constraints ; var_env = ref_fun.creation_env.var_env } in 
           let arguments = List.map (fun elem -> create_z3_var ctx constraint_env elem) ref_fun.argument_list in
-          Printf.printf "map2 error is here!!\n";
           Printf.printf "name of function:%s\n" n;
           Printf.printf "length of ref_fun.argument_list:%d\n" (List.length ref_fun.argument_list);
-          Printf.printf "# of Arguments in arg_list:%d arguments:%d\n" (List.length arg_list) (List.length arguments);
+          check_function_input arg_list arguments;
           let checks = List.map2 (fun elem1 elem2 -> create_validation_check ctx constraint_env elem1 elem2) arg_list arguments in
           (* let environment_constraints = List.map (get_environment_constraints ctx local_env typenv) arg_list in *)
           (* print_env ({ exp_env = ref( checks @ environment_constraints); var_env = Hashtbl.create 0}); *)
           let check_env = { exp_env = ref (checks @ !(local_env.exp_env)); var_env = Hashtbl.create 0} in
           check_validity ctx constraint_env check_env;
+          (* TODO -- add return constraint to environment ?*)
+          add_constraint local_env ref_fun.z3constraint;
+          (*return function application variable*)
+          let f_app = FuncDecl.apply ref_fun.z3f_decl arguments in
+          f_app
         ) 
         (* not a refinement function, so assume it is true*)
         else (
           debug (Printf.sprintf "Function %s not defined, assuming it is true\n" n);
           (* check if argument have other function calls*)
           ignore(List.iter (fun e_elem -> ignore(vc_gen_expression ctx local_env e_elem typenv)) arg_list);
-        );
-        (* dummy value since we don't need to handle non-refined vc_gen_expressions*)
-        (* Figure out how to better ignore those vc_gen_expressions *)
-      );
-    raise (AstTranslationNotImplemented (sprintf "prove_function: external function called %s" n))
-
-
-  (*let ref_fun = Hashtbl.find !function_space n in
-  print_function_temp n ref_fun*)
-  (* check argument against definition *)
-  (* use z3 solve *) 
+          raise (AstTranslationNotImplemented (sprintf "prove_function: external function called %s" n))
+        )
 
 and prove_pair ctx env e_list tuple_type e typenv =
 (*
@@ -1484,133 +1394,6 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
     | Eget _-> raise (Z3FailedException "Error using robot_get while verifying")  
     | _ -> (debug(Printf.sprintf "Ignore vc_gen_expression\n")); raise (AstTranslationNotImplemented "vc_gen_expression: unmatched expression")
 
-    (*| Econstr0(lname) -> Zelus.Econstr0(longname lname)
-    | Evar(Name(n)) ->
-        begin try
-            let { Rename.name = m } = Rename.find n env in Zelus.Elocal(m)
-        with
-          | Not_found -> Zaux.global (Lident.Name(n))
-        end
-    | Evar(lname) -> Zaux.global (longname lname)
-    | Elast(n) -> Zelus.Elast(name loc env n)
-    | Etuple(e_list) -> Zelus.Etuple(List.map (vc_gen_expression env ctx ) e_list)
-    | Econstr1(lname, e_list) ->
-        Zelus.Econstr1(longname lname, List.map (vc_gen_expression env ctx ) e_list)
-
-    | Eop(op, e_list) ->
-       Zelus.Eop(vc_gen_operator loc env op, List.map (vc_gen_expression env ctx) e_list)
-    | Eapp({ app_inline = i; app_statefull = r }, e, e_list) ->
-       Zelus.Eapp({ Zelus.app_inline = i; Zelus.app_statefull = r },
-		  vc_gen_expression env ctx e, List.map (vc_gen_expression env ctx) e_list) 
-  in emake loc desc
-    
-    | Erecord(label_e_list) ->
-        Zelus.Erecord(recordrec loc env label_e_list)
-    | Erecord_access(e1, lname) ->
-        Zelus.Erecord_access(vc_gen_expression env ctx e1, longname lname)
-    | Erecord_with(e, label_e_list) ->
-       Zelus.Erecord_with(vc_gen_expression env ctx e, recordrec loc env label_e_list)
-    | Etypeconstraint(e, ty) ->
-        Zelus.Etypeconstraint(vc_gen_expression env ctx e, types env ty)
-    | Elet(is_rec, eq_list, e_let) ->
-        let env_p, env, eq_list = letin is_rec env eq_list in
-        Zelus.Elet({ Zelus.l_rec = is_rec;
-                     Zelus.l_eq = eq_list; 
-                     Zelus.l_loc = loc; 
-                     Zelus.l_env = Rename.typ_env env_p },
-                    vc_gen_expression env ctx e_let)
-    | Eseq(e1, e2) ->
-        Zelus.Eseq(vc_gen_expression env ctx e1, vc_gen_expression env ctx e2)
-    | Eperiod(p) ->
-       Zelus.Eperiod(period env p)
-    (*added here*)
-    | Eassume(e) -> 
-       Zelus.Eassume(vc_gen_expression env ctx e)   
-    (*added here
-    | Emove(e) ->
-       Zelus.Emove(vc_gen_expression env e)	*)
-    | Estore(c, k) ->
-      		print_string("Robot command: "); print_string (c); print_string("\n");
-      		print_string ("Value: "); print_float (k); print_string("\n"); Zelus.Estore(c, k)
-    (* control structures are turned into equations *)
-    | Ematch(e1, handlers) ->
-        (* match e with P -> e1 => 
-           local result do match e with P -> do result = e1 done in result *)
-        let result = Zident.fresh "result" in
-        let emit e = 
-	  eqmake e.Zelus.e_loc (Zelus.EQeq(varpat e.Zelus.e_loc result, e)) in
-	let e1 = vc_gen_expression env ctx e1 in
-        let handlers = 
-	  match_handler_list 
-	    (fun _ env e -> let e = vc_gen_expression env ctx e in block_with_emit emit e) 
-	    Rename.empty env handlers in
-	let eq = eqmake loc (Zelus.EQmatch(ref false, e1, handlers)) in
-        Zelus.Eblock(block_with_result result [eq], var loc result)
-   | Epresent(handlers, e_opt) ->
-        (* Translate a present vc_gen_expression into a present vc_gen_equation *)
-        (* [present sc1 -> e1 | ... else e] into *)
-        (* [local res do present sc1 -> do res = e1 done *)
-        (*               |... else do res = e in res]*)
-        (* [present sc1 -> e1 | ... init e] into *)
-        (* [local res do present sc1 -> do res = e1 done *)
-        (*               | ...and init res = e in res]*)
-        (* [present sc1 -> e1 ...] into *)
-        (* [local res do present sc1 -> do emit res = e1 done] *)
-        (* [emit e] returns either [emit x = e] or [x = e] according to *)
-        (* the completeness of the definition. A signal is emitted when the *)
-        (* present handler is not complete. *)
-        let result = Zident.fresh "result" in
-	let emit e =
-	  match e_opt with 
-	    | None -> 
-	        eqmake e.Zelus.e_loc (Zelus.EQemit(result, Some(e)))
-	    | Some(Init _)
-	    | Some(Default _) ->
-	        eqmake e.Zelus.e_loc
-                  (Zelus.EQeq(varpat e.Zelus.e_loc result, e)) in
-	let handlers = 
-	  present_handler_list
-	    scondpat 
-	    (fun _ env e -> let e = vc_gen_expression env ctx e in block_with_emit emit e)
-	    Rename.empty env handlers in
-	let b_opt, eq_init, is_mem = 
-	    match e_opt with 
-	      | None -> None, [], false
-	      | Some(Init(e)) -> None, 
-		[eqmake loc (Zelus.EQinit(result, vc_gen_expression env ctx e))],
-		true
-	      | Some(Default(e)) -> 
-		 Some(block_with_emit emit (vc_gen_expression env ctx e)), [], false in
-	let eq_list = 
-	  eqmake loc (Zelus.EQpresent(handlers, b_opt)) :: eq_init in
-	Zelus.Eblock(block_with_result result eq_list, var loc result)
-    | Ereset(e_body, r) ->
-  let e_body = vc_gen_expression env ctx e_body in
-	let r = vc_gen_expression env ctx r in
-	let result = Zident.fresh "result" in
-	let eq = 
-	  eqmake e_body.Zelus.e_loc
-	    (Zelus.EQeq(varpat e_body.Zelus.e_loc result, e_body)) in
-	let eq = eqmake loc (Zelus.EQreset([eq], r)) in
-	Zelus.Eblock(block_with_result result [eq], var loc result)
-    | Eautomaton(handlers, e_opt) ->
-        let result = Zident.fresh "result" in
-	let emit e = 
-	  eqmake e.Zelus.e_loc (Zelus.EQeq(varpat e.Zelus.e_loc result, e)) in
-	let is_weak, handlers, e_opt = 
-	  state_handler_list loc scondpat 
-           (block locals
-              (fun _ env e -> let e = vc_gen_expression env ctx e in [emit e]))
-	   (block locals equation_list)
-              vc_gen_expression 
-	      Rename.empty env handlers ctx e_opt in
-	let eq = eqmake loc (Zelus.EQautomaton(is_weak, handlers, e_opt)) in
-	Zelus.Eblock(block_with_result result [eq], var loc result)
-    | Eblock(b, e) ->
-       let env, b = block_eq_list Rename.empty env b in
-       let e = vc_gen_expression env ctx e in
-       Zelus.Eblock(b, e) in
-  emake loc desc*)
 and get_return_type ctx env ({ e_desc = desc; e_loc = loc }) typenv =
 (*
       ctx    ->  z3 context 
@@ -1834,6 +1617,25 @@ let get_argument_list typenv =
 (* main entry functions *)
 (* this function modifies the environemnt, returns unit *)
 
+let create_constraint_expression ctx arg_list placeholder_var retexp f_decl retbasetype type_map =
+  let env = {exp_env = ref []; var_env = Hashtbl.create 0}  in (*create empty environment*)
+  let subs_var = create_z3_var_typed ctx env placeholder_var (type_expression2string retbasetype) in
+  let app = (FuncDecl.apply f_decl arg_list) in
+  let ret_constraint = Expr.substitute_one retexp subs_var app in
+  ret_constraint
+
+let create_argument_expression ctx arg_list argument_constraints var_env = 
+  let constraint_env = { exp_env = ref argument_constraints ; var_env = var_env } in 
+  let arguments = List.map (fun elem -> create_z3_var ctx constraint_env elem) arg_list in
+  arguments
+
+let create_function_declaration ctx n arg_list retbasetype type_map =
+    (* Declare a function f that takes two integer arguments and returns an integer *)
+    let arg_sort = List.map (fun elem -> type2sort ctx (Hashtbl.find type_map elem).base_type ) arg_list in
+    let return_sort = type2sort ctx (type_expression2string retbasetype) in
+    let f_decl = FuncDecl.mk_func_decl_s ctx n arg_sort return_sort in
+    f_decl
+  
 let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localized*))  =
 (*
     ff        ->   printinf formart  (not used in this file)
@@ -1872,6 +1674,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
       | Erefinementfundecl(n, { f_kind = k; f_atomic = is_atomic; f_args = p_list;
 		      f_body = e; f_loc = loc }) -> debug(Printf.sprintf "Erefinementfundecl %s\n" n); 
             debug(Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
+            raise (AstTranslationNotImplemented "Old syntax is deprecated");
 
             (* let argc = (List.length p_list) in  *)
             let typenv = Hashtbl.copy !type_space in
@@ -1915,7 +1718,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* TODO: remove the following line later and call substituition function *)
           
           (* extracting the constraint variable from the return type *)
-          let (rettype, var_req) = match rettype.desc with | Erefinement ((n,t), exp) -> (exp, n) in
+          let (rettype, var_req, retbasetype) = match rettype.desc with | Erefinement ((n,t), exp) -> (exp, n, t) in
           debug(Printf.sprintf "var_req: %s\n" var_req);
           (* let argc = (List.length p_list) in  *)
           let typenv = Hashtbl.copy !type_space in
@@ -1974,10 +1777,16 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           let function_argument_constraints = !(local_env.exp_env) in
           let function_variable_type_map = typenv in
           let function_argument_list = List.rev (get_argument_list( typenv )) in
+          let f_decl = create_function_declaration ctx n function_argument_list retbasetype function_variable_type_map in
+          let f_z3args = create_argument_expression ctx function_argument_list function_argument_constraints local_env.var_env in
+          let f_ret_constraint = create_constraint_expression ctx f_z3args var_req return_exp f_decl retbasetype function_variable_type_map in
           let f_new = { argument_constraints = function_argument_constraints;
                         variable_maps = function_variable_type_map;
                         argument_list = function_argument_list; 
-                        creation_env = local_env; } in
+                        creation_env = local_env; 
+                        z3f_decl = f_decl;
+                        z3args = f_z3args;
+                        z3constraint = f_ret_constraint; } in
           (* adding post and pre conditions of funtion to environment *)
           if (Expr.to_string return_exp)="true" 
             then Printf.printf "this is a true function\n"
@@ -2041,10 +1850,16 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
             let function_argument_constraints = !(local_env.exp_env) in
             let function_variable_type_map = typenv in
             let function_argument_list = List.rev (get_argument_list( typenv )) in
+            let f_decl = create_function_declaration ctx n function_argument_list retbasetype function_variable_type_map in
+            let f_z3args = create_argument_expression ctx function_argument_list function_argument_constraints local_env.var_env in
+            let f_ret_constraint = create_constraint_expression ctx f_z3args var_req return_exp f_decl retbasetype function_variable_type_map in
             let f_new = { argument_constraints = function_argument_constraints;
                           variable_maps = function_variable_type_map;
                           argument_list = function_argument_list; 
-                          creation_env = local_env; } in
+                          creation_env = local_env; 
+                          z3f_decl = f_decl;
+                          z3args = f_z3args;
+                          z3constraint = f_ret_constraint; } in
             add_function n f_new;
             debug(Printf.sprintf "Printing function environment...\n");
             print_function_environment ();
