@@ -243,37 +243,44 @@ let print_env_list premise =
     
   Print list of z3 vc_gen_expressions
 *)
-  debug (Printf.sprintf "vc_gen_expression = %s ; " (Expr.to_string premise))
+  Printf.printf " ";
+  Printf.printf "%s " (Expr.to_string premise)
 
 let print_env ({exp_env = env; var_env = v}) = 
 (*
   env -> vc_gen_expression environment
   v   -> variable environment
 *)
-  debug (Printf.sprintf ("vc_gen_expression environment : \n"));
-  List.iter print_env_list !env; debug("")
+  Printf.printf ("vc_gen_expression environment : [ ");
+  List.iter print_env_list !env; Printf.printf "]\n"
 
-let print_function_temp n f =
+let print_function n f =
 (*
-  temporary function used for debugging, I will delete it later
+    n -> function name
+    f -> function description
 
-  same thing as print_function but it is defined earlier
+    Prints all fields in function data structure
 *)
-  if !ref_verbose then (
-      debug("");
-      Printf.printf "Function: %s\n" n;
-      Printf.printf "Argument_constraints:\n";
-      List.iter (fun a -> (Printf.printf "%s; " (Expr.to_string a))) f.argument_constraints;
-      Printf.printf "\n";
-      Printf.printf "Variable map:\n";
-      Hashtbl.iter (fun a b -> (Printf.printf "%s:%s; " a b.base_type)) f.variable_maps;
-      Printf.printf "\n";
-      Printf.printf "Argument list:\n";
-      List.iter (fun a -> (Printf.printf "%s; " a)) f.argument_list;
-      Printf.printf "\n";
-      Printf.printf "Creation environment\n";
-      print_env f.creation_env
-  )
+    if !ref_verbose then (
+      Printf.printf "Function: %s\n{\n" n;
+      Printf.printf "\targument_constraints:\t[ ";
+      List.iter (fun a -> (Printf.printf "%s " (Expr.to_string a))) f.argument_constraints;
+      Printf.printf "]\n";
+      Printf.printf "\tvariable_map:\t[ ";
+      Hashtbl.iter (fun a b -> (Printf.printf "(%s:%s) " a b.base_type)) f.variable_maps;
+      Printf.printf "]\n";
+      Printf.printf "\targument_list:\t[ ";
+      List.iter (fun a -> (Printf.printf "(%s) " a)) f.argument_list;
+      Printf.printf "]\n";
+      Printf.printf "\tcreation_environment:\t[";
+      List.iter print_env_list !(f.creation_env.exp_env);
+      Printf.printf " ]\n";
+      Printf.printf "\tf_decl: %s\n"(FuncDecl.to_string f.z3f_decl);
+      Printf.printf "\tf_z3args:\t[ ";
+      List.iter (fun elem -> Printf.printf "(%s) "(Expr.to_string elem)) f.z3args;
+      Printf.printf "]\n\tf_ret_constraint: %s\n"(Expr.to_string f.z3constraint);
+      Printf.printf "}\n\n" 
+    )
 
 let make_void ctx =
   let void_sort = Sort.mk_uninterpreted_s ctx "NULL" in
@@ -295,7 +302,8 @@ let type2sort ctx basetype =
   | "real" -> Real.mk_sort ctx
   | "float" -> Real.mk_sort ctx  (* Use Real sort for float *)
   | "double" -> FloatingPoint.mk_sort_double ctx
-  | _ -> failwith "Unsupported Z3 sort"
+  | "emptytype" -> Sort.mk_uninterpreted_s ctx "NULL"
+  | _ -> failwith (Printf.sprintf "Unsupported Z3 sort: %s"  basetype)
 
 let rec cloc ctx vc model truth = 
     let model_eval = Model.eval model vc false in
@@ -464,28 +472,6 @@ let create_z3_var ctx ({exp_env = e ; var_env = v}) s =
       Create generic z3 Real sort with given variable name s
   *)
     create_z3_var_typed ctx ({exp_env = e ; var_env = v}) s "float"
-
-let print_function n f =
-(*
-    n -> function name
-    f -> function description
-
-    Prints all fields in function data structure
-*)
-  if !ref_verbose then (
-    Printf.printf "Function: %s\n" n;
-    Printf.printf "Argument_constraints:\n";
-    List.iter (fun a -> (Printf.printf "%s; " (Expr.to_string a))) f.argument_constraints;
-    Printf.printf "\n";
-    Printf.printf "Variable map:\n";
-    Hashtbl.iter (fun a b -> (Printf.printf "%s:%s; " a b.base_type)) f.variable_maps;
-    Printf.printf "\n";
-    Printf.printf "Argument list:\n";
-    List.iter (fun a -> (Printf.printf "%s; " a)) f.argument_list;
-    Printf.printf "Creation environment\n";
-    print_env f.creation_env;
-    Printf.printf "\n\n" 
-  )
 
 let print_function_environment () =
 (*
@@ -943,7 +929,7 @@ and create_validation_check ctx env elem1 elem2 =
     return specified input contrained to funciton argument variable
 *)
     debug (Printf.sprintf "\n --- CREATE VALIDATION CHECK ---\n");
-    let input_binding = Boolean.mk_eq ctx (vc_gen_expression ctx env elem1 None) elem2 in
+    let input_binding = Boolean.mk_eq ctx elem1 elem2 in
     (* Printf.printf "%s" (Expr.to_string input_binding); *)
     input_binding
 
@@ -1003,7 +989,7 @@ and prove_function ctx n local_env arg_list typenv =
         then (
           let ref_fun = Hashtbl.find !function_space n in
           debug (Printf.sprintf "checking if arguments obey constraints\n");
-          print_function_temp n ref_fun;
+          print_function n ref_fun;
           print_env local_env;
           (* let expr_test = vc_gen_expression ctx local_env (List.hd arg_list) None in
           Printf.printf "Arg_list[0]: %s\n" (Expr.to_string expr_test); *)
@@ -1012,7 +998,8 @@ and prove_function ctx n local_env arg_list typenv =
           Printf.printf "name of function:%s\n" n;
           Printf.printf "length of ref_fun.argument_list:%d\n" (List.length ref_fun.argument_list);
           check_function_input arg_list arguments;
-          let checks = List.map2 (fun elem1 elem2 -> create_validation_check ctx constraint_env elem1 elem2) arg_list arguments in
+          let user_args = List.map (fun elem -> (vc_gen_expression ctx constraint_env elem None)) arg_list in
+          let checks = List.map2 (fun elem1 elem2 -> create_validation_check ctx constraint_env elem1 elem2) user_args arguments in
           (* let environment_constraints = List.map (get_environment_constraints ctx local_env typenv) arg_list in *)
           (* print_env ({ exp_env = ref( checks @ environment_constraints); var_env = Hashtbl.create 0}); *)
           let check_env = { exp_env = ref (checks @ !(local_env.exp_env)); var_env = Hashtbl.create 0} in
@@ -1020,7 +1007,7 @@ and prove_function ctx n local_env arg_list typenv =
           (* TODO -- add return constraint to environment ?*)
           add_constraint local_env ref_fun.z3constraint;
           (*return function application variable*)
-          let f_app = FuncDecl.apply ref_fun.z3f_decl arguments in
+          let f_app = FuncDecl.apply ref_fun.z3f_decl user_args in
           f_app
         ) 
         (* not a refinement function, so assume it is true*)
@@ -1774,23 +1761,29 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* create function constraint to be proven *)
           let return_exp = (vc_gen_expression ctx local_env rettype (Some typenv)) in
           debug(Printf.sprintf "Return type vc_gen_expression: %s\n" (Expr.to_string return_exp));
-          let function_argument_constraints = !(local_env.exp_env) in
-          let function_variable_type_map = typenv in
-          let function_argument_list = List.rev (get_argument_list( typenv )) in
-          let f_decl = create_function_declaration ctx n function_argument_list retbasetype function_variable_type_map in
-          let f_z3args = create_argument_expression ctx function_argument_list function_argument_constraints local_env.var_env in
-          let f_ret_constraint = create_constraint_expression ctx f_z3args var_req return_exp f_decl retbasetype function_variable_type_map in
-          let f_new = { argument_constraints = function_argument_constraints;
-                        variable_maps = function_variable_type_map;
-                        argument_list = function_argument_list; 
-                        creation_env = local_env; 
-                        z3f_decl = f_decl;
-                        z3args = f_z3args;
-                        z3constraint = f_ret_constraint; } in
-          (* adding post and pre conditions of funtion to environment *)
           if (Expr.to_string return_exp)="true" 
-            then Printf.printf "this is a true function\n"
-            else (add_function n f_new);
+              then 
+                (
+                  Printf.printf "this is a true function\n"
+                )
+            else 
+                (
+                  let function_argument_constraints = !(local_env.exp_env) in
+                  let function_variable_type_map = typenv in
+                  let function_argument_list = List.rev (get_argument_list( typenv )) in
+                  let f_decl = create_function_declaration ctx n function_argument_list retbasetype function_variable_type_map in
+                  let f_z3args = create_argument_expression ctx function_argument_list function_argument_constraints local_env.var_env in
+                  let f_ret_constraint = create_constraint_expression ctx f_z3args var_req return_exp f_decl retbasetype function_variable_type_map in
+                  let f_new = { argument_constraints = function_argument_constraints;
+                                variable_maps = function_variable_type_map;
+                                argument_list = function_argument_list; 
+                                creation_env = local_env; 
+                                z3f_decl = f_decl;
+                                z3args = f_z3args;
+                                z3constraint = f_ret_constraint; } in
+                  (* adding post and pre conditions of funtion to environment *)
+                  add_function n f_new
+                );
           debug(Printf.sprintf "Printing function environment...\n");
           print_function_environment ();
           print_env local_env;
