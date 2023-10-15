@@ -510,7 +510,7 @@ let immediate ctx i =
   debug (Printf.sprintf "\n --- CREATE Z3 VAR IMMEDIATE :  --- \n");
   (* Look at environment for variable*)
   match i with
-      | Ebool(b) ->  Boolean.mk_val ctx b 
+      | Ebool(b) -> debug ((Printf.sprintf "Z3 Bool %b\n") b); Boolean.mk_val ctx b 
       | Eint(i) -> debug ((Printf.sprintf "Z3 Int %d\n") i); Integer.mk_numeral_s ctx (Printf.sprintf "%d" i)
       (*TODO: in general reals and floating points are not the same*)
       | Efloat(i) -> debug ((Printf.sprintf "Z3 Float %f\n") i); Real.mk_numeral_s ctx (Printf.sprintf "%f" i)
@@ -1731,9 +1731,9 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           if not isstream then (            
           (* add function input constraints to local environment *)
           (List.iter (vc_gen_pattern ctx local_env (Some typenv)) p_list);
-          Printf.printf "--------Printing local env \n";
+          Printf.printf "--------Printing local_env \n";
           print_env local_env;
-          debug(Printf.sprintf "---------local_env\n");
+          debug(Printf.sprintf "---------local typenv\n");
           Hashtbl.iter (fun a b -> debug(Printf.sprintf "%s:%s;" a b.base_type)) typenv;
           (* implementation_list ff ctx e; *)
 
@@ -1798,7 +1798,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           
           (*let return_var = (get_return_type ctx local_env rettype (Some typenv)) in*)
             (* changing the return type to be a list *)
-          let return_var = [create_z3_var ctx env var_req] in
+          let return_var = [create_z3_var_typed ctx env var_req (type_expression2string retbasetype)] in
           
           List.iter (fun return_elem -> debug(Printf.sprintf "Return var: %s\n" (Expr.to_string return_elem))) return_var;
           (*let input_var = (get_return_type ctx local_env e (Some typenv)) in
