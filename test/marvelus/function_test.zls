@@ -1,4 +1,4 @@
-(* This is a test file for the function refinement type checker 
+(* This is a test file for the function refinement type checker *)
 
 (* Example 1: Add Function (pass) *)
 (*
@@ -96,7 +96,7 @@ let some_compute (x : {v:float|v>0.0} ) (y : {v:float|v>0.0} ) : { v:float | x <
   let c = b *. 2.0 in
   let d = c /. 3.0 in
   let z = d -. 2.0 in
-  z *)
+  z
 
 (* Example 7: Function with multiple operations (pass) *)
 (*

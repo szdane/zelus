@@ -967,6 +967,9 @@ simple_pattern:
           make (Evarpat i) $startpos $endpos }
   | LPAREN p = pattern RPAREN
       { p }
+  | LPAREN p = pattern COLON t = type_expression RPAREN
+      { Printf.printf "simple_pattern: ( p:type_expression )\n";
+          make (Etypeconstraintpat(p, t)) $startpos $endpos }
   | LPAREN p = pattern_comma_list RPAREN
       { Printf.printf "simple_pattern: LPAREN pattern_comma_list RPAREN\n";
           make (Etuplepat (List.rev p)) $startpos $endpos }
@@ -974,9 +977,6 @@ simple_pattern:
       { make (Econstpat(Evoid)) $startpos $endpos }
   | UNDERSCORE
       { make Ewildpat $startpos $endpos }
-  | LPAREN p = pattern COLON t = type_expression RPAREN
-      { Printf.printf "simple_pattern: ( p:type_expression )\n";
-          make (Etypeconstraintpat(p, t)) $startpos $endpos }
   | LBRACE p = pattern_label_list RBRACE
       { make (Erecordpat(p)) $startpos $endpos }
 ;

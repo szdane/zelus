@@ -1,0 +1,12 @@
+(* This is a test file for the refinement function application unit tests  *) 
+
+(* let add ( (x , y) : { v * w : float * float | v > 0.0 && w > 0.0}) : { v : float | v >=x && v >= y} =
+  x +. y *)
+
+let add ( (x , y) : { (v : float) * (w : float) | v >= 0.0 && w >= 0.0 }) : { v : float | v >=x && v >= y} =
+  x +. y
+  
+let node main () = ()
+
+
+

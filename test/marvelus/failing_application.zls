@@ -1,0 +1,12 @@
+(* This is a test file for the refinement function application unit tests  *) 
+
+let add (x : {v:float | v > 0.0}) (y : {v:float|v > 0.0}) : { v : float | v >=x && v >= y} =
+  x +. y
+
+let node main () =
+    let w1 = (add (-.2.0) (3.0)) in   (* zelus compilation error *)
+    let w2 = (add (-.2.0) (-3.0)) in  (* zelus compilation error *)
+  ()
+
+
+
