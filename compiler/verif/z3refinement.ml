@@ -1043,8 +1043,15 @@ and prove_function ctx n local_env arg_list typenv =
           let arguments = List.map (fun elem -> create_z3_var ctx constraint_env elem) ref_fun.argument_list in
           Printf.printf "name of function:%s\n" n;
           Printf.printf "length of ref_fun.argument_list:%d\n" (List.length ref_fun.argument_list);
-          check_function_input arg_list arguments;
-          let user_args = List.map (fun elem -> (vc_gen_expression ctx constraint_env elem None)) arg_list in
+          let user_args = List.map (fun elem -> ( 
+            if (is_ETuple elem) then (
+              vc_gen_tuple_list ctx constraint_env elem None
+            ) else (
+              [vc_gen_expression ctx constraint_env elem None]
+            )
+            )) arg_list in
+          let user_args = List.flatten user_args in
+          check_function_input user_args arguments;
           let checks = List.map2 (fun elem1 elem2 -> create_validation_check ctx constraint_env elem1 elem2) user_args arguments in
           (* let environment_constraints = List.map (get_environment_constraints ctx local_env typenv) arg_list in *)
           (* print_env ({ exp_env = ref( checks @ environment_constraints); var_env = Hashtbl.create 0}); *)
@@ -1205,7 +1212,7 @@ and vc_gen_operator ctx env typenv e e_list =
       prove_function ctx s env e_list typenv
     | t -> debug(Printf.sprintf "Invalid vc_gen_expression symbol: %s\n" t); debug(Printf.sprintf "%d\n" (List.length e_list)); raise (AstTranslationNotImplemented "vc_gen_operator: Operator not implemented")
   end
-  | op_l :: op_r :: [] -> begin (* Binary operator case *)
+  | op_l :: op_r :: [] -> begin (* Binary and more operator case *)
     match e with 
     | ">=" -> Arithmetic.mk_ge ctx (vc_gen_expression ctx env op_l typenv) (vc_gen_expression ctx env op_r typenv)
     | ">" -> Arithmetic.mk_gt ctx (vc_gen_expression ctx env op_l typenv) (vc_gen_expression ctx env op_r typenv)
@@ -1310,6 +1317,18 @@ and vc_gen_substitute (var : string) env ctx typenv : expr =
       after_subs
   | None -> debug (Printf.sprintf "Something is wrong with typenv\n"); raise (AstTranslationNotImplemented "vc_gen_substitute: unmatched typenv")
 
+and is_ETuple ({ e_desc = desc; e_loc = loc }) =
+  match desc with
+    | Etuple (e_list) -> true
+    | _ -> false
+
+and vc_gen_tuple_list ctx env ({ e_desc = desc; e_loc = loc }) typenv =
+  match desc with
+    | Etuple (e_list) -> debug(Printf.sprintf "Etuple : \n"); 
+      let exp_list = List.map (fun e -> vc_gen_expression ctx env e typenv) e_list in
+      exp_list
+    | _ -> raise (AstTranslationNotImplemented "this function should not be used without ETuple")
+
 and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
 (*
         ctx    -> z3 context
@@ -1375,28 +1394,33 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
     | Eop ( op, e_list) -> debug(Printf.sprintf "Eop\n"); vc_gen_operation ctx env typenv op e_list
     (* used to type check pairs *)
     | Etuple (e_list) -> debug(Printf.sprintf "Etuple : \n"); 
-    let exp_list_temp = List.map (fun e -> vc_gen_expression ctx env e typenv) e_list in
-    let mk_tuple = Symbol.mk_string ctx "mk_tuple" in
-    let field_name = [ Symbol.mk_string ctx "fst"; Symbol.mk_string ctx "snd"] in
-    let field_sort = [ Integer.mk_sort ctx; Integer.mk_sort ctx] in
-    let my_tuple = Tuple.mk_sort ctx mk_tuple field_name field_sort in
-    debug(Printf.sprintf "My tuple: %s\n" (Sort.to_string my_tuple));
-    let f = (Expr.mk_const ctx (Symbol.mk_string ctx "f") (Integer.mk_sort ctx))  in 
-    let s = (Expr.mk_const ctx (Symbol.mk_string ctx "s") (Integer.mk_sort ctx)) in
-    (* create tuple declaration and retrieve fields (fst, snd) *)
-    let tuple_decl = Tuple.get_mk_decl my_tuple in
-    let my_fields = Tuple.get_field_decls my_tuple in
-    (* apply functions to get fst and snd elements*)
-    let app1 = FuncDecl.apply (tuple_decl) [f; s] in
-    let app2 = FuncDecl.apply (List.hd my_fields) [app1] in
-    let app3 = FuncDecl.apply (List.hd (List.tl my_fields)) [app1] in
-    (* equate functions to return vc_gen_expressions*)
-    let exp1 = Boolean.mk_eq ctx app2 (List.hd exp_list_temp) in
-    let exp2 = Boolean.mk_eq ctx app3 (List.hd (List.tl exp_list_temp)) in
-    debug(Printf.sprintf "vc_gen_expression 1: %s\n" (Expr.to_string exp1));
-    debug(Printf.sprintf "vc_gen_expression 2: %s\n" (Expr.to_string exp2));
-    (* Printf.printf "Pair : [ "; *)
-    (* List.iter (fun s -> Printf.printf "%s " (Expr.to_string s)) exp_list_temp; Printf.printf "]\n"; Integer.mk_numeral_s ctx "42" *)
+    (* 
+      The implementation below tries to create a tuple in Z3, but this is a non-trivial task
+      creating individual elements for now   
+    *)
+          (* let exp_list_temp = List.map (fun e -> vc_gen_expression ctx env e typenv) e_list in
+          let mk_tuple = Symbol.mk_string ctx "mk_tuple" in
+          let field_name = [ Symbol.mk_string ctx "fst"; Symbol.mk_string ctx "snd"] in
+          let field_sort = [ Integer.mk_sort ctx; Integer.mk_sort ctx] in
+          let my_tuple = Tuple.mk_sort ctx mk_tuple field_name field_sort in
+          debug(Printf.sprintf "My tuple: %s\n" (Sort.to_string my_tuple));
+          let f = (Expr.mk_const ctx (Symbol.mk_string ctx "f") (Integer.mk_sort ctx))  in 
+          let s = (Expr.mk_const ctx (Symbol.mk_string ctx "s") (Integer.mk_sort ctx)) in
+          (* create tuple declaration and retrieve fields (fst, snd) *)
+          let tuple_decl = Tuple.get_mk_decl my_tuple in
+          let my_fields = Tuple.get_field_decls my_tuple in
+          (* apply functions to get fst and snd elements*)
+          let app1 = FuncDecl.apply (tuple_decl) [f; s] in
+          let app2 = FuncDecl.apply (List.hd my_fields) [app1] in
+          let app3 = FuncDecl.apply (List.hd (List.tl my_fields)) [app1] in
+          (* equate functions to return vc_gen_expressions*)
+          let exp1 = Boolean.mk_eq ctx app2 (List.hd exp_list_temp) in
+          let exp2 = Boolean.mk_eq ctx app3 (List.hd (List.tl exp_list_temp)) in
+          debug(Printf.sprintf "vc_gen_expression 1: %s\n" (Expr.to_string exp1));
+          debug(Printf.sprintf "vc_gen_expression 2: %s\n" (Expr.to_string exp2)); *)
+          (* Printf.printf "Pair : [ "; *)
+          (* List.iter (fun s -> Printf.printf "%s " (Expr.to_string s)) exp_list_temp; Printf.printf "]\n"*)
+    
     raise (AstTranslationNotImplemented "vc_gen_expression: Etuple")
     (* refinement tuples *)
     | Erefinementtuple(e_list, tuple_type, e) -> debug(Printf.sprintf "Erefinementtuple : \n");
