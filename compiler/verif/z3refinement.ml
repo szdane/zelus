@@ -140,7 +140,15 @@ let type_expression2string t =
         | Lident.Name(basetype) -> basetype
     ) 
   | _ -> raise (AstTranslationNotImplemented "type_expression2string")
-           
+
+let rec list_map3 f l1 l2 l3 =
+  match (l1, l2, l3) with
+  | ([], [], []) -> []
+  | (x1::t1, x2::t2, x3::t3) ->
+      let result = f x1 x2 x3 in
+      result :: list_map3 f t1 t2 t3
+  | _ -> failwith "list_map3: input lists have different lengths"
+  
 let erefinement2customt erefinement ctx env typenv =
   match erefinement.desc with
   | Erefinement(t,e) -> (
@@ -529,7 +537,8 @@ let immediate ctx i =
     l_eq: eq list; (* the set of parallel equations *)
     mutable l_env: Deftypes.tentry Zident.Env.t;
     l_loc: location } *)
-let rec create_base_var_from_pattern ctx env pat = 
+let rec create_base_var_from_pattern ctx env pat =
+    Printf.printf "create_base_var_from_pattern\n";
     match pat.p_desc with 
     | Etypeconstraintpat(p,t) ->
       let base_type = 
@@ -560,6 +569,7 @@ and vc_gen_equation_operation ctx env typenv op e_list pat =
     
         Currently used to type check streams
     *)
+    Printf.printf "vc_gen_equation_operation\n";
     let base_var = create_base_var_from_pattern ctx env pat in 
     let refinement_expr = 
         match pat.p_desc with 
@@ -696,6 +706,41 @@ and add_variable_to_table ctx env typenv var_name ref_exp lbl =
             | Modname(q) -> q.id)
           | _ -> "basetype_not_right"); reference_variable = fst(lbl); phi = ref_exp}
     | None -> ())
+
+and  vc_gen_process_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 =
+(*
+
+        Used for the new syntax
+*)
+    (* Get list of variable names on the LHS *)
+    let vars_names = (match p1.p_desc with 
+        | Etuplepat(l) -> (List.map (fun x -> match x.p_desc with
+            | Evarpat(n) -> n.source) l)) in 
+    (* Get list of reference variables (important for the later replacement stage) and a list of types to associate with the original variable names *)
+    let (vars_refnames, vars_basetypes) = List.split lbl_ty_list in
+    Printf.printf "Will perform the following substitutions:\n";
+    ignore (List.map2 (Printf.printf "[%s/%s]\n") vars_names vars_refnames);
+    let vars_basetypes_strings = (List.map (fun ty-> type_expression2string ty) vars_basetypes) in
+    let z3vars_ref = (List.map2 (fun x ty -> create_z3_var_typed ctx env x ty) vars_refnames vars_basetypes_strings) in
+    (* Make a list of Z3 variables *)
+    let z3vars = (List.map2 (fun x ty -> create_z3_var_typed ctx env x ty) vars_names vars_basetypes_strings) in 
+    (* add inputs to typenv *)
+    let tbl = match typenv with 
+                        | Some(tbl) -> tbl
+                        | None -> failwith "Type env not specified" in
+    ignore (list_map3 (fun name baset ref -> Hashtbl.add tbl name {
+                                                                      base_type = baset;
+                                                                      reference_variable = ref;
+                                                                      phi = ref_exp } 
+                      ) vars_names vars_basetypes_strings vars_refnames
+           );
+    (* get input constraint *)
+    let ref_constraint = vc_gen_expression ctx env ref_exp typenv in
+    (* make proper substitution *)
+    let subs_constraint = Expr.substitute ref_constraint z3vars_ref z3vars in
+    Printf.printf "Tuple input constraint: %s\n" (Expr.to_string subs_constraint);
+    (* add to the environment *)
+    add_constraint env subs_constraint
 
 and  vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e =
                 (* Get list of variable names on the LHS *)
@@ -853,6 +898,7 @@ and vc_gen_equation ctx env typenv eq =
 
     Returns z3 vc_gen_expression
 *)
+    Printf.printf "vc_gen_equation\n";
     match eq.eq_desc with
     | EQeq(p, e) -> debug (Printf.sprintf "EQeq:\n");
         (match p.p_desc with
@@ -1462,7 +1508,11 @@ and add_tuple_list_to_type_env ctx env pat_list typ_exp typenv =
       typ_env  -> typing environment
 
       Add each refined element of tuple to typing environment
+
+      WARNING: This function was implemented for the old syntax, where each tuple element
+      would have a separate refinement type, hence the List.iter call
 *)
+      Printf.printf "add_tuple_list_to_type_env\n";
       List.iter (
         fun elem -> 
           (match elem.p_desc with
@@ -1492,6 +1542,11 @@ and add_tuple_list_to_type_env ctx env pat_list typ_exp typenv =
                      (add_constraint env pair_vc_gen_expression;
                      debug(Printf.sprintf "Adding vc_gen_expression: %s\n" (Expr.to_string pair_vc_gen_expression)))
             | Erefinementpair(n, t_exp) -> debug(Printf.sprintf "Erefinementpair\n")
+            | Erefinementlabeledtuple( arg_list , e) -> debug(Printf.sprintf "Erefinementlabeledtuple\n");
+                   let exp_test = (vc_gen_expression ctx env e typenv) in 
+                   Printf.printf "Refinement labeled tuple exp: %s\n"(Expr.to_string exp_test);
+                   List.iter (fun elem -> Printf.printf "%s\n" (fst elem)) arg_list
+            (*missing refinement tuple case*)
             | _ -> debug(Printf.sprintf "Unspecified type constraint match\n"))
           | Econstpat(i) -> debug(Printf.sprintf "Econstpat\n")
           | Econstr0pat(t) -> debug(Printf.sprintf "Econstr0pat\n")
@@ -1547,6 +1602,7 @@ and vc_gen_pattern ctx env typenv pat =
 
       Processes the vc_gen_pattern vc_gen_expression and modifies the typing environment to account for new vc_gen_expressions
 *)
+  Printf.printf "vc_gen_pattern\n";
   match pat.p_desc with
       | Ewildpat -> debug(Printf.sprintf "Ewildpat\n")
       | Econstpat(i) ->  debug(Printf.sprintf "Econstpat\n"); debug(Printf.sprintf "%s\n" (Expr.to_string (immediate ctx i)))
@@ -1584,6 +1640,12 @@ and vc_gen_pattern ctx env typenv pat =
           | Etypefunrefinement(k, n, t_exp, t_exp2, e) -> debug(Printf.sprintf "Etypefunrefinement \n")
           | _ -> raise (AstTranslationNotImplemented "vc_gen_pattern case not implemented" ));
           (vc_gen_typ_exp_desc ctx env (typenv) typ_exp (Some n.source))
+        | Etuplepat(pat_list) -> debug(Printf.sprintf "Etypetuple match: \n"); 
+          (match typ_exp.desc with
+            | Erefinementlabeledtuple(lbl_ty_list, ref_exp) -> debug (Printf.sprintf "Refinement labeled tuple"); 
+            vc_gen_process_labeled_tuple ctx env typenv lbl_ty_list ref_exp pat
+            | _ -> raise (AstTranslationNotImplemented "Unspecified match\n")
+          )
         | _ -> raise (AstTranslationNotImplemented "Unspecified pat.p_desc match\n");
               (match pat.p_desc with
                 | Etuplepat(pat_list) -> debug(Printf.sprintf "Etypetuple match: \n"); add_tuple_list_to_type_env ctx env pat_list typ_exp typenv
