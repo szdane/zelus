@@ -7,7 +7,7 @@ let add ( (x , y) : { (v : float) * (w : float) | v >= 0.0 && w >= 0.0 }) : { v 
   x +. y
   
 let node main () = 
-  let z = add (1.,2.) in 
+  let z = add ((-1.),2.) in 
 ()
 
 

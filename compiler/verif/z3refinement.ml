@@ -993,7 +993,8 @@ and check_validity ctx checks =
     debug (Printf.sprintf "\n --- CHECK INPUT VALIDITY ---\n");
     let check_env = ({exp_env = ref checks; var_env = Hashtbl.create 0}) in
     let arg_constraint = build_z3_premise ctx check_env in
-    z3_solve ctx check_env arg_constraint
+    let true_env = ({exp_env = ref [(Boolean.mk_true ctx)]; var_env = Hashtbl.create 0}) in
+    z3_solve ctx true_env arg_constraint
 
 and get_environment_constraints ctx local_env typenv arg =
 (* 
