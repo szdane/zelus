@@ -355,6 +355,7 @@ let rec cloc ctx vc model truth =
                 
             
         | _ -> ()
+        
 let z3_proof ctx env vc constraints =
 (*
   ctx         -> z3 context
@@ -965,7 +966,7 @@ and vc_gen_equation ctx env typenv eq =
             | _ -> debug(Printf.sprintf "Ignoring vc_gen_equation for now\n")
     
 
-and create_validation_check ctx env elem1 elem2 = 
+and create_validation_check ctx env elem1 elem2 elem3 = 
 (*
     ctx -> z3 context
     constraints -> list of constraints to be satisfied by functions
@@ -975,11 +976,12 @@ and create_validation_check ctx env elem1 elem2 =
     return specified input contrained to funciton argument variable
 *)
     debug (Printf.sprintf "\n --- CREATE VALIDATION CHECK ---\n");
-    let input_binding = Boolean.mk_eq ctx elem1 elem2 in
-    (* Printf.printf "%s" (Expr.to_string input_binding); *)
+    (* let input_binding = Boolean.mk_eq ctx elem1 elem2 in *)
+    let input_binding = Expr.substitute_one elem3 elem2 elem1 in
+    debug(Printf.sprintf "%s" (Expr.to_string input_binding));
     input_binding
 
-and check_validity ctx env checks =
+and check_validity ctx checks =
 (*
     ctx -> z3 context
     constraints -> list of constraints to be satisfied by functions
@@ -989,8 +991,9 @@ and check_validity ctx env checks =
     check if elem1 satisfies the conditions imposed by elem2
 *)
     debug (Printf.sprintf "\n --- CHECK INPUT VALIDITY ---\n");
-    let arg_constraint = build_z3_premise ctx env in
-    z3_solve ctx checks arg_constraint
+    let check_env = ({exp_env = ref checks; var_env = Hashtbl.create 0}) in
+    let arg_constraint = build_z3_premise ctx check_env in
+    z3_solve ctx check_env arg_constraint
 
 and get_environment_constraints ctx local_env typenv arg =
 (* 
@@ -1026,10 +1029,6 @@ and prove_function ctx n local_env arg_list typenv =
     Use function space to determine if argument list has expected type
     from function space
 *)
-    (* if (Hashtbl.mem !stream_space n) then ()
-    (* if it is a stream *)
-
-    else ( *)
       if (Hashtbl.mem !function_space n) 
         (* refinement function, make sure input list obeys constraints *)
         then (
@@ -1050,17 +1049,19 @@ and prove_function ctx n local_env arg_list typenv =
               [vc_gen_expression ctx constraint_env elem None]
             )
             )) arg_list in
-          let user_args = List.flatten user_args in
-          check_function_input user_args arguments;
-          let checks = List.map2 (fun elem1 elem2 -> create_validation_check ctx constraint_env elem1 elem2) user_args arguments in
+          let user_args_flat = List.flatten user_args in
+          check_function_input user_args_flat arguments;
+          (* let checks = list_map3 (fun elem1 elem2 elem3 -> create_validation_check ctx constraint_env elem1 elem2 elem3) user_args_flat arguments ref_fun.argument_constraints in *)
+          let checks = List.map (fun elem -> Expr.substitute elem arguments user_args_flat) ref_fun.argument_constraints in
+          ignore(List.map (fun elem -> debug(Expr.to_string elem)) checks);
           (* let environment_constraints = List.map (get_environment_constraints ctx local_env typenv) arg_list in *)
           (* print_env ({ exp_env = ref( checks @ environment_constraints); var_env = Hashtbl.create 0}); *)
-          let check_env = { exp_env = ref (checks @ !(local_env.exp_env)); var_env = Hashtbl.create 0} in
-          check_validity ctx constraint_env check_env;
+          let check_env = checks @ !(local_env.exp_env) @ !(ref_fun.creation_env.exp_env) in
+          check_validity ctx checks;
           (* TODO -- add return constraint to environment ?*)
           add_constraint local_env ref_fun.z3constraint;
           (*return function application variable*)
-          let f_app = FuncDecl.apply ref_fun.z3f_decl user_args in
+          let f_app = FuncDecl.apply ref_fun.z3f_decl user_args_flat in
           f_app
         ) 
         (* not a refinement function, so assume it is true*)
