@@ -1634,7 +1634,7 @@ and vc_gen_pattern ctx env typenv pat =
       | Econstpat(i) ->  debug(Printf.sprintf "Econstpat\n"); debug(Printf.sprintf "%s\n" (Expr.to_string (immediate ctx i)))
       | Econstr0pat(ln) -> debug(Printf.sprintf "Econstr0pat\n")
       | Econstr1pat(ln, p_list) -> debug(Printf.sprintf "Econstr1pat\n")
-      | Etuplepat(p_list) -> debug(Printf.sprintf "Etplepat\n")
+      | Etuplepat(p_list) -> debug(Printf.sprintf "Etuplepat\n"); ignore(List.map (fun elem -> vc_gen_pattern ctx env typenv elem) p_list)
       | Ealiaspat(p, t) -> debug(Printf.sprintf "Ealiaspat\n")
       | Eorpat(p, p2) -> debug(Printf.sprintf "Eorpat\n")
       | Erecordpat(txp_list) -> debug(Printf.sprintf "Erecordpat\n")
@@ -1794,7 +1794,11 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* TODO: remove the following line later and call substituition function *)
           
           (* extracting the constraint variable from the return type *)
-          let (rettype, var_req, retbasetype) = match rettype.desc with | Erefinement ((n,t), exp) -> (exp, n, t) in
+          let (rettype, var_req, retbasetype) = (match rettype.desc with 
+                                                    | Erefinement ((n,t), exp) -> (exp, n, t) 
+                                                    (* | Etypevar (t) -> (  { desc: (Econst(Ebool(true))); loc: Loc(0, 0) }, "", t) *)
+                                                    | _ -> raise (AstTranslationNotImplemented "rettype not implemented")
+                                                ) in
           debug(Printf.sprintf "var_req: %s\n" var_req);
           (* let argc = (List.length p_list) in  *)
           let typenv = Hashtbl.copy !type_space in
