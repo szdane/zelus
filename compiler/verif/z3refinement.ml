@@ -822,13 +822,21 @@ and  vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e =
                                 z3_proof ctx env (Boolean.mk_not ctx vc2) vc2
 
                             | (Etuple(e1_list), e_second) -> debug (Printf.sprintf "Found a tuple fby let");
+                                debug("start");
+                                (* ignore(List.map (fun x -> debug (Expr.to_string (vc_gen_expression ctx env x typenv))) e1_list);  *)
+                                ignore(debug (Expr.to_string (vc_gen_expression ctx env e2 typenv) )) ;
+                                debug("end");
                                 let rec is_only_lets_and_tuple_on_bottom e = (match (e) with
                                                                     | Elet(l, e_inner) -> is_only_lets_and_tuple_on_bottom e_inner.e_desc
                                                                     | Etuple(_) -> true
                                                                     | _ -> false) in
-                                    (if (is_only_lets_and_tuple_on_bottom e_second) then (Printf.printf "Lets and tuple on bottom"; let rec collapse_lets_and_return_tuple e list_of_replacements = 
+                                    (if (is_only_lets_and_tuple_on_bottom e_second) then (Printf.printf "Lets and tuple on bottom\n"; 
+                                        let rec collapse_lets_and_return_tuple e list_of_replacements = 
                                             (match e with
                                             | Elet(l, e_inner) -> (*(List.iter (vc_gen_equation ctx env typenv) l.l_eq);*) 
+                                                (* debug("e_inner");
+                                                ignore( Expr.to_string (vc_gen_expression ctx env e_inner typenv));
+                                                debug("e_inner end"); *)
                                                 collapse_lets_and_return_tuple e_inner.e_desc 
                                                     ((List.map (fun eq -> (match eq.eq_desc with 
                                                                             | EQeq(p, e) ->
@@ -1400,8 +1408,9 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
       The implementation below tries to create a tuple in Z3, but this is a non-trivial task
       creating individual elements for now   
     *)
-          (* let exp_list_temp = List.map (fun e -> vc_gen_expression ctx env e typenv) e_list in
-          let mk_tuple = Symbol.mk_string ctx "mk_tuple" in
+          let exp_list_temp = List.map (fun e -> vc_gen_expression ctx env e typenv) e_list
+          in ignore(List.map (fun e -> debug(Expr.to_string e)) exp_list_temp);
+          (* let mk_tuple = Symbol.mk_string ctx "mk_tuple" in
           let field_name = [ Symbol.mk_string ctx "fst"; Symbol.mk_string ctx "snd"] in
           let field_sort = [ Integer.mk_sort ctx; Integer.mk_sort ctx] in
           let my_tuple = Tuple.mk_sort ctx mk_tuple field_name field_sort in
@@ -1419,7 +1428,7 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
           let exp1 = Boolean.mk_eq ctx app2 (List.hd exp_list_temp) in
           let exp2 = Boolean.mk_eq ctx app3 (List.hd (List.tl exp_list_temp)) in
           debug(Printf.sprintf "vc_gen_expression 1: %s\n" (Expr.to_string exp1));
-          debug(Printf.sprintf "vc_gen_expression 2: %s\n" (Expr.to_string exp2)); *)
+          debug(Printf.sprintf "vc_gen_expression 2: %s\n" (Expr.to_string exp2));  *)
           (* Printf.printf "Pair : [ "; *)
           (* List.iter (fun s -> Printf.printf "%s " (Expr.to_string s)) exp_list_temp; Printf.printf "]\n"*)
     
@@ -1792,6 +1801,9 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* debug(Printf.sprintf "--------local_env\n"); *)
           (* added to test parsing *)
           (* TODO: remove the following line later and call substituition function *)
+
+          (* flatten tuple arguments before traversing function AST*)
+          
           
           (* extracting the constraint variable from the return type *)
           let (rettype, var_req, retbasetype) = (match rettype.desc with 
@@ -1823,6 +1835,8 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
                           ) in
           if not isstream then (            
           (* add function input constraints to local environment *)
+          let args_only = Hashtbl.create 0 in
+          (List.iter (vc_gen_pattern ctx local_env (Some args_only)) p_list);
           (List.iter (vc_gen_pattern ctx local_env (Some typenv)) p_list);
           Printf.printf "--------Printing local_env \n";
           print_env local_env;
@@ -1863,7 +1877,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
                 (
                   let function_argument_constraints = !(local_env.exp_env) in
                   let function_variable_type_map = typenv in
-                  let function_argument_list = List.rev (get_argument_list( typenv )) in
+                  let function_argument_list = List.rev (get_argument_list( args_only )) in
                   let f_decl = create_function_declaration ctx n function_argument_list retbasetype function_variable_type_map in
                   let f_z3args = create_argument_expression ctx function_argument_list function_argument_constraints local_env.var_env in
                   let f_ret_constraint = create_constraint_expression ctx f_z3args var_req return_exp f_decl retbasetype function_variable_type_map in

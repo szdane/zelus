@@ -1,0 +1,720 @@
+compiling pair_function_application
+ide: IDENT: add
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: y
+simple_pattern: ide
+simple_pattern: LPAREN pattern_comma_list RPAREN
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: w:type_expression
+label_type star list
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: w
+ext_ident: ide: w
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+expression_desc: e1 && e2
+new-syntax refinement tuple
+simple_pattern: ( p:type_expression )
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: y
+ext_ident: ide: y
+Desc var
+Simple expression
+expression: INFIX0: e1 >= e2
+expression_desc: e1 && e2
+new-syntax type refinement
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+ide: IDENT: y
+ext_ident: ide: y
+Desc var
+Simple expression
+Efundecl add 
+ide: IDENT: main
+ide: IDENT: z
+simple_pattern: ide
+ide: IDENT: add
+ext_ident: ide: add
+Desc var
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc Tuple
+Desc void
+Simple expression
+Kinded non-refinement function main 
+ [DEBUG] : Efundecl add
+
+[DEBUG] : # of Arguments: 1
+
+[DEBUG] : Argument------: 
+
+[DEBUG] : var_req: v
+
+[DEBUG] : Stream elet false
+
+vc_gen_pattern
+[DEBUG] : Etypeconstraintpat: 
+[DEBUG] : Etypetuple match: 
+
+[DEBUG] : Refinement labeled tuple
+Will perform the following substitutions:
+[x/v]
+[y/w]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is v
+
+[DEBUG] : -----Adding v to variable environment
+
+[DEBUG] : New variable, returning v
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : w --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is w
+
+[DEBUG] : -----Adding w to variable environment
+
+[DEBUG] : New variable, returning w
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is x
+
+[DEBUG] : -----Adding x to variable environment
+
+[DEBUG] : New variable, returning x
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : y --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is y
+
+[DEBUG] : -----Adding y to variable environment
+
+[DEBUG] : New variable, returning y
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression (>= v 0.0)
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: &&
+
+[DEBUG] : Operator call && : 
+
+Operator call: &&
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: w
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : w --- 
+
+[DEBUG] : Existing variable, returning w
+
+
+vc_gen_expression w
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: w
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : w --- 
+
+[DEBUG] : Existing variable, returning w
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+Tuple input constraint: (and (>= x 0.0) (>= y 0.0))
+--------Printing local_env 
+vc_gen_expression environment : [  (and (>= x 0.0) (>= y 0.0)) ]
+[DEBUG] : ---------local typenv
+
+[DEBUG] : y:float;
+[DEBUG] : x:float;
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : Elocal: x : 2
+
+[DEBUG] : x has type float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] : Existing variable, returning x
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression (>= v x)
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: &&
+
+[DEBUG] : Operator call && : 
+
+Operator call: &&
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : Elocal: y : 3
+
+[DEBUG] : y has type float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : y --- 
+
+[DEBUG] : Existing variable, returning y
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : Elocal: x : 2
+
+[DEBUG] : x has type float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] : Existing variable, returning x
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : Return type vc_gen_expression: (and (>= v x) (>= v y))
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] : Existing variable, returning x
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : y --- 
+
+[DEBUG] : Existing variable, returning y
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is v
+
+[DEBUG] : -----Adding v to variable environment
+
+[DEBUG] : New variable, returning v
+
+
+[DEBUG] : Printing function environment...
+
+Function: add
+{
+	argument_constraints:	[ (and (>= x 0.0) (>= y 0.0)) ]
+	variable_map:	[ (y:float) (x:float) ]
+	argument_list:	[ (x) (y) ]
+	creation_environment:	[ (and (>= x 0.0) (>= y 0.0))  ]
+	f_decl: (declare-fun add (Real Real) Real)
+	f_z3args:	[ (x) (y) ]
+	f_ret_constraint: (and (>= (add x y) x) (>= (add x y) y))
+}
+
+vc_gen_expression environment : [  (and (>= x 0.0) (>= y 0.0)) ]
+[DEBUG] : Elocal: x : 2
+
+[DEBUG] : x has type float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] : Existing variable, returning x
+
+
+vc_gen_expression x
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Modname: +.
+
+[DEBUG] : Operator call +. : 
+
+Operator call: +.
+[DEBUG] : Elocal: y : 3
+
+[DEBUG] : y has type float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : y --- 
+
+[DEBUG] : Existing variable, returning y
+
+
+[DEBUG] : Elocal: x : 2
+
+[DEBUG] : x has type float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] : Existing variable, returning x
+
+
+[DEBUG] : Function body vc_gen_expression handling: (+ x y)
+
+vc_gen_expression environment : [  (and (>= x 0.0) (>= y 0.0)) ]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is v
+
+[DEBUG] : -----Adding v to variable environment
+
+[DEBUG] : New variable, returning v
+
+
+[DEBUG] : Return var: v
+
+[DEBUG] : return definition: (= v (+ x y))
+
+vc_gen_expression environment : [  (= v (+ x y))  (and (>= x 0.0) (>= y 0.0)) ]
+[DEBUG] : Prove constraint: (and (>= v x) (>= v y))
+
+[DEBUG] : Environment before solving: 
+
+vc_gen_expression environment : [  (= v (+ x y))  (and (>= x 0.0) (>= y 0.0)) ]
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= v (+ x y))  (and (>= x 0.0) (>= y 0.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (and (>= v x) (>= v y))
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (let ((a!1 (=> (and (= v (+ x y)) (>= x 0.0) (>= y 0.0))
+               (and (>= v x) (>= v y)))))
+  (not a!1))
+[32mPassed[0m
+vc_gen_expression environment : [  (and (>= v x) (>= v y))  (= v (+ x y))  (and (>= x 0.0) (>= y 0.0)) ]
+[DEBUG] : Efundecl main
+
+[DEBUG] : # of Arguments: 1
+
+[DEBUG] : Argument------: 
+
+Function: add
+{
+	argument_constraints:	[ (and (>= x 0.0) (>= y 0.0)) ]
+	variable_map:	[ (y:float) (x:float) ]
+	argument_list:	[ (x) (y) ]
+	creation_environment:	[ (and (>= v x) (>= v y))  (= v (+ x y))  (and (>= x 0.0) (>= y 0.0))  ]
+	f_decl: (declare-fun add (Real Real) Real)
+	f_z3args:	[ (x) (y) ]
+	f_ret_constraint: (and (>= (add x y) x) (>= (add x y) y))
+}
+
+[DEBUG] : var_req: emptyalias
+
+[DEBUG] : Stream elet
+
+[DEBUG] : Stream eop false
+
+vc_gen_pattern
+[DEBUG] : Econstpat
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : void
+[DEBUG] : NULL!0
+
+--------Printing local_env 
+vc_gen_expression environment : [ ]
+[DEBUG] : ---------local typenv
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Bool true
+
+[DEBUG] : Return type vc_gen_expression: true
+
+this is a true function
+[DEBUG] : Printing function environment...
+
+Function: add
+{
+	argument_constraints:	[ (and (>= x 0.0) (>= y 0.0)) ]
+	variable_map:	[ (y:float) (x:float) ]
+	argument_list:	[ (x) (y) ]
+	creation_environment:	[ (and (>= v x) (>= v y))  (= v (+ x y))  (and (>= x 0.0) (>= y 0.0))  ]
+	f_decl: (declare-fun add (Real Real) Real)
+	f_z3args:	[ (x) (y) ]
+	f_ret_constraint: (and (>= (add x y) x) (>= (add x y) y))
+}
+
+vc_gen_expression environment : [ ]
+[DEBUG] : Elet parsing: 
+
+[DEBUG] : Is recursive false
+vc_gen_equation
+[DEBUG] : EQeq:
+
+[DEBUG] : else case
+[DEBUG] : Eapp
+
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Modname: add
+
+[DEBUG] : Operator call add : 
+
+Operator call: add
+[DEBUG] : Non-standard vc_gen_operator s : add
+
+[DEBUG] : checking if arguments obey constraints
+
+Function: add
+{
+	argument_constraints:	[ (and (>= x 0.0) (>= y 0.0)) ]
+	variable_map:	[ (y:float) (x:float) ]
+	argument_list:	[ (x) (y) ]
+	creation_environment:	[ (and (>= v x) (>= v y))  (= v (+ x y))  (and (>= x 0.0) (>= y 0.0))  ]
+	f_decl: (declare-fun add (Real Real) Real)
+	f_z3args:	[ (x) (y) ]
+	f_ret_constraint: (and (>= (add x y) x) (>= (add x y) y))
+}
+
+vc_gen_expression environment : [ ]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] : Existing variable, returning x
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : y --- 
+
+[DEBUG] : Existing variable, returning y
+
+
+name of function:add
+length of ref_fun.argument_list:2
+[DEBUG] : Etuple : 
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float -1.000000
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 2.000000
+
+[DEBUG] : # of Arguments in arg_list:2 arguments:2
+
+[DEBUG] : (and (>= (- 1.0) 0.0) (>= 2.0 0.0))
+[DEBUG] : 
+ --- CHECK INPUT VALIDITY ---
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  true ]
+[DEBUG] : constraint:
+
+[DEBUG] : (and (>= (- 1.0) 0.0) (>= 2.0 0.0))
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and true) (and (>= (- 1.0) 0.0) (>= 2.0 0.0))))
+[31mCounterexample found:
+Root Cause:
+======================================================================
+(>= (- 1.0) 0.0)
+======================================================================
+Could not prove: (and (>= (- 1.0) 0.0) (>= 2.0 0.0))
+[0m[DEBUG] : App expr: (add (- 1.0) 2.0)
+
+[DEBUG] : body_exp: (add (- 1.0) 2.0)
+
+[DEBUG] : Evarpat: z
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : z --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is z
+
+[DEBUG] : -----Adding z to variable environment
+
+[DEBUG] : New variable, returning z
+
+
+[DEBUG] : pat_exp: z
+
+[DEBUG] : after ret_exp
+
+[DEBUG] : EQ vc_gen_expression: (= z (add (- 1.0) 2.0))
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : void
+[DEBUG] : Body exp :NULL!1 
+
+vc_gen_expression environment : [  (= z (add (- 1.0) 2.0))  (and (>= (add x y) x) (>= (add x y) y)) ]
+[DEBUG] : Function body vc_gen_expression handling: NULL!1
+
+vc_gen_expression environment : [  (= z (add (- 1.0) 2.0))  (and (>= (add x y) x) (>= (add x y) y)) ]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : emptyalias --- 
+
+[DEBUG] :  I don't know what to make here
+
+[DEBUG] : the value of v is NULL!2
+
+[DEBUG] : -----Adding emptyalias to variable environment
+
+[DEBUG] : New variable, returning NULL!2
+
+
+[DEBUG] : Return var: NULL!2
+
+[DEBUG] : return definition: (= NULL!2 NULL!1)
+
+vc_gen_expression environment : [  (= NULL!2 NULL!1)  (= z (add (- 1.0) 2.0))  (and (>= (add x y) x) (>= (add x y) y)) ]
+[DEBUG] : Prove constraint: true
+
+[DEBUG] : Environment before solving: 
+
+vc_gen_expression environment : [  (= NULL!2 NULL!1)  (= z (add (- 1.0) 2.0))  (and (>= (add x y) x) (>= (add x y) y)) ]
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= NULL!2 NULL!1)  (= z (add (- 1.0) 2.0))  (and (>= (add x y) x) (>= (add x y) y)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : true
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (let ((a!1 (=> (and (= NULL!2 NULL!1)
+                    (= z (add (- 1.0) 2.0))
+                    (>= (add x y) x)
+                    (>= (add x y) y))
+               true)))
+  (not a!1))
+[32mPassed[0m
+vc_gen_expression environment : [  true  (= NULL!2 NULL!1)  (= z (add (- 1.0) 2.0))  (and (>= (add x y) x) (>= (add x y) y)) ]
+[31m[WARNING][0m Failed proof count : 1 
+Hello, this is Z3 Refinement

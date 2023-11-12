@@ -1,0 +1,51 @@
+let vfi:{v: float | v > 0.} = 0.5
+let dt:{v: float | v > 0.} = 0.1
+let b:{v: float | v > 0.} = 0.136
+let xli:{v: float | v > 0.} = 2.
+let xbrake:{v: float | v >= xli} = 4.
+let amax:{v: float | v >= 0.} = 0.06
+let need_to_brake (xf, vf, xl, vl) = 
+  ((xf +. ((vf*.vf)/.(2.*.b)) +. 
+    ((1.+.(amax /. b))*.(2.*.dt*.vf+.((amax*.(4.*.dt*.dt))/. 2.))) +. 
+    ((vf*.dt)/. 2.)) 
+    >= 
+    (xl +. (((vl-.(b*.dt))*.(vl-.(b*.dt)))/.(2.*.b)) +. 
+    (((vl-.(b*.dt))*.dt)/. 2.)))
+let (follower_control (xf, vf, xl, vl)) : 
+    {v:float | ((~need_to_brake(xf, vf, xl, vl) && (v = amax)) ||
+       (need_to_brake(xf, vf, xl, vl) && (v = -.b)))} =
+   (if ((xf +. ((vf*.vf)/.(2.*.b)) +. 
+    ((1.+.(amax /. b))*.(2.*.dt*.vf+.((amax*.(4.*.dt*.dt))/. 2.))) +. 
+    ((vf*.dt)/. 2.)) + 0.5 % key difference here
+    >= 
+    (xl +. (((vl-.(b*.dt))*.(vl-.(b*.dt)))/.(2.*.b)) +. 
+    (((vl-.(b*.dt))*.dt)/. 2.))) 
+        then (-.b) 
+        else amax)
+(* This can be assumed to be built-in *)
+let max (x,y) : {v:float | v >= x && v >= y} = 
+    (if (x < y) then y else x)
+let (leader_control xl) : {v:float | ((xl >= xbrake) && (v = -.b)) || 
+       ((xl < xbrake) && (v = 0.))} =
+    (if (xl >= xbrake) then (-.b) else 0.)
+    
+let node exec () =
+  let rec ((xf, vf, af, xl, vl, al):
+    {(x:float)*(v:float)*(a:float)*(x2:float)*(v2:float)*(a2:float) |
+      (x2 > x) && (x2 >= xli) && (v2 >= 0.) && (v >= 0.) &&
+      (x >= 0.) && (a >= -.b) &&
+      ((x +. ((v*.v)/.(2.*.b)) +. ((v*.dt)/. 2.)) < 
+      (x2 +. ((v2*.v2)/.(2.*.b)) +. ((v2*.dt)/. 2.)))
+    }) =
+        xf = (0. fby (xf +. (vf_next *. dt))) 
+            models (robot_get ("follower_x"))
+    and vf = (vfi fby max(vf +. (af*.dt), 0.))
+            models (robot_get ("follower_vel"))
+    and af = (follower_control xf_next, vf_next, xl_next, vl_next)
+    and xl = (xli fby (xl +. (vl_next *. dt)))
+            models (robot_get ("leader_x"))
+    and vl = (vfi fby max(vl +. (al*.dt), 0.))
+            models (robot_get ("leader_vel"))
+    and al = (leader_control xl_next)
+    (0., vfi, amax, xli, vfi, 0.) fby
+    in ((robot_str ("accel", af)); (xf, vf, af, xl, vl, al))

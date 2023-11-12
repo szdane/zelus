@@ -1,0 +1,18 @@
+(* This can be assumed to be built-in *)
+let dt:{v: float | v > 0.} = 0.1
+
+let node max ((s1, s2) : { (v:float) * (w:float) | true }) : {v:float | v >= s1 && v >= s2}  = 
+    (if (s1 < s2) then s2 else s1)
+
+let node exec () = 
+    let rec ((x,y) : {(vx:float)*(vy:float) | vx >= 0}) = 
+        ((0., 0.) fby 
+            (let x_next = (max ((x -. 1.), 0.)) in 
+             (let y_next = (y +. 1.) in
+                (x_next, y_next))))
+        in (x, y)
+
+let hybrid main () =
+	let rec trigger = (period (dt)) in
+	present (trigger) -> (let (x2, y2) = exec () in 
+  (print_float (Timestamp.gettimeofday ()); print_string ","; print_float x2; print_string ","; print_float y2; print_newline ())) else () 

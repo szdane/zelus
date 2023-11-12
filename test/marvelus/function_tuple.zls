@@ -1,0 +1,5 @@
+let swap (x,y) : {v : int | v >=x && v >= y} = (y, x)
+
+let exec () = 
+   let (x0, y0) = max (2, 1) in
+   x0
