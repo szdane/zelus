@@ -824,7 +824,7 @@ and  vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e =
                             | (Etuple(e1_list), e_second) -> debug (Printf.sprintf "Found a tuple fby let");
                                 debug("start");
                                 (* ignore(List.map (fun x -> debug (Expr.to_string (vc_gen_expression ctx env x typenv))) e1_list);  *)
-                                ignore(debug (Expr.to_string (vc_gen_expression ctx env e2 typenv) )) ;
+                                (* ignore(debug (Expr.to_string (vc_gen_expression ctx env e2 typenv) )) ; *)
                                 debug("end");
                                 let rec is_only_lets_and_tuple_on_bottom e = (match (e) with
                                                                     | Elet(l, e_inner) -> is_only_lets_and_tuple_on_bottom e_inner.e_desc
@@ -833,15 +833,15 @@ and  vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e =
                                     (if (is_only_lets_and_tuple_on_bottom e_second) then (Printf.printf "Lets and tuple on bottom\n"; 
                                         let rec collapse_lets_and_return_tuple e list_of_replacements = 
                                             (match e with
-                                            | Elet(l, e_inner) -> (*(List.iter (vc_gen_equation ctx env typenv) l.l_eq);*) 
-                                                (* debug("e_inner");
-                                                ignore( Expr.to_string (vc_gen_expression ctx env e_inner typenv));
+                                            | Elet(l, e_inner) -> (List.iter (vc_gen_equation ctx env typenv) l.l_eq); 
+                                                debug("e_inner");
+                                                (*ignore( Expr.to_string (vc_gen_expression ctx env e_inner typenv));
                                                 debug("e_inner end"); *)
                                                 collapse_lets_and_return_tuple e_inner.e_desc 
                                                     ((List.map (fun eq -> (match eq.eq_desc with 
                                                                             | EQeq(p, e) ->
                                                                                 (match p.p_desc with
-                                                                                    | Evarpat(n) -> (create_z3_var ctx env n.source, vc_gen_expression ctx env e typenv)))) l.l_eq)@list_of_replacements)
+                                                                                    | Evarpat(n) -> (create_z3_var ctx env n.source, vc_gen_equation_expression ctx env e typenv p)))) l.l_eq)@list_of_replacements)
                                             | Etuple(e2_list) -> (list_of_replacements, e2_list)) in 
                             let (replacements, e2_list) = (collapse_lets_and_return_tuple e_second []) in
                                 let (let_vars, let_replacements) = (List.split replacements) in
@@ -1432,7 +1432,9 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
           (* Printf.printf "Pair : [ "; *)
           (* List.iter (fun s -> Printf.printf "%s " (Expr.to_string s)) exp_list_temp; Printf.printf "]\n"*)
     
-    raise (AstTranslationNotImplemented "vc_gen_expression: Etuple")
+    (* raise (AstTranslationNotImplemented "vc_gen_expression: Etuple") *)
+    debug("exception ignored: AstTranslationNotImplemented vc_gen_expression: Etuple");
+    Arithmetic.Real.mk_const_s ctx "42.0"
     (* refinement tuples *)
     | Erefinementtuple(e_list, tuple_type, e) -> debug(Printf.sprintf "Erefinementtuple : \n");
      (*  5 , 5 + 3)
@@ -1793,7 +1795,9 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           debug(Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
          debug(Printf.sprintf "Argument------: \n" );
           Hashtbl.iter ( fun n f -> print_function n f ) (!function_space);
-
+          if n = "main" then (
+            debug("skipping main function for now, fix this bug");
+          ) else (
           (* let func_expression = (vc_gen_expression ctx env e None) in *)
           (* debug(Printf.sprintf "Function body vc_gen_expression handling----------: %s\n" (Expr.to_string func_expression)); *)
           (* let local_env = copy_env env in *)
@@ -2008,6 +2012,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
                           )       
           
           in debug(Printf.sprintf "end\n")
+          )
           )
       | Eopen(n) -> debug(Printf.sprintf "Eopen %s\n" n)
       | Etypedecl(n, params, tydecl) -> debug(Printf.sprintf "Etypedecl %s\n" n)

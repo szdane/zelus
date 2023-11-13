@@ -3,9 +3,9 @@ ide: IDENT: dt
 ide: IDENT: float
 ext_ident: ide: float
 type constr
-label_type: v:type_expression
-ide: IDENT: v
-ext_ident: ide: v
+label_type: q:type_expression
+ide: IDENT: q
+ext_ident: ide: q
 Desc var
 Simple expression
 Desc const
@@ -37,9 +37,9 @@ simple_pattern: ( p:type_expression )
 ide: IDENT: float
 ext_ident: ide: float
 type constr
-label_type: v:type_expression
-ide: IDENT: v
-ext_ident: ide: v
+label_type: z:type_expression
+ide: IDENT: z
+ext_ident: ide: z
 Desc var
 Simple expression
 ide: IDENT: s1
@@ -47,8 +47,8 @@ ext_ident: ide: s1
 Desc var
 Simple expression
 expression: INFIX0: e1 >= e2
-ide: IDENT: v
-ext_ident: ide: v
+ide: IDENT: z
+ext_ident: ide: z
 Desc var
 Simple expression
 ide: IDENT: s2
@@ -81,6 +81,13 @@ Desc seq expression
 Simple expression
 Kinded refinement function
 ide: IDENT: exec
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: p:type_expression
+Desc const
+Simple expression
+new-syntax type refinement
 ide: IDENT: x
 simple_pattern: ide
 ide: IDENT: y
@@ -130,12 +137,20 @@ Desc seq expression
 Simple expression
 ide: IDENT: y_next
 simple_pattern: ide
+ide: IDENT: max
+ext_ident: ide: max
+Desc var
 ide: IDENT: y
 ext_ident: ide: y
 Desc var
 Simple expression
 Desc const
 Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc Tuple
 Desc seq expression
 Simple expression
 ide: IDENT: x_next
@@ -164,8 +179,8 @@ Desc var
 Simple expression
 Desc Tuple
 Simple expression
-Kinded non-refinement function exec 
- ide: IDENT: main
+Kinded refinement function
+ide: IDENT: main
 ide: IDENT: trigger
 simple_pattern: ide
 ide: IDENT: dt
@@ -248,24 +263,24 @@ Kinded non-refinement function main
 
 [DEBUG] : Erefinement e2t
 [DEBUG] : float
-[DEBUG] : v
+[DEBUG] : q
 vc_gen_expression environment : [  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : Calling vc_gen_substitute
 
 [DEBUG] : typenv found
 
-[DEBUG] : v
+[DEBUG] : q
 [DEBUG] : float
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : q --- 
 
 [DEBUG] :  I will make a float here
 
-[DEBUG] : the value of v is v
+[DEBUG] : the value of v is q
 
-[DEBUG] : -----Adding v to variable environment
+[DEBUG] : -----Adding q to variable environment
 
-[DEBUG] : New variable, returning v
+[DEBUG] : New variable, returning q
 
 
 [DEBUG] : 
@@ -276,15 +291,15 @@ vc_gen_expression environment : [  (= dt (/ 1.0 10.0)) ]
 
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: q
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : q --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] : Existing variable, returning q
 
 
-vc_gen_expression v
+vc_gen_expression q
 [DEBUG] : Operator stringfy
 
 [DEBUG] : Name: >
@@ -299,19 +314,19 @@ Operator call: >
 
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: q
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : q --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] : Existing variable, returning q
 
 
 [DEBUG] : Basetype in vc_gen_substitute:float 
 
-[DEBUG] : Arg1:(> v 0.0) 
+[DEBUG] : Arg1:(> q 0.0) 
 
-[DEBUG] : Arg2:v 
+[DEBUG] : Arg2:q 
 
 [DEBUG] : Arg3:dt 
 
@@ -339,7 +354,7 @@ vc_gen_expression environment : [  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 
 [DEBUG] : Argument------: 
 
-[DEBUG] : var_req: v
+[DEBUG] : var_req: z
 
 [DEBUG] : Stream elet false
 
@@ -354,7 +369,13 @@ Will perform the following substitutions:
 [DEBUG] : 
  --- CREATE Z3 VAR TYPED : v --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is v
+
+[DEBUG] : -----Adding v to variable environment
+
+[DEBUG] : New variable, returning v
 
 
 [DEBUG] : 
@@ -446,15 +467,21 @@ vc_gen_expression environment : [  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : dt:float;
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: z
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is z
+
+[DEBUG] : -----Adding z to variable environment
+
+[DEBUG] : New variable, returning z
 
 
-vc_gen_expression v
+vc_gen_expression z
 [DEBUG] : Operator stringfy
 
 [DEBUG] : Name: >=
@@ -473,15 +500,15 @@ Operator call: >=
 
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: z
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] : Existing variable, returning z
 
 
-vc_gen_expression (>= v s1)
+vc_gen_expression (>= z s1)
 [DEBUG] : Operator stringfy
 
 [DEBUG] : Name: &&
@@ -491,15 +518,15 @@ vc_gen_expression (>= v s1)
 Operator call: &&
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: z
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] : Existing variable, returning z
 
 
-vc_gen_expression v
+vc_gen_expression z
 [DEBUG] : Operator stringfy
 
 [DEBUG] : Name: >=
@@ -518,25 +545,25 @@ Operator call: >=
 
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: z
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] : Existing variable, returning z
 
 
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: z
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] : Existing variable, returning z
 
 
-vc_gen_expression v
+vc_gen_expression z
 [DEBUG] : Operator stringfy
 
 [DEBUG] : Name: >=
@@ -555,15 +582,15 @@ Operator call: >=
 
 [DEBUG] : Eglobal vc_gen_expression
 
-[DEBUG] : Name: v
+[DEBUG] : Name: z
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] : Existing variable, returning z
 
 
-[DEBUG] : Return type vc_gen_expression: (and (>= v s1) (>= v s2))
+[DEBUG] : Return type vc_gen_expression: (and (>= z s1) (>= z s2))
 
 [DEBUG] : 
  --- CREATE Z3 VAR TYPED : s2 --- 
@@ -578,15 +605,15 @@ Operator call: >=
 
 
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
 [DEBUG] :  I will make a float here
 
-[DEBUG] : the value of v is v
+[DEBUG] : the value of v is z
 
-[DEBUG] : -----Adding v to variable environment
+[DEBUG] : -----Adding z to variable environment
 
-[DEBUG] : New variable, returning v
+[DEBUG] : New variable, returning z
 
 
 [DEBUG] : Printing function environment...
@@ -664,42 +691,48 @@ Operator call: <
 
 vc_gen_expression environment : [  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : 
- --- CREATE Z3 VAR TYPED : v --- 
+ --- CREATE Z3 VAR TYPED : z --- 
 
-[DEBUG] : Existing variable, returning v
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is z
+
+[DEBUG] : -----Adding z to variable environment
+
+[DEBUG] : New variable, returning z
 
 
-[DEBUG] : Return var: v
+[DEBUG] : Return var: z
 
-[DEBUG] : return definition: (= v (ite (< s1 s2) s2 s1))
+[DEBUG] : return definition: (= z (ite (< s1 s2) s2 s1))
 
-vc_gen_expression environment : [  (= v (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
-[DEBUG] : Prove constraint: (and (>= v s1) (>= v s2))
+vc_gen_expression environment : [  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : Prove constraint: (and (>= z s1) (>= z s2))
 
 [DEBUG] : Environment before solving: 
 
-vc_gen_expression environment : [  (= v (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+vc_gen_expression environment : [  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : 
 --- Z3 SOLVE ---
 
 [DEBUG] : environment:
 
-vc_gen_expression environment : [  (= v (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+vc_gen_expression environment : [  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : constraint:
 
-[DEBUG] : (and (>= v s1) (>= v s2))
+[DEBUG] : (and (>= z s1) (>= z s2))
 
 [DEBUG] : --- Z3 SOLVE ---
 
 
-Proving constraint: (let ((a!1 (and (= v (ite (< s1 s2) s2 s1))
+Proving constraint: (let ((a!1 (and (= z (ite (< s1 s2) s2 s1))
                 true
                 true
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0)))))
-  (not (=> a!1 (and (>= v s1) (>= v s2)))))
+  (not (=> a!1 (and (>= z s1) (>= z s2)))))
 [32mPassed[0m
-vc_gen_expression environment : [  (and (>= v s1) (>= v s2))  (= v (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+vc_gen_expression environment : [  (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : Efundecl exec
 
 [DEBUG] : # of Arguments: 1
@@ -711,13 +744,13 @@ Function: max
 	argument_constraints:	[ true true (> dt 0.0) (= dt (/ 1.0 10.0)) ]
 	variable_map:	[ (s1:float) (s2:float) (dt:float) ]
 	argument_list:	[ (s2) (s1) ]
-	creation_environment:	[ (and (>= v s1) (>= v s2))  (= v (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
+	creation_environment:	[ (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
 	f_decl: (declare-fun max (Real Real) Real)
 	f_z3args:	[ (s2) (s1) ]
 	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
 }
 
-[DEBUG] : var_req: emptyalias
+[DEBUG] : var_req: p
 
 [DEBUG] : Stream elet
 
@@ -763,7 +796,7 @@ Function: max
 	argument_constraints:	[ true true (> dt 0.0) (= dt (/ 1.0 10.0)) ]
 	variable_map:	[ (s1:float) (s2:float) (dt:float) ]
 	argument_list:	[ (s2) (s1) ]
-	creation_environment:	[ (and (>= v s1) (>= v s2))  (= v (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
+	creation_environment:	[ (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
 	f_decl: (declare-fun max (Real Real) Real)
 	f_z3args:	[ (s2) (s1) ]
 	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
@@ -831,9 +864,8 @@ Will perform the following substitutions:
 [DEBUG] : operation
 [DEBUG] : Found a tuple fby let
 [DEBUG] : start
-[DEBUG] : Elet parsing: 
-
-[DEBUG] : Is recursive false
+[DEBUG] : end
+Lets and tuple on bottom
 vc_gen_equation
 [DEBUG] : EQeq:
 
@@ -856,7 +888,7 @@ Function: max
 	argument_constraints:	[ true true (> dt 0.0) (= dt (/ 1.0 10.0)) ]
 	variable_map:	[ (s1:float) (s2:float) (dt:float) ]
 	argument_list:	[ (s2) (s1) ]
-	creation_environment:	[ (and (>= v s1) (>= v s2))  (= v (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
+	creation_environment:	[ (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
 	f_decl: (declare-fun max (Real Real) Real)
 	f_z3args:	[ (s2) (s1) ]
 	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
@@ -959,15 +991,162 @@ Could not prove: (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))
 
 [DEBUG] : EQ vc_gen_expression: (= x_next (max (- x 1.0) 0.0))
 
-[DEBUG] : Elet parsing: 
+[DEBUG] : e_inner
+[DEBUG] : Eapp
 
-[DEBUG] : Is recursive false
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Modname: max
+
+[DEBUG] : Operator call max : 
+
+Operator call: max
+[DEBUG] : Non-standard vc_gen_operator s : max
+
+[DEBUG] : checking if arguments obey constraints
+
+Function: max
+{
+	argument_constraints:	[ true true (> dt 0.0) (= dt (/ 1.0 10.0)) ]
+	variable_map:	[ (s1:float) (s2:float) (dt:float) ]
+	argument_list:	[ (s2) (s1) ]
+	creation_environment:	[ (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
+	f_decl: (declare-fun max (Real Real) Real)
+	f_z3args:	[ (s2) (s1) ]
+	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
+}
+
+vc_gen_expression environment : [  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : s2 --- 
+
+[DEBUG] : Existing variable, returning s2
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : s1 --- 
+
+[DEBUG] : Existing variable, returning s1
+
+
+name of function:max
+length of ref_fun.argument_list:2
+[DEBUG] : Etuple : 
+
+[DEBUG] : Elocal: x : 4
+
+[DEBUG] : Error: typenv not given!
+
+vc_gen_expression x
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Modname: -.
+
+[DEBUG] : Operator call -. : 
+
+Operator call: -.
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 1.000000
+
+[DEBUG] : Elocal: x : 4
+
+[DEBUG] : Error: typenv not given!
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : # of Arguments in arg_list:2 arguments:2
+
+[DEBUG] : true
+[DEBUG] : true
+[DEBUG] : (> dt 0.0)
+[DEBUG] : (= dt (/ 1.0 10.0))
+[DEBUG] : 
+ --- CHECK INPUT VALIDITY ---
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  true ]
+[DEBUG] : constraint:
+
+[DEBUG] : (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and true) (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))))
+[31mCounterexample found:
+	dt = 0.05
+Root Cause:
+======================================================================
+(= dt (/ 1.0 10.0))
+======================================================================
+Could not prove: (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))
+[0m[DEBUG] : App expr: (max (- x 1.0) 0.0)
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x_next --- 
+
+[DEBUG] : Existing variable, returning x_next
+
+
 vc_gen_equation
 [DEBUG] : EQeq:
 
 [DEBUG] : else case
 [DEBUG] : Eapp
 
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Modname: max
+
+[DEBUG] : Operator call max : 
+
+Operator call: max
+[DEBUG] : Non-standard vc_gen_operator s : max
+
+[DEBUG] : checking if arguments obey constraints
+
+Function: max
+{
+	argument_constraints:	[ true true (> dt 0.0) (= dt (/ 1.0 10.0)) ]
+	variable_map:	[ (s1:float) (s2:float) (dt:float) ]
+	argument_list:	[ (s2) (s1) ]
+	creation_environment:	[ (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
+	f_decl: (declare-fun max (Real Real) Real)
+	f_z3args:	[ (s2) (s1) ]
+	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
+}
+
+vc_gen_expression environment : [  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : s2 --- 
+
+[DEBUG] : Existing variable, returning s2
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : s1 --- 
+
+[DEBUG] : Existing variable, returning s1
+
+
+name of function:max
+length of ref_fun.argument_list:2
+[DEBUG] : Etuple : 
+
+[DEBUG] : Elocal: y : 5
+
+[DEBUG] : Error: typenv not given!
+
+vc_gen_expression y
 [DEBUG] : Operator stringfy
 
 [DEBUG] : Modname: +.
@@ -982,9 +1161,46 @@ Operator call: +.
 
 [DEBUG] : Elocal: y : 5
 
-[DEBUG] : App expr: (+ y 1.0)
+[DEBUG] : Error: typenv not given!
 
-[DEBUG] : body_exp: (+ y 1.0)
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : # of Arguments in arg_list:2 arguments:2
+
+[DEBUG] : true
+[DEBUG] : true
+[DEBUG] : (> dt 0.0)
+[DEBUG] : (= dt (/ 1.0 10.0))
+[DEBUG] : 
+ --- CHECK INPUT VALIDITY ---
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  true ]
+[DEBUG] : constraint:
+
+[DEBUG] : (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and true) (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))))
+[31mCounterexample found:
+	dt = 1.1
+Root Cause:
+======================================================================
+(= dt (/ 1.0 10.0))
+======================================================================
+Could not prove: (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))
+[0m[DEBUG] : App expr: (max (+ y 1.0) 0.0)
+
+[DEBUG] : body_exp: (max (+ y 1.0) 0.0)
 
 [DEBUG] : Evarpat: y_next
 
@@ -1004,14 +1220,422 @@ Operator call: +.
 
 [DEBUG] : after ret_exp
 
-[DEBUG] : EQ vc_gen_expression: (= y_next (+ y 1.0))
+[DEBUG] : EQ vc_gen_expression: (= y_next (max (+ y 1.0) 0.0))
 
+[DEBUG] : e_inner
+[DEBUG] : Eapp
+
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Modname: max
+
+[DEBUG] : Operator call max : 
+
+Operator call: max
+[DEBUG] : Non-standard vc_gen_operator s : max
+
+[DEBUG] : checking if arguments obey constraints
+
+Function: max
+{
+	argument_constraints:	[ true true (> dt 0.0) (= dt (/ 1.0 10.0)) ]
+	variable_map:	[ (s1:float) (s2:float) (dt:float) ]
+	argument_list:	[ (s2) (s1) ]
+	creation_environment:	[ (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
+	f_decl: (declare-fun max (Real Real) Real)
+	f_z3args:	[ (s2) (s1) ]
+	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
+}
+
+vc_gen_expression environment : [  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : s2 --- 
+
+[DEBUG] : Existing variable, returning s2
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : s1 --- 
+
+[DEBUG] : Existing variable, returning s1
+
+
+name of function:max
+length of ref_fun.argument_list:2
 [DEBUG] : Etuple : 
+
+[DEBUG] : Elocal: y : 5
+
+[DEBUG] : Error: typenv not given!
+
+vc_gen_expression y
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Modname: +.
+
+[DEBUG] : Operator call +. : 
+
+Operator call: +.
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 1.000000
+
+[DEBUG] : Elocal: y : 5
+
+[DEBUG] : Error: typenv not given!
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : # of Arguments in arg_list:2 arguments:2
+
+[DEBUG] : true
+[DEBUG] : true
+[DEBUG] : (> dt 0.0)
+[DEBUG] : (= dt (/ 1.0 10.0))
+[DEBUG] : 
+ --- CHECK INPUT VALIDITY ---
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  true ]
+[DEBUG] : constraint:
+
+[DEBUG] : (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and true) (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))))
+[31mCounterexample found:
+	dt = 0.05
+Root Cause:
+======================================================================
+(= dt (/ 1.0 10.0))
+======================================================================
+Could not prove: (and true true (> dt 0.0) (= dt (/ 1.0 10.0)))
+[0m[DEBUG] : App expr: (max (+ y 1.0) 0.0)
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : y_next --- 
+
+[DEBUG] : Existing variable, returning y_next
+
+
+List of replacements:
+y_next -> (max (+ y 1.0) 0.0)
+x_next -> (max (- x 1.0) 0.0)
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
 
 [DEBUG] : Elocal: x_next : 6
 
 [DEBUG] : Elocal: y_next : 7
 
-[DEBUG] : x_next
-[DEBUG] : y_next
+(0.0,0.0,) fby ((max (- x 1.0) 0.0),(max (+ y 1.0) 0.0),)
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: vx
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : vx --- 
+
+[DEBUG] : Existing variable, returning vx
+
+
+vc_gen_expression vx
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Int 0
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: vx
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : vx --- 
+
+[DEBUG] : Existing variable, returning vx
+
+
+[DEBUG] : phi_e1: (>= 0.0 (to_real 0))
+
+[DEBUG] : phi_e2: (>= (max (- x 1.0) 0.0) (to_real 0))
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (not (=> a!2 (>= 0.0 (to_real 0))))))
+[32mPassed[0m
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= (max (- x 1.0) 0.0) (to_real 0)))))
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+(let ((a!3 (=> a!2 (>= (max (- x 1.0) 0.0) (to_real 0)))))
+  (not a!3))))
+[31mCounterexample found:
+	s2 = -7719
+	x = 0
+	s1 = -38
+	dt = 0.1
+	y = 0
+	y_next = 0
+	x_next = -0.5
+Root Cause:
+======================================================================
+(>= (max (- x 1.0) 0.0) (to_real 0))
+======================================================================
+Could not prove: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= (max (- x 1.0) 0.0) (to_real 0)))))
+[0m[DEBUG] : Etuple : 
+
+[DEBUG] : Elocal: x : 4
+
+[DEBUG] : Elocal: y : 5
+
+[DEBUG] : x
+[DEBUG] : y
+[DEBUG] : exception ignored: AstTranslationNotImplemented vc_gen_expression: Etuple
+[DEBUG] : Body exp :|42.0| 
+
+vc_gen_expression environment : [  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : Function body vc_gen_expression handling: |42.0|
+
+vc_gen_expression environment : [  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : p --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is p
+
+[DEBUG] : -----Adding p to variable environment
+
+[DEBUG] : New variable, returning p
+
+
+[DEBUG] : Return var: p
+
+[DEBUG] : return definition: (= p |42.0|)
+
+vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : Prove constraint: true
+
+[DEBUG] : Environment before solving: 
+
+vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : true
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+(let ((a!3 (and (= p |42.0|)
+                (=> a!2 (>= 0.0 (to_real 0)))
+                a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0)))))
+  (not (=> a!3 true)))))
+[32mPassed[0m
+vc_gen_expression environment : [  true  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
+(let ((a!2 (and a!1
+                (= y_next (max (+ y 1.0) 0.0))
+                a!1
+                a!1
+                (= x_next (max (- x 1.0) 0.0))
+                a!1
+                (> dt 0.0)
+                (= dt (/ 1.0 10.0))
+                (>= x (to_real 0)))))
+  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+[DEBUG] : Efundecl main
+
+[DEBUG] : # of Arguments: 1
+
+[DEBUG] : Argument------: 
+
+Function: max
+{
+	argument_constraints:	[ true true (> dt 0.0) (= dt (/ 1.0 10.0)) ]
+	variable_map:	[ (s1:float) (s2:float) (dt:float) ]
+	argument_list:	[ (s2) (s1) ]
+	creation_environment:	[ (and (>= z s1) (>= z s2))  (= z (ite (< s1 s2) s2 s1))  true  true  (> dt 0.0)  (= dt (/ 1.0 10.0))  ]
+	f_decl: (declare-fun max (Real Real) Real)
+	f_z3args:	[ (s2) (s1) ]
+	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
+}
+
+[DEBUG] : skipping main function for now, fix this bug
+[31m[WARNING][0m Failed proof count : 5 
 Hello, this is Z3 Refinement
