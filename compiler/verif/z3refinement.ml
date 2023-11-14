@@ -1067,8 +1067,8 @@ and prove_function ctx n local_env arg_list typenv =
           (* print_env ({ exp_env = ref( checks @ environment_constraints); var_env = Hashtbl.create 0}); *)
           let check_env = checks @ !(local_env.exp_env) @ !(ref_fun.creation_env.exp_env) in
           check_validity ctx checks;
-          (* TODO -- add return constraint to environment ?*)
-          add_constraint local_env ref_fun.z3constraint;
+          (* TODO -- add return constraint to environment this is not general ?*)
+          (* add_constraint local_env ref_fun.z3constraint; *)
           (*return function application variable*)
           let f_app = FuncDecl.apply ref_fun.z3f_decl user_args_flat in
           f_app

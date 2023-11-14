@@ -1031,7 +1031,7 @@ Function: max
 	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
 }
 
-vc_gen_expression environment : [  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+vc_gen_expression environment : [  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : 
  --- CREATE Z3 VAR TYPED : s2 --- 
 
@@ -1131,7 +1131,7 @@ Function: max
 	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
 }
 
-vc_gen_expression environment : [  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+vc_gen_expression environment : [  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : 
  --- CREATE Z3 VAR TYPED : s2 --- 
 
@@ -1244,7 +1244,7 @@ Function: max
 	f_ret_constraint: (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))
 }
 
-vc_gen_expression environment : [  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+vc_gen_expression environment : [  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : 
  --- CREATE Z3 VAR TYPED : s2 --- 
 
@@ -1376,104 +1376,72 @@ Operator call: >=
 
 [DEBUG] : environment:
 
-vc_gen_expression environment : [  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+vc_gen_expression environment : [  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : constraint:
 
-[DEBUG] : (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+[DEBUG] : (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))
+  (=> a!1 (>= 0.0 (to_real 0))))
 
 [DEBUG] : --- Z3 SOLVE ---
 
 
-Proving constraint: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+Proving constraint: (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (not (=> a!2 (>= 0.0 (to_real 0))))))
+  (not (=> a!1 (>= 0.0 (to_real 0)))))
 [32mPassed[0m
 [DEBUG] : 
 --- Z3 SOLVE ---
 
 [DEBUG] : environment:
 
-vc_gen_expression environment : [  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+vc_gen_expression environment : [  (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+  (=> a!1 (>= 0.0 (to_real 0))))  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : constraint:
 
-[DEBUG] : (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+[DEBUG] : (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= (max (- x 1.0) 0.0) (to_real 0)))))
+  (=> a!1 (>= (max (- x 1.0) 0.0) (to_real 0))))
 
 [DEBUG] : --- Z3 SOLVE ---
 
 
-Proving constraint: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+Proving constraint: (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-(let ((a!3 (=> a!2 (>= (max (- x 1.0) 0.0) (to_real 0)))))
-  (not a!3))))
+(let ((a!2 (=> a!1 (>= (max (- x 1.0) 0.0) (to_real 0)))))
+  (not a!2)))
 [31mCounterexample found:
-	s2 = -7719
 	x = 0
-	s1 = -38
 	dt = 0.1
 	y = 0
-	y_next = 0
+	y_next = -0.5
 	x_next = -0.5
 Root Cause:
 ======================================================================
 (>= (max (- x 1.0) 0.0) (to_real 0))
 ======================================================================
-Could not prove: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+Could not prove: (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= (max (- x 1.0) 0.0) (to_real 0)))))
+  (=> a!1 (>= (max (- x 1.0) 0.0) (to_real 0))))
 [0m[DEBUG] : Etuple : 
 
 [DEBUG] : Elocal: x : 4
@@ -1485,30 +1453,20 @@ Could not prove: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
 [DEBUG] : exception ignored: AstTranslationNotImplemented vc_gen_expression: Etuple
 [DEBUG] : Body exp :|42.0| 
 
-vc_gen_expression environment : [  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+vc_gen_expression environment : [  (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+  (=> a!1 (>= 0.0 (to_real 0))))  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : Function body vc_gen_expression handling: |42.0|
 
-vc_gen_expression environment : [  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+vc_gen_expression environment : [  (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+  (=> a!1 (>= 0.0 (to_real 0))))  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : 
  --- CREATE Z3 VAR TYPED : p --- 
 
@@ -1525,48 +1483,33 @@ vc_gen_expression environment : [  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max 
 
 [DEBUG] : return definition: (= p |42.0|)
 
-vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+  (=> a!1 (>= 0.0 (to_real 0))))  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : Prove constraint: true
 
 [DEBUG] : Environment before solving: 
 
-vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+  (=> a!1 (>= 0.0 (to_real 0))))  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : 
 --- Z3 SOLVE ---
 
 [DEBUG] : environment:
 
-vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+  (=> a!1 (>= 0.0 (to_real 0))))  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : constraint:
 
 [DEBUG] : true
@@ -1574,39 +1517,25 @@ vc_gen_expression environment : [  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1)
 [DEBUG] : --- Z3 SOLVE ---
 
 
-Proving constraint: (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+Proving constraint: (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-(let ((a!3 (and (= p |42.0|)
-                (=> a!2 (>= 0.0 (to_real 0)))
-                a!1
+(let ((a!2 (and (= p |42.0|)
+                (=> a!1 (>= 0.0 (to_real 0)))
                 (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0)))))
-  (not (=> a!3 true)))))
+  (not (=> a!2 true))))
 [32mPassed[0m
-vc_gen_expression environment : [  true  (= p |42.0|)  (let ((a!1 (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))))
-(let ((a!2 (and a!1
-                (= y_next (max (+ y 1.0) 0.0))
-                a!1
-                a!1
+vc_gen_expression environment : [  true  (= p |42.0|)  (let ((a!1 (and (= y_next (max (+ y 1.0) 0.0))
                 (= x_next (max (- x 1.0) 0.0))
-                a!1
                 (> dt 0.0)
                 (= dt (/ 1.0 10.0))
                 (>= x (to_real 0)))))
-  (=> a!2 (>= 0.0 (to_real 0)))))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= y_next (max (+ y 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (= x_next (max (- x 1.0) 0.0))  (and (>= (max s2 s1) s1) (>= (max s2 s1) s2))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
+  (=> a!1 (>= 0.0 (to_real 0))))  (= y_next (max (+ y 1.0) 0.0))  (= x_next (max (- x 1.0) 0.0))  (> dt 0.0)  (= dt (/ 1.0 10.0)) ]
 [DEBUG] : Efundecl main
 
 [DEBUG] : # of Arguments: 1
