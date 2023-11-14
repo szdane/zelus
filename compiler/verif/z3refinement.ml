@@ -1819,6 +1819,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* let argc = (List.length p_list) in  *)
           let typenv = Hashtbl.copy !type_space in
           let local_env = copy_env env in
+          let args_env = {exp_env = ref []; var_env = Hashtbl.create 0 } in
           let istuple = (match e.e_desc with
                           | Etuple(_) -> true
                           | _ -> false
@@ -1840,10 +1841,12 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           if not isstream then (            
           (* add function input constraints to local environment *)
           let args_only = Hashtbl.create 0 in
-          (List.iter (vc_gen_pattern ctx local_env (Some args_only)) p_list);
+          (List.iter (vc_gen_pattern ctx args_env (Some args_only)) p_list);
           (List.iter (vc_gen_pattern ctx local_env (Some typenv)) p_list);
           Printf.printf "--------Printing local_env \n";
           print_env local_env;
+          Printf.printf "----- args env \n";
+          print_env args_env;
           debug(Printf.sprintf "---------local typenv\n");
           Hashtbl.iter (fun a b -> debug(Printf.sprintf "%s:%s;" a b.base_type)) typenv;
           (* implementation_list ff ctx e; *)
@@ -1879,11 +1882,11 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
                 )
             else 
                 (
-                  let function_argument_constraints = !(local_env.exp_env) in
+                  let function_argument_constraints = !(args_env.exp_env) in
                   let function_variable_type_map = typenv in
                   let function_argument_list = List.rev (get_argument_list( args_only )) in
                   let f_decl = create_function_declaration ctx n function_argument_list retbasetype function_variable_type_map in
-                  let f_z3args = create_argument_expression ctx function_argument_list function_argument_constraints local_env.var_env in
+                  let f_z3args = create_argument_expression ctx function_argument_list function_argument_constraints args_env.var_env in
                   let f_ret_constraint = create_constraint_expression ctx f_z3args var_req return_exp f_decl retbasetype function_variable_type_map in
                   let f_new = { argument_constraints = function_argument_constraints;
                                 variable_maps = function_variable_type_map;
@@ -1942,6 +1945,8 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           (* TODO: define functions inside function*)
           ) else (
             (* Function is a stream *)
+            (* This function is old and not updated, e.g. does not have args_env for argument constraints 11/13/2023 *)
+            (* Do not trust this 11/13/2023 *)
             (* add function input constraints to local environment *)
             debug(Printf.sprintf "--STREAM--\n");
             (List.iter (vc_gen_pattern ctx local_env (Some typenv)) p_list);
