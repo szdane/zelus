@@ -4,16 +4,16 @@ let b:{v: float | v > 0.} = 0.136
 let xli:{v: float | v > 0.} = 2.
 let xbrake:{v: float | v >= xli} = 4.
 let amax:{v: float | v >= 0.} = 0.06
-
+(*
 let node need_to_brake (xf, vf, xl, vl) : { w : bool | true } = 
   ((xf +. ((vf*.vf)/.(2.*.b)) +. 
     ((1.+.(amax /. b))*.(2.*.dt*.vf+.((amax*.(4.*.dt*.dt))/. 2.))) +. 
     ((vf*.dt)/. 2.)) 
     >= 
     (xl +. (((vl-.(b*.dt))*.(vl-.(b*.dt)))/.(2.*.b)) +. 
-    (((vl-.(b*.dt))*.dt)/. 2.)))
+    (((vl-.(b*.dt))*.dt)/. 2.)))*)
 
-let node follower_control (xf, vf, xl, vl) : 
+let node follower_control ((xf, vf, xl, vl):{(vxf:float)*(vvf:float)*(vxl:float)*(vvl:float) | true}) : 
     {v:float | ((((xf +. ((vf*.vf)/.(2.*.b)) +. 
     ((1.+.(amax /. b))*.(2.*.dt*.vf+.((amax*.(4.*.dt*.dt))/. 2.))) +. 
     ((vf*.dt)/. 2.)) 
@@ -36,14 +36,14 @@ let node follower_control (xf, vf, xl, vl) :
         else amax)
         
 (* This can be assumed to be built-in *)
-let node max (x) : {v:float | v >= 0.} = 
+let node max (x:{v:float | true}) : {v:float | v >= 0.} = 
     (if (x < 0.) then 0. else x)
     
-let node leader_control xl : {v:float | ((xl >= xbrake) && (v = -.b)) || 
+let node leader_control (xl:{v:float | true}) : {v:float | ((xl >= xbrake) && (v = -.b)) || 
        ((xl < xbrake) && (v = 0.))} =
     (if (xl >= xbrake) then (-.b) else 0.)
     
-let node exec () =
+let node exec () : {(vxf:float)*(vvf:float)*(vaf:float)*(vxl:float)*(vvl:float)*(vval:float) | true}=
   let rec ((xf, vf, af, xl, vl, al):
     {(x:float)*(v:float)*(a:float)*(x2:float)*(v2:float)*(a2:float) |
       (x2 > x) && (x2 >= xli) && (v2 >= 0.) && (v >= 0.) &&
@@ -64,9 +64,9 @@ let node exec () =
       (follower_control (xf_next, vf_next, xl_next, vl_next)),
        xl_next, vl_next,
        (leader_control xl_next))))))
-    in ((robot_str ("accel", af)); (xf, vf, af, xl, vl, al))
+    in (xf, vf, af, xl, vl, al) (*models ((robot_str ("accel", af)); (xf, vf, af, xl, vl, al))*)
 
 let hybrid main () =
 	let rec trigger = (period (dt)) in
-	present (trigger) -> (let (x, v, a, xl, vl, al) = exec () in 
-  (print_float (Timestamp.gettimeofday ()); print_string ","; print_float x; print_string ","; print_float v; print_string ","; print_float a; print_string ","; print_float xl; print_string ","; print_float vl; print_string ","; print_float al; print_newline ())) else () 
+	present (trigger) -> (let (x, v, a, xl, vl, al) = exec () in ()) else ()
+  (*(print_float (Timestamp.gettimeofday ()); print_string ","; print_float x; print_string ","; print_float v; print_string ","; print_float a; print_string ","; print_float xl; print_string ","; print_float vl; print_string ","; print_float al; print_newline ())) else () *)

@@ -1287,6 +1287,8 @@ and vc_gen_operation ctx env typenv op e_list =
     | Econcat, [e1; e2] -> debug(Printf.sprintf "Econcat\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Econcat")
     | Eatomic, [e] -> debug(Printf.sprintf "Eatomic\n"); raise (AstTranslationNotImplemented "vc_gen_operation: Eatomic")
     | Emodels, [e1; e2] -> vc_gen_expression ctx env e1 typenv
+    | Estr, [e1; e2] -> debug(Printf.sprintf "Skipping Estr for now\n"); (Arithmetic.Real.mk_const_s ctx "42.0")
+    (*| Eseq, [e1; e2] -> debug(Printf.sprintf "Eseq, checking the second only"); (vc_gen_expression ctx env e2 typenv)*)
     | _ -> debug(Printf.sprintf "Operation undefined\n"); raise (AstTranslationNotImplemented "vc_gen_operation: unmatched operation")
     
 
@@ -1815,6 +1817,7 @@ let implementation ff ctx env (impl (*: Zelus.implementation_desc Zelus.localize
           let (rettype, var_req, retbasetype) = (match rettype.desc with 
                                                     | Erefinement ((n,t), exp) -> (exp, n, t) 
                                                     (* | Etypevar (t) -> (  { desc: (Econst(Ebool(true))); loc: Loc(0, 0) }, "", t) *)
+                                                    | Erefinementlabeledtuple(t_list, e) -> ((debug(Printf.sprintf "Probably not the best way of doing things, but we ignore tuple returns for now")); (e, (fst (hd t_list)), (snd (hd t_list))))
                                                     | _ -> raise (AstTranslationNotImplemented "rettype not implemented")
                                                 ) in
           debug(Printf.sprintf "var_req: %s\n" var_req);
