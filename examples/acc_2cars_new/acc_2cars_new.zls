@@ -78,9 +78,9 @@ let node exec () : {(vxf:float)*(vvf:float)*(vaf:float)*(vxl:float)*(vvl:float)*
       ),
        xl_next, vl_next,
        ((if (xl_next >= xbrake) then (-.b) else 0.)))))))
-    in (xf, vf, af, xl, vl, al) models ((robot_str ("accel", af)); (xf, vf, af, xl, vl, al))
+    in (robot_str ("accel", af)); (xf, vf, af, xl, vl, al)
 
 let hybrid main () =
 	let rec trigger = (period (dt)) in
-	present (trigger) -> (let (x, v, a, xl, vl, al) = exec () in ()) else ()
-  (*(print_float (Timestamp.gettimeofday ()); print_string ","; print_float x; print_string ","; print_float v; print_string ","; print_float a; print_string ","; print_float xl; print_string ","; print_float vl; print_string ","; print_float al; print_newline ())) else () *)
+	present (trigger) -> (let (x, v, a, xl, vl, al) = exec () in
+  (print_float (Timestamp.gettimeofday ()); print_string ","; print_float x; print_string ","; print_float v; print_string ","; print_float a; print_string ","; print_float xl; print_string ","; print_float vl; print_string ","; print_float al; print_newline ())) else ()

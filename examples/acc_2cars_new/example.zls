@@ -1,0 +1,5 @@
+let f (x : { v : float | v < 0. }) : {v : float | v >= 0.} = 
+ let y = x *. x in
+ y
+
+let main () = ()
