@@ -1,0 +1,1848 @@
+compiling acc_2cars
+ide: IDENT: vfi
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: dt
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: b
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: xli
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: amax
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: exec
+ide: IDENT: xf
+simple_pattern: ide
+ide: IDENT: vf
+simple_pattern: ide
+ide: IDENT: af
+simple_pattern: ide
+ide: IDENT: xl
+simple_pattern: ide
+ide: IDENT: vl
+simple_pattern: ide
+ide: IDENT: al
+simple_pattern: ide
+simple_pattern: LPAREN pattern_comma_list RPAREN
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: x:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+label_type star list
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: a:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: x2:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v2:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: a2:type_expression
+ide: IDENT: x2
+ext_ident: ide: x2
+Desc var
+Simple expression
+ide: IDENT: xli
+ext_ident: ide: xli
+Desc var
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+Simple expression
+ide: IDENT: x2
+ext_ident: ide: x2
+Desc var
+Simple expression
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+expression: INFIX0: e1 > e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: x2
+ext_ident: ide: x2
+Desc var
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: x2
+ext_ident: ide: x2
+Desc var
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+ide: IDENT: x2
+ext_ident: ide: x2
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+Simple expression
+ide: IDENT: a2
+ext_ident: ide: a2
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+ide: IDENT: x2
+ext_ident: ide: x2
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc seq expression
+Simple expression
+ide: IDENT: a2
+ext_ident: ide: a2
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: x2
+ext_ident: ide: x2
+Desc var
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+new-syntax refinement tuple
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+ide: IDENT: vfi
+ext_ident: ide: vfi
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: xli
+ext_ident: ide: xli
+Desc var
+Simple expression
+ide: IDENT: vfi
+ext_ident: ide: vfi
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc Tuple
+Simple expression
+ide: IDENT: vl_next
+simple_pattern: ide
+ide: IDENT: vl
+ext_ident: ide: vl
+Desc var
+Simple expression
+ide: IDENT: al
+ext_ident: ide: al
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vl
+ext_ident: ide: vl
+Desc var
+Simple expression
+ide: IDENT: al
+ext_ident: ide: al
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: xl_next
+simple_pattern: ide
+ide: IDENT: xl
+ext_ident: ide: xl
+Desc var
+Simple expression
+ide: IDENT: vl_next
+ext_ident: ide: vl_next
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v_next
+simple_pattern: ide
+ide: IDENT: vf
+ext_ident: ide: vf
+Desc var
+Simple expression
+ide: IDENT: af
+ext_ident: ide: af
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vf
+ext_ident: ide: vf
+Desc var
+Simple expression
+ide: IDENT: af
+ext_ident: ide: af
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: x_next
+simple_pattern: ide
+ide: IDENT: xf
+ext_ident: ide: xf
+Desc var
+Simple expression
+ide: IDENT: v_next
+ext_ident: ide: v_next
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: x_next
+ext_ident: ide: x_next
+Desc var
+Simple expression
+ide: IDENT: v_next
+ext_ident: ide: v_next
+Desc var
+Simple expression
+ide: IDENT: x_next
+ext_ident: ide: x_next
+Desc var
+Simple expression
+ide: IDENT: v_next
+ext_ident: ide: v_next
+Desc var
+Simple expression
+ide: IDENT: v_next
+ext_ident: ide: v_next
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: v_next
+ext_ident: ide: v_next
+Desc var
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v_next
+ext_ident: ide: v_next
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: xl_next
+ext_ident: ide: xl_next
+Desc var
+Simple expression
+ide: IDENT: vl_next
+ext_ident: ide: vl_next
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vl_next
+ext_ident: ide: vl_next
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vl_next
+ext_ident: ide: vl_next
+Desc var
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: amax
+ext_ident: ide: amax
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: xl_next
+ext_ident: ide: xl_next
+Desc var
+Simple expression
+ide: IDENT: vl_next
+ext_ident: ide: vl_next
+Desc var
+Simple expression
+ide: IDENT: xl_next
+ext_ident: ide: xl_next
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+Simple expression
+ide: IDENT: b
+ext_ident: ide: b
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc Tuple
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: xf
+ext_ident: ide: xf
+Desc var
+Simple expression
+ide: IDENT: vf
+ext_ident: ide: vf
+Desc var
+Simple expression
+ide: IDENT: af
+ext_ident: ide: af
+Desc var
+Simple expression
+ide: IDENT: xl
+ext_ident: ide: xl
+Desc var
+Simple expression
+ide: IDENT: vl
+ext_ident: ide: vl
+Desc var
+Simple expression
+ide: IDENT: al
+ext_ident: ide: al
+Desc var
+Simple expression
+Desc Tuple
+Simple expression
+Kinded non-refinement function exec 
+ ide: IDENT: main
+ide: IDENT: trigger
+simple_pattern: ide
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: trigger
+ext_ident: ide: trigger
+Desc var
+Simple expression
+Desc seq expression
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: v
+simple_pattern: ide
+ide: IDENT: a
+simple_pattern: ide
+ide: IDENT: xl
+simple_pattern: ide
+ide: IDENT: vl
+simple_pattern: ide
+ide: IDENT: al
+simple_pattern: ide
+simple_pattern: LPAREN pattern_comma_list RPAREN
+ide: IDENT: exec
+ext_ident: ide: exec
+Desc var
+Desc void
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: xl
+ext_ident: ide: xl
+Desc var
+ide: IDENT: print_newline
+ext_ident: ide: print_newline
+Desc var
+Desc void
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc void
+Simple expression
+Kinded non-refinement function main 
+ [DEBUG] : Erefinementdecl vfi
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.800000
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : vfi --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is vfi
+
+[DEBUG] : -----Adding vfi to variable environment
+
+[DEBUG] : New variable, returning vfi
+
+
+[DEBUG] : Erefinement e2t
+[DEBUG] : float
+[DEBUG] : v
+vc_gen_expression environment : [  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Calling vc_gen_substitute
+
+[DEBUG] : typenv found
+
+[DEBUG] : v
+[DEBUG] : float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is v
+
+[DEBUG] : -----Adding v to variable environment
+
+[DEBUG] : New variable, returning v
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : vfi --- 
+
+[DEBUG] : Existing variable, returning vfi
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >
+
+[DEBUG] : Operator call > : 
+
+Operator call: >
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : Basetype in vc_gen_substitute:float 
+
+[DEBUG] : Arg1:(> v 0.0) 
+
+[DEBUG] : Arg2:v 
+
+[DEBUG] : Arg3:vfi 
+
+[DEBUG] : After sub:(> vfi 0.0) 
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (> vfi 0.0)
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and (= vfi (/ 4.0 5.0))) (> vfi 0.0)))
+[32mPassed[0m
+vc_gen_expression environment : [  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Erefinementdecl dt
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.100000
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : dt --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is dt
+
+[DEBUG] : -----Adding dt to variable environment
+
+[DEBUG] : New variable, returning dt
+
+
+[DEBUG] : Erefinement e2t
+[DEBUG] : float
+[DEBUG] : v
+vc_gen_expression environment : [  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Calling vc_gen_substitute
+
+[DEBUG] : typenv found
+
+[DEBUG] : v
+[DEBUG] : float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : dt --- 
+
+[DEBUG] : Existing variable, returning dt
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >
+
+[DEBUG] : Operator call > : 
+
+Operator call: >
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : Basetype in vc_gen_substitute:float 
+
+[DEBUG] : Arg1:(> v 0.0) 
+
+[DEBUG] : Arg2:v 
+
+[DEBUG] : Arg3:dt 
+
+[DEBUG] : After sub:(> dt 0.0) 
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (> dt 0.0)
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and (= dt (/ 1.0 10.0)) (> vfi 0.0) (= vfi (/ 4.0 5.0))) (> dt 0.0)))
+[32mPassed[0m
+vc_gen_expression environment : [  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Erefinementdecl b
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.136000
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : b --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is b
+
+[DEBUG] : -----Adding b to variable environment
+
+[DEBUG] : New variable, returning b
+
+
+[DEBUG] : Erefinement e2t
+[DEBUG] : float
+[DEBUG] : v
+vc_gen_expression environment : [  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Calling vc_gen_substitute
+
+[DEBUG] : typenv found
+
+[DEBUG] : v
+[DEBUG] : float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : b --- 
+
+[DEBUG] : Existing variable, returning b
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >
+
+[DEBUG] : Operator call > : 
+
+Operator call: >
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : Basetype in vc_gen_substitute:float 
+
+[DEBUG] : Arg1:(> v 0.0) 
+
+[DEBUG] : Arg2:v 
+
+[DEBUG] : Arg3:b 
+
+[DEBUG] : After sub:(> b 0.0) 
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (> b 0.0)
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and (= b (/ 17.0 125.0))
+              (> dt 0.0)
+              (= dt (/ 1.0 10.0))
+              (> vfi 0.0)
+              (= vfi (/ 4.0 5.0)))
+         (> b 0.0)))
+[32mPassed[0m
+vc_gen_expression environment : [  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Erefinementdecl xli
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 5.000000
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : xli --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is xli
+
+[DEBUG] : -----Adding xli to variable environment
+
+[DEBUG] : New variable, returning xli
+
+
+[DEBUG] : Erefinement e2t
+[DEBUG] : float
+[DEBUG] : v
+vc_gen_expression environment : [  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Calling vc_gen_substitute
+
+[DEBUG] : typenv found
+
+[DEBUG] : v
+[DEBUG] : float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : xli --- 
+
+[DEBUG] : Existing variable, returning xli
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >
+
+[DEBUG] : Operator call > : 
+
+Operator call: >
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : Basetype in vc_gen_substitute:float 
+
+[DEBUG] : Arg1:(> v 0.0) 
+
+[DEBUG] : Arg2:v 
+
+[DEBUG] : Arg3:xli 
+
+[DEBUG] : After sub:(> xli 0.0) 
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (> xli 0.0)
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and (= xli 5.0)
+              (> b 0.0)
+              (= b (/ 17.0 125.0))
+              (> dt 0.0)
+              (= dt (/ 1.0 10.0))
+              (> vfi 0.0)
+              (= vfi (/ 4.0 5.0)))
+         (> xli 0.0)))
+[32mPassed[0m
+vc_gen_expression environment : [  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Erefinementdecl amax
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.050000
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : amax --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is amax
+
+[DEBUG] : -----Adding amax to variable environment
+
+[DEBUG] : New variable, returning amax
+
+
+[DEBUG] : Erefinement e2t
+[DEBUG] : float
+[DEBUG] : v
+vc_gen_expression environment : [  (= amax (/ 1.0 20.0))  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Calling vc_gen_substitute
+
+[DEBUG] : typenv found
+
+[DEBUG] : v
+[DEBUG] : float
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : amax --- 
+
+[DEBUG] : Existing variable, returning amax
+
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+vc_gen_expression v
+[DEBUG] : Operator stringfy
+
+[DEBUG] : Name: >=
+
+[DEBUG] : Operator call >= : 
+
+Operator call: >=
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Float 0.000000
+
+[DEBUG] : Eglobal vc_gen_expression
+
+[DEBUG] : Name: v
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : Basetype in vc_gen_substitute:float 
+
+[DEBUG] : Arg1:(>= v 0.0) 
+
+[DEBUG] : Arg2:v 
+
+[DEBUG] : Arg3:amax 
+
+[DEBUG] : After sub:(>= amax 0.0) 
+
+[DEBUG] : 
+--- Z3 SOLVE ---
+
+[DEBUG] : environment:
+
+vc_gen_expression environment : [  (= amax (/ 1.0 20.0))  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : constraint:
+
+[DEBUG] : (>= amax 0.0)
+
+[DEBUG] : --- Z3 SOLVE ---
+
+
+Proving constraint: (not (=> (and (= amax (/ 1.0 20.0))
+              (> xli 0.0)
+              (= xli 5.0)
+              (> b 0.0)
+              (= b (/ 17.0 125.0))
+              (> dt 0.0)
+              (= dt (/ 1.0 10.0))
+              (> vfi 0.0)
+              (= vfi (/ 4.0 5.0)))
+         (>= amax 0.0)))
+[32mPassed[0m
+vc_gen_expression environment : [  (>= amax 0.0)  (= amax (/ 1.0 20.0))  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Efundecl exec
+
+[DEBUG] : # of Arguments: 1
+
+[DEBUG] : Argument------: 
+
+[DEBUG] : var_req: emptyalias
+
+[DEBUG] : Stream elet
+
+[DEBUG] : Stream eop
+
+[DEBUG] : Stream eminusgreater false
+
+vc_gen_pattern
+[DEBUG] : Econstpat
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : void
+[DEBUG] : NULL!0
+
+vc_gen_pattern
+[DEBUG] : Econstpat
+
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : void
+[DEBUG] : NULL!1
+
+--------Printing local_env 
+vc_gen_expression environment : [  (>= amax 0.0)  (= amax (/ 1.0 20.0))  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+----- args env 
+vc_gen_expression environment : [ ]
+[DEBUG] : ---------local typenv
+
+[DEBUG] : vfi:float;
+[DEBUG] : xli:float;
+[DEBUG] : b:float;
+[DEBUG] : amax:float;
+[DEBUG] : dt:float;
+[DEBUG] : 
+ --- CREATE Z3 VAR IMMEDIATE :  --- 
+
+[DEBUG] : Z3 Bool true
+
+[DEBUG] : Return type vc_gen_expression: true
+
+this is a true function
+[DEBUG] : Printing function environment...
+
+vc_gen_expression environment : [  (>= amax 0.0)  (= amax (/ 1.0 20.0))  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : Elet parsing: 
+
+[DEBUG] : Is recursive true
+vc_gen_equation
+[DEBUG] : EQeq:
+
+[DEBUG] : Refinement labeled tuple
+vc_gen_expression environment : [  (>= amax 0.0)  (= amax (/ 1.0 20.0))  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+Will perform the following substitutions:
+[xf/x]
+[vf/v]
+[af/a]
+[xl/x2]
+[vl/v2]
+[al/a2]
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is x
+
+[DEBUG] : -----Adding x to variable environment
+
+[DEBUG] : New variable, returning x
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v --- 
+
+[DEBUG] : Existing variable, returning v
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : a --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is a
+
+[DEBUG] : -----Adding a to variable environment
+
+[DEBUG] : New variable, returning a
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : x2 --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is x2
+
+[DEBUG] : -----Adding x2 to variable environment
+
+[DEBUG] : New variable, returning x2
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : v2 --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is v2
+
+[DEBUG] : -----Adding v2 to variable environment
+
+[DEBUG] : New variable, returning v2
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : a2 --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is a2
+
+[DEBUG] : -----Adding a2 to variable environment
+
+[DEBUG] : New variable, returning a2
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : xf --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is xf
+
+[DEBUG] : -----Adding xf to variable environment
+
+[DEBUG] : New variable, returning xf
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : vf --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is vf
+
+[DEBUG] : -----Adding vf to variable environment
+
+[DEBUG] : New variable, returning vf
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : af --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is af
+
+[DEBUG] : -----Adding af to variable environment
+
+[DEBUG] : New variable, returning af
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : xl --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is xl
+
+[DEBUG] : -----Adding xl to variable environment
+
+[DEBUG] : New variable, returning xl
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : vl --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is vl
+
+[DEBUG] : -----Adding vl to variable environment
+
+[DEBUG] : New variable, returning vl
+
+
+[DEBUG] : 
+ --- CREATE Z3 VAR TYPED : al --- 
+
+[DEBUG] :  I will make a float here
+
+[DEBUG] : the value of v is al
+
+[DEBUG] : -----Adding al to variable environment
+
+[DEBUG] : New variable, returning al
+
+
+[DEBUG] : operation
+[DEBUG] : Found a tuple fby let
+[DEBUG] : start
+vc_gen_expression environment : [  (>= amax 0.0)  (= amax (/ 1.0 20.0))  (> xli 0.0)  (= xli 5.0)  (> b 0.0)  (= b (/ 17.0 125.0))  (> dt 0.0)  (= dt (/ 1.0 10.0))  (> vfi 0.0)  (= vfi (/ 4.0 5.0)) ]
+[DEBUG] : end
+Lets and tuple on bottom
+vc_gen_equation
+[DEBUG] : EQeq:
+
+[DEBUG] : else case
+[DEBUG] : Eop pat
+
+vc_gen_equation_operation
+create_base_var_from_pattern
+Hello, this is Z3 Refinement

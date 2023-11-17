@@ -689,8 +689,12 @@ and vc_gen_equation_expression ctx env e typenv pat =
   | Etypeconstraint (_, _)-> debug(Printf.sprintf "Etypeconstraint\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Etypeconstraint")
   | Epresent (_, _)-> debug(Printf.sprintf "Epresent\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Epresent")
   | Ematch (_, _, _)-> debug(Printf.sprintf "Ematch\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Ematch")
-  | Eseq ( e1, e2)-> debug(Printf.sprintf ("Eseq : (e1 = %s e2 = %s)\n") (Expr.to_string (vc_gen_expression ctx env e1 typenv)) (Expr.to_string (vc_gen_expression ctx env e2 typenv)));
-  raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eseq")
+  | Eseq ( e1, e2)-> 
+    let exp1 = (vc_gen_expression ctx env e1 typenv) in
+    let exp2 = (vc_gen_expression ctx env e2 typenv) in  
+    debug(Printf.sprintf ("Eseq : (e1 = %s e2 = %s)\n") (Expr.to_string exp1) (Expr.to_string exp2));
+    exp2
+  (* raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eseq") *)
   | Eperiod _-> debug(Printf.sprintf "Eperiod\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eperiod")
   | Eblock (_, _)-> debug(Printf.sprintf "Eblock\n"); raise (AstTranslationNotImplemented "vc_gen_equation_expression: Eblock")
   | _ -> vc_gen_expression ctx env e typenv
@@ -825,6 +829,7 @@ and  vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e =
                                 debug("start");
                                 (* ignore(List.map (fun x -> debug (Expr.to_string (vc_gen_expression ctx env x typenv))) e1_list);  *)
                                 (* ignore(debug (Expr.to_string (vc_gen_expression ctx env e2 typenv) )) ; *)
+                                print_env env;
                                 debug("end");
                                 let rec is_only_lets_and_tuple_on_bottom e = (match (e) with
                                                                     | Elet(l, e_inner) -> is_only_lets_and_tuple_on_bottom e_inner.e_desc
@@ -860,6 +865,8 @@ and  vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e =
                                 let ref_constraint = (vc_gen_expression ctx env ref_exp typenv) in
                                 (* Gets phi[x/v] *)
                                 let ref_replaced_constraint = Expr.substitute ref_constraint z3vars_ref z3vars in
+                                debug("ref_replaced_constraint");
+                                debug(Expr.to_string ref_replaced_constraint);
                                 (* Gets "next step" variables, or those associated with e2 *)
                                 (*let next_step_vars = List.map2 (fun x ty -> (create_z3_var_typed ctx env (Printf.sprintf "%s_next" x) ty)) vars_names vars_basetypes_strings in*)
                                 (*
@@ -884,6 +891,10 @@ and  vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e =
                                 (* vc2 === phi[x/v] => phi[e2 / v] *)
                                 let vc2 = Boolean.mk_implies ctx (Boolean.mk_and ctx [(Boolean.mk_and ctx !(env.exp_env)); ref_replaced_constraint]) phi_e2 in
                                 (* Tries to disprove the VCs then adds them to the environment if no counterexample found *)
+                                debug(Printf.sprintf "vc1: %s\n" (Expr.to_string vc1));
+                                debug(Printf.sprintf "vc2: %s\n" (Expr.to_string vc2));
+                                debug("Environment for proof tuple fby");
+                                print_env env;
                                 z3_proof ctx env (Boolean.mk_not ctx vc1) vc1;
                                 z3_proof ctx env (Boolean.mk_not ctx vc2) vc2
 
@@ -914,6 +925,7 @@ and vc_gen_equation ctx env typenv eq =
           | Etypeconstraintpat(p1, t) -> (match t.desc with
 
             | Erefinementlabeledtuple(lbl_ty_list, ref_exp) -> debug (Printf.sprintf "Refinement labeled tuple"); 
+                print_env env;
                 vc_gen_refinement_labeled_tuple ctx env typenv lbl_ty_list ref_exp p1 e
                 (* end goal: return an equality constraint btw original variables and their RHS, and also add the refinement constraint but with the variables substituted*)
                 )
@@ -989,7 +1001,7 @@ and create_validation_check ctx env elem1 elem2 elem3 =
     debug(Printf.sprintf "%s" (Expr.to_string input_binding));
     input_binding
 
-and check_validity ctx checks =
+and check_validity ctx env checks =
 (*
     ctx -> z3 context
     constraints -> list of constraints to be satisfied by functions
@@ -1001,8 +1013,8 @@ and check_validity ctx checks =
     debug (Printf.sprintf "\n --- CHECK INPUT VALIDITY ---\n");
     let check_env = ({exp_env = ref checks; var_env = Hashtbl.create 0}) in
     let arg_constraint = build_z3_premise ctx check_env in
-    let true_env = ({exp_env = ref [(Boolean.mk_true ctx)]; var_env = Hashtbl.create 0}) in
-    z3_solve ctx true_env arg_constraint
+    (* let true_env = ({exp_env = ref [(Boolean.mk_true ctx)]; var_env = Hashtbl.create 0}) in *)
+    z3_solve ctx env arg_constraint
 
 and get_environment_constraints ctx local_env typenv arg =
 (* 
@@ -1066,7 +1078,7 @@ and prove_function ctx n local_env arg_list typenv =
           (* let environment_constraints = List.map (get_environment_constraints ctx local_env typenv) arg_list in *)
           (* print_env ({ exp_env = ref( checks @ environment_constraints); var_env = Hashtbl.create 0}); *)
           let check_env = checks @ !(local_env.exp_env) @ !(ref_fun.creation_env.exp_env) in
-          check_validity ctx checks;
+          check_validity ctx local_env checks;
           (* TODO -- add return constraint to environment after substituting input arguments ?*)
           let subs_constraint = Expr.substitute ref_fun.z3constraint ref_fun.z3args user_args_flat in
           debug(Expr.to_string subs_constraint);
@@ -1461,8 +1473,12 @@ and vc_gen_expression ctx env ({ e_desc = desc; e_loc = loc }) typenv =
     | Etypeconstraint (_, _)-> debug(Printf.sprintf "Etypeconstraint\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Etypeconstraint")
     | Epresent (_, _)-> debug(Printf.sprintf "Epresent\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Epresent")
     | Ematch (_, _, _)-> debug(Printf.sprintf "Ematch\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Ematch")
-    | Eseq ( e1, e2)-> debug(Printf.sprintf ("Eseq : (e1 = %s e2 = %s)\n") (Expr.to_string (vc_gen_expression ctx env e1 typenv)) (Expr.to_string (vc_gen_expression ctx env e2 typenv)));
-    raise (AstTranslationNotImplemented "vc_gen_expression: Eseq")
+    | Eseq ( e1, e2)->
+      let exp1 = (vc_gen_expression ctx env e1 typenv) in
+      let exp2 = (vc_gen_expression ctx env e2 typenv) in  
+      debug(Printf.sprintf ("Eseq : (e1 = %s e2 = %s)\n") (Expr.to_string exp1) (Expr.to_string exp2));
+      exp2
+    (* raise (AstTranslationNotImplemented "vc_gen_expression: Eseq") *)
     | Eperiod _-> debug(Printf.sprintf "Eperiod\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Eperiod")
     | Eblock (_, _)-> debug(Printf.sprintf "Eblock\n"); raise (AstTranslationNotImplemented "vc_gen_expression: Eblock")
     | Eget _-> raise (Z3FailedException "Error using robot_get while verifying")  
