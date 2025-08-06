@@ -169,7 +169,7 @@ let longname = function
       Lident.Modname({ Lident.qual = q; Lident.id = id })
 
 let immediate = function
-  | .Eint(i) -> Deftypes.Eint(i)
+  | Zparsetree.Eint(i) -> Deftypes.Eint(i)
   | Zparsetree.Ebool(b) -> Deftypes.Ebool(b)
   | Zparsetree.Efloat(f) -> Deftypes.Efloat(f)
   | Zparsetree.Echar(c) -> Deftypes.Echar(c)

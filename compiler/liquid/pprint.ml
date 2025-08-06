@@ -6,40 +6,58 @@ ocamlfind ocamlopt -I ../global -I ../parsing ../global/zlocation.ml ../parsing/
   *)
 
 
-open Zparsetree         
+open Zelus
+open Typing    
 
+open Zident
+open Lident
+open Global
+open Modules
+open Deftypes
+open Ztypes
+open Typerrors
 
-let rec string_of_longname = function
+open Zmisc
+open Zlocation
+open Format
+
+open List
+open Hashtbl
+open Str
+
+let string_of_lident = function
   | Name n                     -> n
   | Modname { qual; id }       -> qual ^ "." ^ id
+
+let string_of_zident n = n.source
+
 
 let string_of_basic_type (t : type_expression) =
   match t.desc with
   | Etypeconstr (Name "int",  [])  -> "Int"
   | Etypeconstr (Name "bool", [])  -> "Bool"
   | Etypeconstr (Name "real", [])  -> "Real"
-  | Etypeconstr (ln,          _)   -> string_of_longname ln
+  | Etypeconstr (ln,          _)   -> string_of_lident ln
   | _                              -> "<complex-type>"
 
 
   let rec string_of_expr (e : exp) =
-    match e.desc with
-    | Evar ln                           -> string_of_longname ln
-  
+    match e.e_desc with
+    | Eglobal {lname; _}                   -> string_of_lident lname
+    | Elocal zi                         -> string_of_zident zi
     | Econst (Eint n)                   -> string_of_int n
     | Econst (Ebool b)                  -> string_of_bool b
     | Econst (Efloat f)                 -> string_of_float f
     | Econst (Echar c)                  -> String.make 1 c
     | Econst (Estring s)                -> Printf.sprintf "\"%s\"" s
   
-    | Eapp (_, { desc = Evar (Name "not"); _ }, [e1]) ->
+    | Eapp (_, { e_desc = Eglobal {lname = Name "not"; _}; _ }, [e1]) ->
         "!(" ^ string_of_expr e1 ^ ")"
   
-    | Eapp (_, { desc = Evar (Name op); _ }, [e1; e2])
-      when List.mem op ["<"; "<="; ">"; ">="; "="; "!="; "&&"; "||"] ->
+    | Eapp (_, { e_desc = Eglobal {lname = Name op ; _}; _ }, [e1; e2])
+      when List.mem op ["<"; "<="; ">"; ">="; "="; "!="; "&&"; "||"; "+"; "-"; "*"; "/"] ->
         Printf.sprintf "%s %s %s"
           (string_of_expr e1) op (string_of_expr e2)
-  
     | _ -> "<complex-expr>"
 
 

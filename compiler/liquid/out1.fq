@@ -1,0 +1,10 @@
+bind 1 v : {v:Int | true}
+bind 2 h : {v:func(1,[Bool,Bool]) | true}
+bind 3 b : {v:Bool | true}
+bind 4 c : {v:Bool | true}
+
+constraint:
+  env [1;2;3;4]
+  lhs {v:Int | v < 0}
+  rhs {v:Int | v < 0}
+  id 1 tag []

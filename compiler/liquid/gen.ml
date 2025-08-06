@@ -1,7 +1,26 @@
-(* gen.ml  ─  Zelus AST → Liquid Fixpoint text *****************************)
+(* gen.ml  ─  Zelus AST → Liquid Fixpoint text 
+Usage:
+ocamlfind ocamlopt -I ../global -I ../parsing ../global/zlocation.ml ../parsing/zparsetree.ml pprint.ml gen.ml -o example
 
-open Zparsetree
-open Pprint               
+*****************************)
+open Zelus
+open Typing
+open Pprint    
+
+open Zident
+open Global
+open Modules
+open Deftypes
+open Ztypes
+open Typerrors
+
+open Zmisc
+open Zlocation
+open Format
+
+open List
+open Hashtbl
+open Str
 
 let fresh =
   let counter = ref 0 in
@@ -45,17 +64,17 @@ let to_fq
 
   String.concat "\n" (bind_lines @ ["" (* blank line *)] @ constraint_lines)
 
-let () =
-  if Array.length Sys.argv = 2 then begin
+let () = ()
+  (* if Array.length Sys.argv = 2 then begin
     let out_file = Sys.argv.(1) in
 
     let loc  = Zlocation.no_location in
     let base = { desc = Etypeconstr (Name "int", []); loc } in
     let pred =
       { desc = Eapp ({ app_inline = false; app_statefull = false },
-                     { desc = Evar (Name "<"); loc },
-                     [ { desc = Evar (Name "v"); loc };
-                       { desc = Econst (Eint 0); loc } ]);
+                     { e_desc = Evar (Name "<"); e_loc },
+                     [ { e_desc = Evar (Name "v"); loc };
+                       { e_desc = Econst (Eint 5); loc } ]);
         loc }
     in
     let ty = { desc = Erefinement (("v", base), pred); loc } in
@@ -65,14 +84,24 @@ let () =
       { desc = Eapp ({ app_inline = false; app_statefull = false },
                      { desc = Evar (Name "<"); loc },
                      [ { desc = Evar (Name "v"); loc };
-                       { desc = Econst (Eint 5); loc } ]);
+                       { desc = Econst (Eint 0); loc } ]);
         loc }
     in
     let lty = { desc = Erefinement (("v", lbase), lpred); loc } in
 
-    let fq_text = to_fq ~cid:1 ~lhs:lty ~rhs:ty ~env:[ty] () in
+    (*let base1 = { desc = Etypeconstr (Name "int", []); loc } in
+    let pred1 =
+      { desc = Eapp ({ app_inline = false; app_statefull = false },
+                     { desc = Evar (Name "<"); loc },
+                     [ { desc = Evar (Name "v"); loc };
+                       { desc = Econst (Eint 0); loc } ]);
+        loc }
+    in
+    let lty = { desc = Erefinement (("v", lbase), lpred); loc } in *)
+
+    let fq_text = to_fq ~cid:1 ~lhs:lty ~rhs:ty ~env:[ty;ty] () in
 
     let oc = open_out out_file in
     output_string oc fq_text;  close_out oc;
-    Printf.printf "Wrote %s\n" out_file
-  end
+    Printf.printf "Wrote %s\n" out_file *)
+  (* end *)

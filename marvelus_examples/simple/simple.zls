@@ -1,0 +1,19 @@
+(* A simple program that counts up from zero. Verify that the number is always non-decreasing *)
+let dt:{v:float | v > 0.} = 0.1
+
+(* let node exec () : {(vx:float) | true} =
+  (* Set up another variable y to keep track of the previous value of x. Then just ensure x >= y *)
+  let rec ((x, y):{(v:float)*(w:float) | v >= w}) = 
+     (0., 0.) fby (x +. 1., x)
+    in x
+
+
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = exec () in
+        (print_float x; print_newline ())) else ()
+    *)
+
+let hybrid main () = () 
+
+
