@@ -354,7 +354,7 @@ let zident_pretty (z : Zident.t) : string =
   
   
   let process_tuple_let_eq (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
-    (* Pattern: (x,y,z) : {(vx,vy,vz) | φ} *)
+
     let (xs, ann_zelus) =
       match pat.p_desc with
       | Etypeconstraintpat (bp, ann) ->
@@ -373,6 +373,7 @@ let zident_pretty (z : Zident.t) : string =
     if List.length xs <> List.length es then
       failwith "Tuple let: arity mismatch";
   
+    
     let ann_zpt = to_zpt_type ann_zelus in
     let (bvars, bases, phi) =
       match ann_zpt.desc with
@@ -390,7 +391,8 @@ let zident_pretty (z : Zident.t) : string =
     let ar = List.length xs in
     if List.length bvars <> ar || List.length bases <> ar then
       failwith "Tuple let: annotation arity mismatch";
-
+  
+    
     let ghosts =
       List.mapi (fun i ei ->
         let bi   = List.nth bvars i in
@@ -404,6 +406,7 @@ let zident_pretty (z : Zident.t) : string =
       add_binding bi ty
     ) ghosts;
   
+    
     let k       = ar - 1 in
     let bk      = List.nth bvars k in
     let base_k  = List.nth bases k in
@@ -416,6 +419,7 @@ let zident_pretty (z : Zident.t) : string =
     if not (run_fq bk lhs_k rhs_k) then
       failwith "Liquid type error: tuple refinement not satisfied";
   
+    
     for i = 0 to ar - 1 do
       let xi   = List.nth xs i in
       let base = List.nth bases i in
@@ -435,9 +439,11 @@ let zident_pretty (z : Zident.t) : string =
     | Evarpat id -> zident_pretty id
     | _ -> failwith "Let pattern must be a variable with a refinement annotation"
   in
-\
+
+  
   let ty_ann_zpt = to_zpt_type ty_ann_zelus in
 
+  
   let base_name =
     match ty_ann_zpt.desc with
     | Zparsetree.Erefinement ((_v, base_ty), _pred) ->
@@ -447,21 +453,21 @@ let zident_pretty (z : Zident.t) : string =
     | _ -> failwith "Expected refinement type on let-bound pattern"
   in
 
+  
   let lhs_ty =
     singleton_type_of_const
       { desc = vc_gen_expression rhs; loc = dummy_loc }
       base_name
   in
 
+  
   if run_fq x lhs_ty ty_ann_zpt then
     add_binding x ty_ann_zpt
   else
     failwith (Printf.sprintf
       "Liquid type error: let-bound %s does not satisfy its annotation" x)
 
-(* Extract and check a single let-binding of the form:
-   let (x : {v:Base | pred}) = rhs in ...
-   It builds the singleton type of rhs and checks it ≤ the refinement. *)
+
 let process_let_eq (eq : Zelus.eq) : unit =
   match eq.eq_desc with
   | EQeq (pat, rhs) -> begin
@@ -469,7 +475,7 @@ let process_let_eq (eq : Zelus.eq) : unit =
       | Etypeconstraintpat (base_pat, ty_ann_zelus) -> begin
         match base_pat.p_desc with
         | Zelus.Etuplepat _ps ->
-            (* IMPORTANT: just call; do NOT write `let x = process_tuple_let_eq ...` *)
+            
             process_tuple_let_eq pat rhs
         | Zelus.Evarpat id ->
             let x = Zident.name id in
@@ -486,6 +492,7 @@ let process_let_eq (eq : Zelus.eq) : unit =
     match f () with
     | () -> gamma := saved
     | exception ex -> gamma := saved; raise ex
+  
   
   let check_return ~(fname:string)
                    ~(ret_binder:string)
@@ -515,6 +522,7 @@ let process_let_eq (eq : Zelus.eq) : unit =
                          (e:Zelus.exp) : unit =
     match e.e_desc with
     | Zelus.Elet (l_block, r_exp) ->
+        (* New scope for this let: bindings only live inside r_exp. *)
         with_env_snapshot (fun () ->
           (* handle “let ... and ... and ...” *)
           List.iter process_let_eq l_block.l_eq;
@@ -534,7 +542,7 @@ let process_let_eq (eq : Zelus.eq) : unit =
         in
         process_lets_only e1;
         check_fun_body ~fname ~ret_binder ~ret_base ~ret_pred e2
-  
+
   
     | _ ->
         check_return ~fname ~ret_binder ~ret_base ~ret_pred e
