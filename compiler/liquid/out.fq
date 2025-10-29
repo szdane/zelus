@@ -1,6 +1,0 @@
-bind 1 v : {v:Int | true}
-constraint:
-  env [1]
-  lhs {v:Int | v < 0}
-  rhs {v:Int | true}
-  id 1 tag []

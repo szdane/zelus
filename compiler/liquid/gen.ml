@@ -45,7 +45,7 @@ let to_fq
 
   String.concat "\n" (bind_lines @ ["" (* blank line *)] @ constraint_lines)
 
-let () =
+(* let () =
   if Array.length Sys.argv = 2 then begin
     let out_file = Sys.argv.(1) in
 
@@ -75,4 +75,4 @@ let () =
     let oc = open_out out_file in
     output_string oc fq_text;  close_out oc;
     Printf.printf "Wrote %s\n" out_file
-  end
+  end *)
