@@ -1,7 +1,7 @@
 let dt:{v:float | v > 0.} = 0.1
-let maxflow:{v:float | v > 0.} = 5*dt
+let maxflow:{v:float | v > 0.} = 0.5
 let outflow:{v:float | v > 0.} = 0.1
-let minlevel:{v:float | v > 0} = 1.
+let minlevel:{v:float | v > 0 && v <5} = 1.
 let maxlevel:{v:float | v > minlevel} = 19.
 let node exec () : {(vf:float)*(vl:float) | true} =
   let rec ((flow, level):{(f:float)*(l:float) | 

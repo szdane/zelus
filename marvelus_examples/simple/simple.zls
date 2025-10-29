@@ -1,19 +1,33 @@
 (* A simple program that counts up from zero. Verify that the number is always non-decreasing *)
-let dt:{v:float | v > 0.} = 0.1
+let foo:{v:int | v >=0} = 2+1
+let var:{v:int | v = foo} = foo
+let foo1:{v:string | v = "hey"} = "hey"
+let b:{v:bool | v = true} = true
+let foo2:{v:bool | b } = true
+let dt:{v:float | v >= 0.0+0.1} = 0.1 +. 0.3
+let ite:{v: int | v <= 0 } = if foo > 0 then -1*foo else foo
+(*let t:{(v:float)*(w:float) | v >= w} = (1., 0.)*)
+(*let rec (x,y,z) = (4,5,6) in x*)
+(*let ((x,y,z):{ (vx:int)*(vy:int)*(vz:int) | vx+1 = vy & vz =6}) = (4,5,6) *)
 
-(* let node exec () : {(vx:float) | true} =
+let node test () : {(v : int) | v>=0+3} = 2+1
+let f : {vf: int -> int | true } = 0
+
+let node exec1 () : {(v:float) | v=5} =
+  let (e:{v:int | v=5}) = 5 
+  and (n:{v:int | v=5}) = 5 in
+  let ((x,y,z):{ (vx:int)*(vy:int)*(vz:int) | vy=vx+1 && vz=6}) = (4,5,6) in e
+
+
+let node exec () : {(v:float) | v = 7.0} =
   (* Set up another variable y to keep track of the previous value of x. Then just ensure x >= y *)
-  let rec ((x, y):{(v:float)*(w:float) | v >= w}) = 
+  let (e:{v:int | v=5}) = 5 in 7.0
+  
+  (*let rec ((x, y):{(v:float)*(w:float) | v >= w}) = 
      (0., 0.) fby (x +. 1., x)
-    in x
-
+    in x *)
 
 let hybrid main () = 
     let rec trigger = (period (dt)) in
         present (trigger) -> (let (x) = exec () in
         (print_float x; print_newline ())) else ()
-    *)
-
-let hybrid main () = () 
-
-

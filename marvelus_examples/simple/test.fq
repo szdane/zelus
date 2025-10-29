@@ -1,0 +1,15 @@
+bind 96 b : {v:bool | v = true}
+bind 97 dt : {v:real | v >= 0.0 + 0.1}
+bind 98 e : {v:Int | v = 5}
+bind 99 f : {v:func(1,[Int,Int]) | true}
+bind 100 foo : {v:Int | v >= 0}
+bind 101 foo1 : {v:Str | v = "hey"}
+bind 102 foo2 : {v:bool | b}
+bind 103 ite : {v:Int | v <= 0}
+bind 104 var : {v:Int | v = foo}
+
+constraint:
+  env [96;97;98;99;100;101;102;103;104]
+  lhs {v:real | v = 7.0}
+  rhs {vx:real | true}
+  id 5 tag []
