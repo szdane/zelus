@@ -1,5 +1,10 @@
 open Zparsetree
 
+let paren_if b s = if b then "(" ^ s ^ ")" else s
+let rec needs_parens_as_arg (e: exp) =
+  match e.desc with
+  | Eapp _ -> true
+  | _      -> false
 let rec string_of_longname = function
   | Name n               -> n
   | Modname { qual; id } -> qual ^ "." ^ id
@@ -48,8 +53,14 @@ let rec string_of_expr (e : exp) =
 
   (* Generic function application: f(a,b,...) *)
   | Eapp (_, { desc = Evar (Name f); _ }, args) ->
-      let args_s = args |> List.map string_of_expr |> String.concat "," in
-      Printf.sprintf "%s(%s)" f args_s
+    let args_s =
+      args
+      |> List.map (fun a ->
+           let sa = string_of_expr a in
+           paren_if (needs_parens_as_arg a) sa)
+      |> String.concat " "
+    in
+    if args_s = "" then f else Printf.sprintf "%s %s" f args_s
 
   | _ -> "<complex-expr>"
 

@@ -1,9 +1,8 @@
 (* A simple program that counts up from zero. Verify that the number is always non-decreasing *)
 let foo:{v:int | v >=0} = 2+1
 let var:{v:int | v = foo} = foo
-let foo1:{v:string | v = "hey"} = "hey"
 let b:{v:bool | v = true} = true
-let foo2:{v:bool | b } = true
+let foo2:{v:bool |  b } = true
 let dt:{v:float | v >= 0.0+0.1} = 0.1 +. 0.3
 let ite:{v: int | v <= 0 } = if foo > 0 then -1*foo else foo
 (*let t:{(v:float)*(w:float) | v >= w} = (1., 0.)*)

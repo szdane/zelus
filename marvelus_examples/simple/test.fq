@@ -1,15 +1,18 @@
-bind 96 b : {v:bool | v = true}
-bind 97 dt : {v:real | v >= 0.0 + 0.1}
-bind 98 e : {v:Int | v = 5}
-bind 99 f : {v:func(1,[Int,Int]) | true}
-bind 100 foo : {v:Int | v >= 0}
-bind 101 foo1 : {v:Str | v = "hey"}
-bind 102 foo2 : {v:bool | b}
-bind 103 ite : {v:Int | v <= 0}
-bind 104 var : {v:Int | v = foo}
+bind 0 hd : {v:func(1,[bool,bool]) | true}
+bind 1 X : {v:func(1,[bool,bool]) | true}
+bind 2 G: {v:func(1,[bool,bool]) | true}
+bind 3 hd_float : {v:func(1,[real,real]) | true}
+bind 4 X_float : {v:func(1,[real,real]) | true}
+bind 5 G_float : {v:func(1,[real,real]) | true}
+bind 6 hd_bool : {v:func(1,[bool,bool]) | true}
+bind 7 X_bool : {v:func(1,[bool,bool]) | true}
+bind 8 G_bool : {v:func(1,[bool,bool]) | true}
+bind 9 var : {v:int |true}
+bind 10 a : {v:bool | var=2+1}
+bind 11 b : {v:bool | var >=0}
 
 constraint:
-  env [96;97;98;99;100;101;102;103;104]
-  lhs {v:real | v = 7.0}
-  rhs {vx:real | true}
+  env [0;1;2;3;4;5;6;7;8;9;10;11]
+  lhs {v:Int | hd a && X (G a) }
+  rhs {v:Int | hd b}
   id 5 tag []

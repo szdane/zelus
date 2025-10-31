@@ -1,11 +1,9 @@
 (* The Zelus compiler, version 2.2-dev
-  (2025-10-29-19:28) *)
+  (2025-10-31-20:23) *)
 open Ztypes
 let foo = (+) 2  1
 
 let var = foo
-
-let foo1 = "hey"
 
 let b = true
 
