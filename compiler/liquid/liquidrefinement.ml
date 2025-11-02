@@ -45,7 +45,65 @@ let dummy_loc = Zlocation.no_location
 
 let mk_type desc =
   { desc  = desc; loc = dummy_loc}
+let mk_app f args     = { desc = Zparsetree.Eapp ({app_inline=false; app_statefull=false}, f, args); loc = dummy_loc }
+let mk_var s          = { desc = Zparsetree.Evar (Name s); loc = dummy_loc }
+let mk_and a b = mk_app (mk_var "&&") [a; b]
+let mk_paren (e : Zparsetree.exp) : Zparsetree.exp =
+  { desc =
+      Zparsetree.Eapp (
+        { app_inline = true; app_statefull = false },
+        { desc = Zparsetree.Evar (Name ""); loc = dummy_loc },
+        [ e ]
+      );
+    loc = dummy_loc
+  }
+let mk_eq a b         = mk_app (mk_var "=")  [a; b]
 
+
+let strip_once (fname:string) (base:string) (e:Zparsetree.exp) : Zparsetree.exp option =
+  match e.desc with
+  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg])
+      when String.equal f fname -> Some arg
+  | _ -> None
+
+let rec strip_temporal_chain (base:string) (e:Zparsetree.exp) : Zparsetree.exp =
+  match e.desc with
+  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg]) ->
+      if String.equal f "x"
+          || String.equal f "g"
+          || String.equal f "m"
+      then strip_temporal_chain base arg
+      else e
+  | _ -> e
+
+  
+
+
+  let decompose_fby_goal (base:string) (pred:Zparsetree.exp)
+  : (Zparsetree.exp * Zparsetree.exp) option =
+  let is_and = function
+    | { desc = Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "&&"); _}, [_;_]); _ } -> true
+    | _ -> false
+  in
+  let as_pair = function
+    | { desc = Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "&&"); _}, [p1;p2]); _ } -> Some (p1,p2)
+    | _ -> None
+  in
+  match as_pair pred with
+  | None -> None
+  | Some (p,q) ->
+      let try_order a b =
+        match strip_once "hd" base a with
+        | Some phi ->
+            let psi_raw =  strip_temporal_chain base b in
+            Some (phi, psi_raw)
+            | None -> None
+        | None -> None
+      in
+      match try_order p q with
+      | Some x -> Some x
+      | None ->
+          try_order q p
 
 let to_zpt_kind kind = 
   match kind with 
@@ -88,6 +146,45 @@ let add_binding name ty =
 let current_env ()      = !gamma |> Env.bindings |> List.map snd
 
 
+let gensym =
+  let c = ref 0 in
+  fun (p:string) -> incr c; Printf.sprintf "__%s_%d" p !c
+let is_var = function
+  | { desc = Zparsetree.Evar (Name _); _ } -> true
+  | _ -> false
+
+let starts_with s ~prefix =
+  let n = String.length prefix in
+  String.length s >= n && String.sub s 0 n = prefix
+  
+  let t_hd base t = mk_app (mk_var "hd") [t]
+  let t_G  base t = mk_app (mk_var "g") [t]
+  let t_X  base t = mk_app (mk_var "x") [t]
+  let t_M  base t = mk_app (mk_var "m") [t] 
+
+let add_bool_ghost (gname:string) phi : unit =
+  let v   = { desc = Zparsetree.Evar (Name "v"); loc = dummy_loc } in
+  let eq  = mk_eq v (mk_paren phi) in
+  let bty = { desc = Zparsetree.Etypeconstr (Name "bool", []); loc = dummy_loc } in
+  let ty  = { desc = Zparsetree.Erefinement (("v", bty), eq); loc = dummy_loc } in
+  add_binding gname ty
+
+
+let build_fby_pred_with_ghosts ~(binder:string)
+                               ~(base:string) rhs1 rhs2
+  : Zparsetree.exp =
+  (* create and add ghosts *)
+  let g_e = gensym "hd" in
+  let g_f = gensym "tl" in
+  add_bool_ghost g_e rhs1;
+  add_bool_ghost g_f rhs2;
+  (* hd_Bool e  &&  X_Bool(G_Bool(M_Bool f)) *)
+  let e_var = mk_var g_e in
+  let f_var = mk_var g_f in
+  let hd_e  = t_hd "Bool" e_var in
+  let xgm_f = t_X  "Bool" (t_G "Bool" (t_M "Bool" f_var)) in
+  mk_and hd_e xgm_f
+
 let fixpoint_is_safe (fq_txt : string) : bool =
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in
@@ -119,12 +216,14 @@ let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
       ( { app_inline = i; app_statefull = r }, { desc = vc_gen_expression e; loc = dummy_loc }, List.map (fun exp -> { desc = vc_gen_expression exp; loc = dummy_loc }) e_list )
   | Zelus.Eop(op, exp_list) -> (match op with 
       | Zelus.Eifthenelse -> failwith (Printf.sprintf "Not handling ifthenelse for now")
+      | Zelus.Efby -> failwith (Printf.sprintf "Not handling fby for now")
       | _ -> failwith (Printf.sprintf "Not handling this Eop for now")
     )
   | Zelus.Eblock(_) -> failwith (Printf.sprintf "Not handling Eblock for now")
   (* | Zelus.Elet(_,exp) -> match exp.e_desc with
       | Econst(_) -> implementation {desc = vc_gen_expression exp; loc = dummy_loc}
       | _ -> failwith (Printf.sprintf "Not handling non constant let for now") *)
+  | _ -> failwith(Printf.sprintf "Not handling this expression")
 
 let rec to_zpt_type (t : Zelus.type_expression) : Zparsetree.type_expression =
   let loc = dummy_loc in
@@ -431,42 +530,165 @@ let zident_pretty (z : Zident.t) : string =
       add_binding xi ty_i;
 
     done
+let check_against_phi ~(fname:string)
+    ~(binder:string)
+    ~(base:string)
+    ~(phi:Zparsetree.exp)
+    (e_val:Zelus.exp) : bool =
+        let lhs =
+        singleton_type_of_const
+        { desc = vc_gen_expression e_val; loc = dummy_loc }
+        base
+        in
+        let rhs =
+        { desc = Zparsetree.Erefinement
+        ((binder,
+        { desc = Zparsetree.Etypeconstr (Name (String.lowercase_ascii base), []); loc = dummy_loc }),
+        phi);
+        loc = dummy_loc }
+        in
+run_fq fname lhs rhs
+let install_fby_binding ~(name:string)
+                        ~(binder:string)
+                        ~(base:string)
+                        ~(ann_pred:Zparsetree.exp)
+                        rhs1 rhs2
+  : unit =
+  (* Recover φ, ψ from the annotated predicate: we expect something like
+       hd(φ) && X(G(M(ψ)))
+     but we robustly strip modalities to get the cores. *)
+  (* let phi_hd, psi_tl =
+    match ann_pred.desc with
+    | Zparsetree.Eapp (_,
+        {desc = Zparsetree.Evar (Name "&&"); _},
+        [p_hd; p_tail]) ->
+        ( p_hd,  p_tail)
+    | _ ->
+        (* fallback: use the same core for both sides if the user gave a single φ *)
+        let core =  ann_pred in
+        (core, core)
+  in *)
+  (* let ok1 = check_against_phi ~fname:name ~binder ~base ~phi:phi_hd e1 in
+  let ok2 = check_against_phi ~fname:name ~binder ~base ~phi:psi_tl e2 in
+  if not (ok1 && ok2) then
+    failwith (Printf.sprintf "Liquid type error: %s fby parts don't satisfy φ/ψ" name); *)
 
-  let process_scalar_eq base_pat ty_ann_zelus rhs =    
-    debug (Printf.sprintf "Processing let eq with annotation");       
-    let x =
-    match base_pat.p_desc with
-    | Evarpat id -> zident_pretty id
-    | _ -> failwith "Let pattern must be a variable with a refinement annotation"
+  let pred = build_fby_pred_with_ghosts ~binder ~base rhs1 rhs2 in
+  let rhs_ty =
+    { desc = Zparsetree.Erefinement
+              ((binder,
+                { desc = Zparsetree.Etypeconstr (Name (String.lowercase_ascii base), []); loc = dummy_loc }),
+               pred);
+      loc = dummy_loc }
   in
+  add_binding name rhs_ty
 
-  
-  let ty_ann_zpt = to_zpt_type ty_ann_zelus in
-
-  
-  let base_name =
-    match ty_ann_zpt.desc with
-    | Zparsetree.Erefinement ((_v, base_ty), _pred) ->
-        (match base_ty.desc with
-          | Zparsetree.Etypeconstr (Name b, []) -> b
-          | _ -> failwith "Refinement base must be Etypeconstr(Name,[])")
-    | _ -> failwith "Expected refinement type on let-bound pattern"
-  in
-
-  
-  let lhs_ty =
-    singleton_type_of_const
-      { desc = vc_gen_expression rhs; loc = dummy_loc }
-      base_name
-  in
-
-  
-  if run_fq x lhs_ty ty_ann_zpt then
-    add_binding x ty_ann_zpt
-  else
-    failwith (Printf.sprintf
-      "Liquid type error: let-bound %s does not satisfy its annotation" x)
-
+  let process_scalar_eq base_pat ty_ann_zelus rhs =
+      debug "Processing let eq with annotation";
+      let x =
+        match base_pat.p_desc with
+        | Evarpat id -> zident_pretty id
+        | _ -> failwith "Let pattern must be a variable with a refinement annotation"
+      in
+    
+      (* Annotation as ZPT *)
+      let ty_ann_zpt = to_zpt_type ty_ann_zelus in
+      let (ret_binder, base_ty, pred_zpt) =
+        match ty_ann_zpt.desc with
+        | Zparsetree.Erefinement ((vb, base_ty), pred) -> (vb, base_ty, pred)
+        | _ -> failwith "Expected refinement type on let-bound pattern"
+      in
+      let base_name =
+        match base_ty.desc with
+        | Zparsetree.Etypeconstr (Name b, []) -> b
+        | _ -> failwith "Refinement base must be Etypeconstr(Name,[])"
+      in
+    
+      (* Fast-path: {v | true} *)
+      (match pred_zpt.desc with
+       | Zparsetree.Econst (Ebool true) ->
+           add_binding x ty_ann_zpt
+       | _ ->
+         (* FBY special case: let … = e1 fby e2 in … *)
+         match rhs.e_desc with
+         | Zelus.Eop (Zelus.Efby, e1 :: e2 :: []) -> (
+             match decompose_fby_goal base_name pred_zpt with
+             | None ->
+                 failwith "FBY: annotation must be of the form hd(φ) && X(…ψ…)"
+             | Some (phi_for_e1, psi_for_e2) ->
+                (debug "here";
+                 let lhs1 =
+                   singleton_type_of_const
+                     { desc = vc_gen_expression e1; loc = dummy_loc }
+                     base_name
+                 in
+                 let rhs1 =
+                   mk_type (Zparsetree.Erefinement
+                             ((ret_binder,
+                               mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), []))),
+                              phi_for_e1))
+                 in
+                 let ok1 = run_fq x lhs1 rhs1 in
+    
+                 let lhs2 =
+                   singleton_type_of_const
+                     { desc = vc_gen_expression e2; loc = dummy_loc }
+                     base_name
+                 in
+                 let rhs2 =
+                   mk_type (Zparsetree.Erefinement
+                             ((ret_binder,
+                               mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), []))),
+                              psi_for_e2))
+                 in
+                 let ok2 = run_fq x lhs2 rhs2 in
+    
+                 if ok1 && ok2 then install_fby_binding x ret_binder base_name pred_zpt psi_for_e2 phi_for_e1
+                 else failwith (Printf.sprintf "Liquid type error: FBY checks failed for %s" x))
+              | _ -> failwith "Here";
+           )
+    
+         (* Previous ITE branch you added — keep it! *)
+         | Zelus.Eop (Zelus.Eifthenelse, i :: t_then :: t_else :: []) ->
+             let lhs_then =
+               singleton_type_of_const { desc = vc_gen_expression t_then; loc = dummy_loc } base_name
+             in
+             let lhs_else =
+               singleton_type_of_const { desc = vc_gen_expression t_else; loc = dummy_loc } base_name
+             in
+             let base_ty_zpt =
+               mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), []))
+             in
+             let imp_then =
+               mk_app (mk_var "=>") [ { desc = vc_gen_expression i; loc = dummy_loc } ; pred_zpt ]
+             in
+             let imp_else =
+               mk_app (mk_var "=>")
+                 [ mk_app (mk_var "not") [ { desc = vc_gen_expression i; loc = dummy_loc } ]
+                 ; pred_zpt
+                 ]
+             in
+             let rhs_then =
+               mk_type (Zparsetree.Erefinement ((ret_binder, base_ty_zpt), imp_then))
+             in
+             let rhs_else =
+               mk_type (Zparsetree.Erefinement ((ret_binder, base_ty_zpt), imp_else))
+             in
+             let ok_then = run_fq x lhs_then rhs_then in
+             let ok_else = run_fq x lhs_else rhs_else in
+             if ok_then && ok_else then add_binding x ty_ann_zpt
+             else failwith (Printf.sprintf "Liquid type error: let-bound %s (ITE) violates its annotation" x)
+    
+         (* Plain (non-ITE/FBY) RHS *)
+         | _ -> 
+             let lhs_ty =
+               singleton_type_of_const { desc = vc_gen_expression rhs; loc = dummy_loc } base_name
+             in
+             if run_fq x lhs_ty ty_ann_zpt then add_binding x ty_ann_zpt
+             else failwith (Printf.sprintf
+                    "Liquid type error: let-bound %s does not satisfy its annotation" x)
+      )
+    
 
 let process_let_eq (eq : Zelus.eq) : unit =
   match eq.eq_desc with
@@ -486,6 +708,12 @@ let process_let_eq (eq : Zelus.eq) : unit =
       | _ -> ()
     end
   | _ -> ()
+    
+  
+
+  
+
+
 
   let with_env_snapshot (f : unit -> unit) : unit =
     let saved = !gamma in
@@ -499,22 +727,54 @@ let process_let_eq (eq : Zelus.eq) : unit =
                    ~(ret_base:string)
                    ~(ret_pred:Zelus.exp)
                    (e:Zelus.exp) : unit =
-    (* Build LHS singleton from the *return expression* e with base = ret_base. *)
-    let lhs =
-      singleton_type_of_const
-        { desc = vc_gen_expression e; loc = dummy_loc }
-        ret_base
-    in
-    (* Build RHS from the declared return refinement; ensure binder consistency. *)
-    let rhs =
-      mk_type (Zparsetree.Erefinement
-                 ((ret_binder,
-                   mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base), []))),
-                  { desc = vc_gen_expression ret_pred; loc = dummy_loc }))
-    in
-    if not (run_fq fname lhs rhs) then
-      failwith (Printf.sprintf "Liquid type error: %s does not satisfy its annotation" fname)
-  
+    match e.e_desc with 
+    | Zelus.Eop (Zelus.Eifthenelse, i :: t :: el :: []) ->
+      let lhs_then =
+        singleton_type_of_const { desc = vc_gen_expression t;  loc = dummy_loc } ret_base
+      in
+      let lhs_else =
+        singleton_type_of_const { desc = vc_gen_expression el; loc = dummy_loc } ret_base
+      in
+      let phi =
+        { desc = vc_gen_expression ret_pred; loc = dummy_loc }
+      in
+      let base_ty =
+        mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base), []))
+      in
+      let rhs_then =
+        mk_type (Zparsetree.Erefinement
+                   ((ret_binder, base_ty),
+                    mk_app (mk_var "=>")
+                      [ { desc = vc_gen_expression i; loc = dummy_loc }
+                      ; phi ]))
+      in
+      let rhs_else =
+        mk_type (Zparsetree.Erefinement
+                   ((ret_binder, base_ty),
+                    mk_app (mk_var "=>")
+                      [ mk_app (mk_var "not") [ { desc = vc_gen_expression i; loc = dummy_loc } ]
+                      ; phi ]))
+      in
+      let ok_then = run_fq fname lhs_then rhs_then in
+      let ok_else = run_fq fname lhs_else rhs_else in
+      if ok_then && ok_else then ()
+      else failwith (Printf.sprintf "Liquid type error: %s (return ITE) does not satisfy its annotation" fname)
+      | _ -> (
+        let lhs =
+          singleton_type_of_const
+            { desc = vc_gen_expression e; loc = dummy_loc }
+            ret_base
+        in
+        (* Build RHS from the declared return refinement; ensure binder consistency. *)
+        let rhs =
+          mk_type (Zparsetree.Erefinement
+                    ((ret_binder,
+                      mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base), []))),
+                      { desc = vc_gen_expression ret_pred; loc = dummy_loc }))
+        in
+        if not (run_fq fname lhs rhs) then
+          failwith (Printf.sprintf "Liquid type error: %s does not satisfy its annotation" fname))
+      
   let rec check_fun_body ~(fname:string)
                          ~(ret_binder:string)
                          ~(ret_base:string)
@@ -593,7 +853,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                 | Zelus.Eop(op,exp_list) -> (
                   match op with 
                     | Zelus.Eifthenelse -> failwith (Printf.sprintf "Not handling ifthenelse for now")
-                    | _ -> failwith (Printf.sprintf "Not handling this Eop for now")
+                    | _ -> failwith (Printf.sprintf "Not handling this Eop for now inside implementation")
                 )
                 (*Liquid fixpoint doesn't allow having {v:Int| c or var} only {v:base| true or false} that's why I commented out the following predicate matchings*)
                 (* | Zelus.Elocal{num = i; source = n} -> failwith (Printf.sprintf "Yes it is an Elocal")
