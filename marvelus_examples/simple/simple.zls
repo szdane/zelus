@@ -20,8 +20,8 @@ let f : {vf: int -> int | true } = 0*)
 
 let node exec () : {(v:float) | v = 7.0} =
   (* Set up another variable y to keep track of the previous value of x. Then just ensure x >= y *)
-  (*let (e:{v:int | v=5}) = 5 in *)
-  let (e1:{v:int | hd (v>=0) && x (g (m(v>=0)))}) = 5 fby 6 in 7.0
+  let (e:{v:int | v=5}) = 5 in 
+  let (e1:{v:int | hd (v=5) && x (g (m(v>=0)))}) = e fby 6 in 7.0
   
   (*let rec ((x, y):{(v:float)*(w:float) | v >= w}) = 
      (0., 0.) fby (x +. 1., x)

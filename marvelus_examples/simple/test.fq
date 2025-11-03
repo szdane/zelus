@@ -2,18 +2,20 @@ bind 0 x  : {v:func(1, [bool, bool]) | true}
 bind 1 hd  : {v:func(1, [bool, bool]) | true}
 bind 2 g : {v:func(1, [bool, bool]) | true}
 bind 3 m  : {v:func(1, [bool, bool]) | true}
-bind 37 __hd_1 : {v:bool | v =  (v >= 0)}
-bind 38 __tl_2 : {v:bool | v =  (v >= 0)}
-bind 39 b : {v:bool | v = true}
-bind 40 dt : {v:real | v >= 0.0 + 0.1}
-bind 41 e1 : {v:Int | hd __hd_1 && x (g (m __tl_2))}
-bind 42 foo : {v:Int | v >= 0}
-bind 43 foo2 : {v:bool | b}
-bind 44 ite : {v:Int | v <= 0}
-bind 45 var : {v:Int | v = foo}
+bind 4 i : {v: int | true}
+bind 45 __hd_1 : {v:bool | true}
+bind 46 __tl_2 : {v:bool | true}
+bind 47 b : {v:bool | v = true}
+bind 48 dt : {v:real | v >= 0.0 + 0.1}
+bind 49 e : {v:Int | v = 5}
+bind 50 e1 : {v:Int | __hd_1 = (v=5) && __tl_2 = (v>=0) && hd __hd_1 && x (g (m __tl_2))}
+bind 51 foo : {v:Int | v >= 0}
+bind 52 foo2 : {v:bool | b}
+bind 53 ite : {v:Int | v <= 0}
+bind 54 var : {v:Int | v = foo}
 
 constraint:
-  env [0;1;2;37;38;39;40;41;42;43;44;45]
+  env [0;1;2;3;4;45;46;47;48;49;50;51;52;53;54]
   lhs {v:real | v = 7.0}
   rhs {v:real | v = 7.0}
   id 5 tag []

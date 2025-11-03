@@ -42,7 +42,7 @@ let to_fq
     Printf.sprintf "  id %d tag []" cid
   ] in
 
-  String.concat "\n" (["bind 0 x  : {v:func(1, [bool, bool]) | true}"] @ ["bind 1 hd  : {v:func(1, [bool, bool]) | true}"] @ ["bind 2 g : {v:func(1, [bool, bool]) | true}"] @ ["bind 3 m  : {v:func(1, [bool, bool]) | true}"] @ bind_lines @ ["" (* blank line *)] @ constraint_lines)
+  String.concat "\n" (["bind 0 x  : {v:func(1, [bool, bool]) | true}"] @ ["bind 1 hd  : {v:func(1, [bool, bool]) | true}"] @ ["bind 2 g : {v:func(1, [bool, bool]) | true}"] @ ["bind 3 m  : {v:func(1, [bool, bool]) | true}"] @ ["bind 4 i : {v: int | true} "] @ bind_lines @ ["" (* blank line *)] @ constraint_lines)
 
 (* let () =
   if Array.length Sys.argv = 2 then begin

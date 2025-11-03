@@ -58,7 +58,8 @@ let mk_paren (e : Zparsetree.exp) : Zparsetree.exp =
     loc = dummy_loc
   }
 let mk_eq a b         = mk_app (mk_var "=")  [a; b]
-
+let mk_true : Zparsetree.exp =
+  { desc = Zparsetree.Econst (Ebool true); loc = dummy_loc }
 
 let strip_once (fname:string) (base:string) (e:Zparsetree.exp) : Zparsetree.exp option =
   match e.desc with
@@ -148,7 +149,7 @@ let current_env ()      = !gamma |> Env.bindings |> List.map snd
 
 let gensym =
   let c = ref 0 in
-  fun (p:string) -> incr c; Printf.sprintf "__%s_%d" p !c
+  fun (p:string) -> incr c; Printf.sprintf "%s_%d" p !c
 let is_var = function
   | { desc = Zparsetree.Evar (Name _); _ } -> true
   | _ -> false
@@ -162,12 +163,13 @@ let starts_with s ~prefix =
   let t_X  base t = mk_app (mk_var "x") [t]
   let t_M  base t = mk_app (mk_var "m") [t] 
 
-let add_bool_ghost (gname:string) phi : unit =
+let add_bool_ghost (gname:string) phi  =
   let v   = { desc = Zparsetree.Evar (Name "v"); loc = dummy_loc } in
   let eq  = mk_eq v (mk_paren phi) in
   let bty = { desc = Zparsetree.Etypeconstr (Name "bool", []); loc = dummy_loc } in
   let ty  = { desc = Zparsetree.Erefinement (("v", bty), eq); loc = dummy_loc } in
-  add_binding gname ty
+  add_binding gname ty;
+  ty
 
 
 let build_fby_pred_with_ghosts ~(binder:string)
@@ -176,14 +178,14 @@ let build_fby_pred_with_ghosts ~(binder:string)
   (* create and add ghosts *)
   let g_e = gensym "hd" in
   let g_f = gensym "tl" in
-  add_bool_ghost g_e rhs1;
-  add_bool_ghost g_f rhs2;
+  let ty_1 = add_bool_ghost g_e mk_true in
+  let ty_2 = add_bool_ghost g_f mk_true in
   (* hd_Bool e  &&  X_Bool(G_Bool(M_Bool f)) *)
   let e_var = mk_var g_e in
   let f_var = mk_var g_f in
   let hd_e  = t_hd "Bool" e_var in
   let xgm_f = t_X  "Bool" (t_G "Bool" (t_M "Bool" f_var)) in
-  mk_and hd_e xgm_f
+  mk_and (mk_eq (mk_var g_e) (mk_paren rhs2)) (mk_and (mk_eq (mk_var g_f) (mk_paren rhs1)) (mk_and hd_e xgm_f))
 
 let fixpoint_is_safe (fq_txt : string) : bool =
   let tmp_dir = Filename.get_temp_dir_name () in
@@ -583,7 +585,7 @@ let install_fby_binding ~(name:string)
   in
   add_binding name rhs_ty
 
-  let process_scalar_eq base_pat ty_ann_zelus rhs =
+let process_scalar_eq base_pat ty_ann_zelus rhs =
       debug "Processing let eq with annotation";
       let x =
         match base_pat.p_desc with
