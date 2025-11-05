@@ -18,16 +18,16 @@ let f : {vf: int -> int | true } = 0*)
   let ((x,y,z):{ (vx:int)*(vy:int)*(vz:int) | vy=vx+1 && vz=6}) = (4,5,6) in e*)
 
 
-let node exec () : {(v:float) | v = 7.0} =
+let node exec () : {(v:int) | v >= 0} =
   (* Set up another variable y to keep track of the previous value of x. Then just ensure x >= y *)
   let (e:{v:int | v=5}) = 5 in 
-  let (e1:{v:int | hd (v=5) && x (g (m(v>=0)))}) = e fby 6 in 7.0
+  let (e1:{v:int | v=5 && x (g (m(v>=0)))}) = e fby 6 in e1
   
   (*let rec ((x, y):{(v:float)*(w:float) | v >= w}) = 
      (0., 0.) fby (x +. 1., x)
     in x *)
 
-let hybrid main () = 
-    let rec trigger = (period (dt)) in
+let hybrid main () = ()
+    (*let rec trigger = (period (dt)) in
         present (trigger) -> (let (x) = exec () in
-        (print_float x; print_newline ())) else ()
+        (print_float x; print_newline ())) else ()*)

@@ -36,140 +36,7 @@ open Lident
 
 open Zparsetree
 
-let debug message =
-  (* log debug message *)
-  (* if !ref_verbose then (Printf.printf "[DEBUG] : %s\n" message)  *)
-  (Printf.printf "[DEBUG] : %s\n" message)
-
-let dummy_loc = Zlocation.no_location
-
-let mk_type desc =
-  { desc  = desc; loc = dummy_loc}
-let mk_app f args     = { desc = Zparsetree.Eapp ({app_inline=false; app_statefull=false}, f, args); loc = dummy_loc }
-let mk_var s          = { desc = Zparsetree.Evar (Name s); loc = dummy_loc }
-let mk_and a b = mk_app (mk_var "&&") [a; b]
-let mk_paren (e : Zparsetree.exp) : Zparsetree.exp =
-  { desc =
-      Zparsetree.Eapp (
-        { app_inline = true; app_statefull = false },
-        { desc = Zparsetree.Evar (Name ""); loc = dummy_loc },
-        [ e ]
-      );
-    loc = dummy_loc
-  }
-let mk_eq a b         = mk_app (mk_var "=")  [a; b]
-let mk_true : Zparsetree.exp =
-  { desc = Zparsetree.Econst (Ebool true); loc = dummy_loc }
-
-let strip_once (fname:string) (base:string) (e:Zparsetree.exp) : Zparsetree.exp option =
-  match e.desc with
-  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg])
-      when String.equal f fname -> Some arg
-  | _ -> None
-
-let rec strip_temporal_chain (base:string) (e:Zparsetree.exp) : Zparsetree.exp =
-  match e.desc with
-  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg]) ->
-      if String.equal f "x"
-          || String.equal f "g"
-          || String.equal f "m"
-      then strip_temporal_chain base arg
-      else e
-  | _ -> e
-
-  
-
-
-  let decompose_fby_goal (base:string) (pred:Zparsetree.exp)
-  : (Zparsetree.exp * Zparsetree.exp) option =
-  let is_and = function
-    | { desc = Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "&&"); _}, [_;_]); _ } -> true
-    | _ -> false
-  in
-  let as_pair = function
-    | { desc = Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "&&"); _}, [p1;p2]); _ } -> Some (p1,p2)
-    | _ -> None
-  in
-  match as_pair pred with
-  | None -> None
-  | Some (p,q) ->
-      let try_order a b =
-        match strip_once "hd" base a with
-        | Some phi ->
-            let psi_raw =  strip_temporal_chain base b in
-            Some (phi, psi_raw)
-            | None -> None
-        | None -> None
-      in
-      match try_order p q with
-      | Some x -> Some x
-      | None ->
-          try_order q p
-
-let to_zpt_kind kind = 
-  match kind with 
-    | Zelus.S -> Zparsetree.S
-    | Zelus.A -> Zparsetree.A
-    | Zelus.C -> Zparsetree.C
-    | Zelus.D -> Zparsetree.D
-    | Zelus.AD -> Zparsetree.AD
-    | Zelus.AS -> Zparsetree.AS
-    | Zelus.P -> Zparsetree.P
-
-  let zident_opt_to_string_opt (o : Zident.t option) : string option =
-    Option.map Zident.name o
-
-    
-let literal_and_base = function
-(*TODO: Fix this issue with int vs other types*)
-  | Deftypes.Eint  n  -> Zparsetree.Eint n  , "Int"
-  | Deftypes.Efloat f -> Zparsetree.Efloat f, "Real"
-  | Ebool b  -> Zparsetree.Ebool b, "Bool"
-  | Estring s -> Zparsetree.Estring s , "String"
-  | _         -> failwith "Unsupported literal in Liquid prototype"
-
-let singleton_type_of_const e base_name=
-  let base_ty  = mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), [])) in
-  let v_var    = { desc = Zparsetree.Evar (Name "v"); loc = dummy_loc } in
-  let op_exp   = { desc = Zparsetree.Evar (Name "=");  loc = dummy_loc } in
-  let pred_exp = { desc = Zparsetree.Eapp ({ app_inline = false; app_statefull = false },
-                                  op_exp, [v_var; e]);
-                  loc  = dummy_loc } in
-  mk_type (Zparsetree.Erefinement (("v", base_ty), pred_exp))
-
-
-module Env = Map.Make (String)
-let gamma : type_expression Env.t ref = ref Env.empty
-let add_binding name ty = 
-  match ty.desc with
-    | Erefinement((var, base_ty), lpred) -> gamma := Env.add name ({desc = Erefinement((name, base_ty), lpred); loc = dummy_loc}) !gamma
-    | _ -> failwith(Printf.sprintf "It's not a refinement type")
-let current_env ()      = !gamma |> Env.bindings |> List.map snd
-
-
-let gensym =
-  let c = ref 0 in
-  fun (p:string) -> incr c; Printf.sprintf "%s_%d" p !c
-let is_var = function
-  | { desc = Zparsetree.Evar (Name _); _ } -> true
-  | _ -> false
-
-let starts_with s ~prefix =
-  let n = String.length prefix in
-  String.length s >= n && String.sub s 0 n = prefix
-  
-  let t_hd base t = mk_app (mk_var "hd") [t]
-  let t_G  base t = mk_app (mk_var "g") [t]
-  let t_X  base t = mk_app (mk_var "x") [t]
-  let t_M  base t = mk_app (mk_var "m") [t] 
-
-let add_bool_ghost (gname:string) phi  =
-  let v   = { desc = Zparsetree.Evar (Name "v"); loc = dummy_loc } in
-  let eq  = mk_eq v (mk_paren phi) in
-  let bty = { desc = Zparsetree.Etypeconstr (Name "bool", []); loc = dummy_loc } in
-  let ty  = { desc = Zparsetree.Erefinement (("v", bty), eq); loc = dummy_loc } in
-  add_binding gname ty;
-  ty
+open Utilities
 
 
 let build_fby_pred_with_ghosts ~(binder:string)
@@ -185,7 +52,8 @@ let build_fby_pred_with_ghosts ~(binder:string)
   let f_var = mk_var g_f in
   let hd_e  = t_hd "Bool" e_var in
   let xgm_f = t_X  "Bool" (t_G "Bool" (t_M "Bool" f_var)) in
-  mk_and (mk_eq (mk_var g_e) (mk_paren rhs2)) (mk_and (mk_eq (mk_var g_f) (mk_paren rhs1)) (mk_and hd_e xgm_f))
+  mk_and rhs2 (mk_and (mk_paren (mk_eq (mk_var g_f) (mk_paren rhs1))) xgm_f)
+
 
 let fixpoint_is_safe (fq_txt : string) : bool =
   let tmp_dir = Filename.get_temp_dir_name () in
@@ -197,11 +65,12 @@ let fixpoint_is_safe (fq_txt : string) : bool =
   Sys.remove tmp;
   status = 0
 
-(* 
-let rec vc_gen_exp_list exp_list = 
-  match exp_list with
-    | [] -> []
-    | exp::tl -> {desc = vc_gen_expression exp ; loc = dummy_loc}::vc_gen_exp_list tl *)
+let rec contains_X (e:Zparsetree.exp) : bool =
+  match e.desc with
+  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name "x"); _ }, _args) -> true
+  | Zparsetree.Eapp (_, _f, args) -> List.exists contains_X args
+  | Zparsetree.Etuple es          -> List.exists contains_X es
+  | _ -> false
   
 
 let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
@@ -227,6 +96,107 @@ let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
       | _ -> failwith (Printf.sprintf "Not handling non constant let for now") *)
   | _ -> failwith(Printf.sprintf "Not handling this expression")
 
+
+let mk_eq_v_to_zls (e_zls : Zelus.exp) : Zparsetree.exp =
+    let v = mk_v () in
+    let ez = { desc = vc_gen_expression e_zls; loc = dummy_loc } in
+    mk_eq v ez
+let normalize_pred_with_next ~(binder:string) (pred:Zelus.exp) : Zparsetree.exp =
+  let loc = dummy_loc in
+  let zpt = { desc = vc_gen_expression pred; loc } in
+
+  let phi_now =
+    match find_eq_atom_for_binder binder zpt with
+    | Some eq -> eq
+    | None    -> e_true
+  in
+
+  let phi_next =
+    match zpt.desc with
+    | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, _)
+        when f = "X" || f = "x" -> zpt
+    | _ ->
+        if is_temporal_head zpt then zpt else e_true
+  in
+
+  mk_and phi_now (mk_X phi_next)
+
+  
+  (* Convert a Zelus predicate to ZPT expr for "now" and "next" parts, WITHOUT hd. *)
+let zls_pred_to_nf ~(binder:string) (pred_zls:Zelus.exp) : Zparsetree.exp =
+    let p = { desc = vc_gen_expression pred_zls; loc = dummy_loc } in
+    (* Top-only behavior for temporal heads; otherwise, append X true
+       unless an X(...) already occurs somewhere inside p. *)
+    match p.desc with
+    | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "g"); _}, [_]) ->
+        (* e.g., G(phi)  ->  phi && X(G(phi)) *)
+        let inner =
+          match p.desc with
+          | Zparsetree.Eapp (_, _, [q]) -> q
+          | _ -> mk_true
+        in
+        mk_and inner (mk_X p)
+  
+    | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "x"); _}, [_])
+    | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "m"); _}, [_]) ->
+        (* already X(...) or M(...):  true && X(original) *)
+        mk_and (mk_true) (mk_X p)
+  
+    | _ ->
+        (* non-temporal head: only add X true if there is no X anywhere inside *)
+        if contains_X p
+        then p                    (* just φ, no extra && X true *)
+        else mk_and p (mk_X (mk_true))
+  
+  (* Pretty-print an NF line for debugging (keeps your binder name in the header). *)
+let debug_nf (tag:string) ~(binder:string) (pred_zls:Zelus.exp) : unit =
+    let nf = zls_pred_to_nf ~binder pred_zls in
+    let s_now =
+      (* reuse your pretty printer *)
+      (* Show {binder | <nf>} *)
+      Printf.sprintf "{%s | %s}" binder (Pprint.string_of_expr nf)
+    in
+    debug (Printf.sprintf "[NF:%s] %s" tag s_now)
+let debug_nf_synth_lhs (rhs : Zelus.exp) : unit =
+      let pp_ty (p : Zparsetree.exp) : string =
+        (* reuse your pretty-printer: {v | …} form *)
+        let ty =
+          { desc = Zparsetree.Erefinement (("v",
+                   { desc = Zparsetree.Etypeconstr (Name "Int", []); loc = dummy_loc }),
+                   p);
+            loc = dummy_loc }
+        in
+       Pprint.string_of_type ty
+      in
+      match rhs.e_desc with
+      | Zelus.Eop (Zelus.Eifthenelse, [c; t; e]) ->
+          (* THEN branch: v = t  &&  X(G(v = t)) *)
+          let p_then =
+            let v_eq_t = mk_eq_v_to_zls t in
+            mk_and v_eq_t (mk_X (mk_G v_eq_t))
+          in
+          debug (Printf.sprintf "[NF:synth LHS then] %s" (pp_ty p_then));
+    
+          (* ELSE branch: v = e  &&  X(G(v = e)) *)
+          let p_else =
+            let v_eq_e = mk_eq_v_to_zls e in
+            mk_and v_eq_e (mk_X (mk_G v_eq_e))
+          in
+          debug (Printf.sprintf "[NF:synth LHS else] %s" (pp_ty p_else))
+    
+      | Zelus.Eop (Zelus.Efby, [e1; e2]) ->
+          (* e1 fby e2  -> v = e1  &&  X(G(M(v = e2))) *)
+          let v_eq_e1 = mk_eq_v_to_zls e1 in
+          let v_eq_e2 = mk_eq_v_to_zls e2 in
+          let p = mk_and v_eq_e1 (mk_X (mk_G (mk_M v_eq_e2))) in
+          debug (Printf.sprintf "[NF:synth LHS fby] %s" (pp_ty p))
+    
+      | _ ->
+          (* default: constants/any other expr -> v = rhs && X(G(v = rhs)) *)
+          let v_eq = mk_eq_v_to_zls rhs in
+          let p    = mk_and v_eq (mk_X (mk_G v_eq)) in
+          debug (Printf.sprintf "[NF:synth LHS] %s" (pp_ty p))
+  
 let rec to_zpt_type (t : Zelus.type_expression) : Zparsetree.type_expression =
   let loc = dummy_loc in
   match t.desc with
@@ -237,11 +207,16 @@ let rec to_zpt_type (t : Zelus.type_expression) : Zparsetree.type_expression =
       mk_type (Zparsetree.Etypetuple (List.map to_zpt_type ts))
 
   | Zelus.Erefinement ((vname, base_ty), pred_exp) ->
+      (* debug_nf "type" ~binder:vname pred_exp; *)
       let base_zpt = to_zpt_type base_ty in
       let pred_zpt = { desc = vc_gen_expression pred_exp; loc } in
       mk_type (Zparsetree.Erefinement ((vname, base_zpt), pred_zpt))
 
   | Zelus.Erefinementlabeledtuple (fields, pred_exp) ->
+      (* let binder_for_log =
+        match fields with (n,_)::_ -> n | [] -> "_tuple"
+      in
+      debug_nf "type-tuple" ~binder:binder_for_log pred_exp; *)
       let fields' =
         List.map (fun (nm, ty) -> (nm, to_zpt_type ty)) fields
       in
@@ -265,6 +240,7 @@ let run_fq name lhs rhs =
 
 
 let process_lhs_ty e_desc base e = 
+  debug_nf_synth_lhs e; 
   match e_desc with 
     | Zelus.Etuple(_) -> failwith (Printf.sprintf "The expression is tuple")
     | Zelus.Eop(Eifthenelse,i::t::el::[]) -> singleton_type_of_const {desc = (vc_gen_expression t); loc = dummy_loc} base
@@ -471,6 +447,7 @@ let zident_pretty (z : Zident.t) : string =
       | Zelus.Etuple es -> es
       | _ -> failwith "Tuple let: RHS must be a tuple expression"
     in
+    List.iter (fun ei -> debug_nf_synth_lhs ei) es;
     if List.length xs <> List.length es then
       failwith "Tuple let: arity mismatch";
   
@@ -587,19 +564,28 @@ let install_fby_binding ~(name:string)
 
 let process_scalar_eq base_pat ty_ann_zelus rhs =
       debug "Processing let eq with annotation";
+      debug_nf_synth_lhs rhs;
       let x =
         match base_pat.p_desc with
         | Evarpat id -> zident_pretty id
         | _ -> failwith "Let pattern must be a variable with a refinement annotation"
       in
-    
+     
       (* Annotation as ZPT *)
       let ty_ann_zpt = to_zpt_type ty_ann_zelus in
       let (ret_binder, base_ty, pred_zpt) =
         match ty_ann_zpt.desc with
-        | Zparsetree.Erefinement ((vb, base_ty), pred) -> (vb, base_ty, pred)
+        | Zparsetree.Erefinement ((vb, base_ty), pred) -> 
+          (vb, base_ty, pred)
         | _ -> failwith "Expected refinement type on let-bound pattern"
       in
+      (match ty_ann_zelus.desc with
+      | Zelus.Erefinement ((_v, _base_ty), pred_exp) ->
+          debug_nf "let" ~binder:x pred_exp
+      | Zelus.Erefinementlabeledtuple (_fields, _pred) ->
+          (* Optional: could log for each component; see tuple case below *)
+          ()
+      | _ -> ());
       let base_name =
         match base_ty.desc with
         | Zparsetree.Etypeconstr (Name b, []) -> b
@@ -729,6 +715,8 @@ let process_let_eq (eq : Zelus.eq) : unit =
                    ~(ret_base:string)
                    ~(ret_pred:Zelus.exp)
                    (e:Zelus.exp) : unit =
+    
+    debug_nf_synth_lhs e;
     match e.e_desc with 
     | Zelus.Eop (Zelus.Eifthenelse, i :: t :: el :: []) ->
       let lhs_then =
@@ -819,6 +807,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
         debug (Printf.sprintf "id %s ifthenelse" id);
         (match rhs_ty.desc with 
         | Zelus.Erefinement((v,base_ty), pred) -> 
+          debug_nf "constdecl" ~binder:v pred;
           (match base_ty.desc with 
             | Zelus.Etypeconstr(Name base, []) -> process_ite id v base pred.e_desc e
             | _ -> failwith (Printf.sprintf "Not a Etypeconstr"))
@@ -827,6 +816,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
         (debug (Printf.sprintf "id %s" id);
         match rhs_ty.desc with
         | Zelus.Erefinement((v, base_ty), pred) ->
+          debug_nf "constdecl" ~binder:v pred;
           (
           match base_ty.desc with 
             | Zelus.Etypefun(a, b, arg, out) -> (
@@ -879,9 +869,9 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
       ) else (
         let (ret_pred_exp, var_req, ret_base_ty) =
         match rettype.desc with
-        | Zelus.Erefinement ((n,t), exp) -> (exp, n, t)
+        | Zelus.Erefinement ((n,t), exp) -> debug_nf "ret" ~binder:n exp; (exp, n, t)
         | Zelus.Erefinementlabeledtuple (t_list, e) ->
-            (debug "Ignoring tuple returns for now";
+            (List.iter (fun (nm, _ty) -> debug_nf "ret-tuple" ~binder:nm e) t_list;
              (e, (fst (List.hd t_list)), (snd (List.hd t_list))))
         | _ -> failwith "Not a refinement type in the return type"
       in
