@@ -110,7 +110,7 @@ let is_temporal_head (e:Zparsetree.exp) : bool =
       f = "X" || f = "G" || f = "M"
       || f = "x" || f = "g" || f = "m"
   | _ -> false
-\
+
 let rec find_eq_atom_for_binder (binder:string) (e:Zparsetree.exp)
   : Zparsetree.exp option =
   match e.desc with
