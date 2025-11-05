@@ -107,15 +107,10 @@ let e_true : Zparsetree.exp =
 let is_temporal_head (e:Zparsetree.exp) : bool =
   match e.desc with
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, _args) ->
-      (* extend this set if you add more temporal uifs *)
       f = "X" || f = "G" || f = "M"
       || f = "x" || f = "g" || f = "m"
   | _ -> false
-
-(* Try to extract an equality atom of the shape (binder = rhs) from a ZPT expr.
-    Returns SOME(binder = rhs) if found at top-level or as (some) subexpr;
-    otherwise NONE.  This keeps it lightweight: it only looks at the top-level
-    and under a single G/X/F/M application (common in your use-cases). *)
+\
 let rec find_eq_atom_for_binder (binder:string) (e:Zparsetree.exp)
   : Zparsetree.exp option =
   match e.desc with
@@ -125,7 +120,6 @@ let rec find_eq_atom_for_binder (binder:string) (e:Zparsetree.exp)
             Some (mk_eq lhs rhs)
         | _ -> None)
 
-  (* Peel one temporal layer and look again (e.g., G(v=5) -> find v=5) *)
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg])
       when f="G" || f="X" || f="M" || f="g" || f="x" || f="m" ->
       find_eq_atom_for_binder binder arg

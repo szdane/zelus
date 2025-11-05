@@ -47,7 +47,6 @@ let build_fby_pred_with_ghosts ~(binder:string)
   let g_f = gensym "tl" in
   let ty_1 = add_bool_ghost g_e mk_true in
   let ty_2 = add_bool_ghost g_f mk_true in
-  (* hd_Bool e  &&  X_Bool(G_Bool(M_Bool f)) *)
   let e_var = mk_var g_e in
   let f_var = mk_var g_f in
   let hd_e  = t_hd "Bool" e_var in
@@ -122,7 +121,7 @@ let normalize_pred_with_next ~(binder:string) (pred:Zelus.exp) : Zparsetree.exp 
   mk_and phi_now (mk_X phi_next)
 
   
-  (* Convert a Zelus predicate to ZPT expr for "now" and "next" parts, WITHOUT hd. *)
+  (* Convert a Zelus predicate to ZPT expr for "now" and "next" parts *)
 let zls_pred_to_nf ~(binder:string) (pred_zls:Zelus.exp) : Zparsetree.exp =
     let p = { desc = vc_gen_expression pred_zls; loc = dummy_loc } in
     (* Top-only behavior for temporal heads; otherwise, append X true
@@ -145,21 +144,18 @@ let zls_pred_to_nf ~(binder:string) (pred_zls:Zelus.exp) : Zparsetree.exp =
     | _ ->
         (* non-temporal head: only add X true if there is no X anywhere inside *)
         if contains_X p
-        then p                    (* just φ, no extra && X true *)
+        then p                    
         else mk_and p (mk_X (mk_true))
   
-  (* Pretty-print an NF line for debugging (keeps your binder name in the header). *)
 let debug_nf (tag:string) ~(binder:string) (pred_zls:Zelus.exp) : unit =
     let nf = zls_pred_to_nf ~binder pred_zls in
     let s_now =
-      (* reuse your pretty printer *)
       (* Show {binder | <nf>} *)
       Printf.sprintf "{%s | %s}" binder (Pprint.string_of_expr nf)
     in
     debug (Printf.sprintf "[NF:%s] %s" tag s_now)
 let debug_nf_synth_lhs (rhs : Zelus.exp) : unit =
       let pp_ty (p : Zparsetree.exp) : string =
-        (* reuse your pretty-printer: {v | …} form *)
         let ty =
           { desc = Zparsetree.Erefinement (("v",
                    { desc = Zparsetree.Etypeconstr (Name "Int", []); loc = dummy_loc }),
@@ -394,8 +390,6 @@ let process_and_run_eq ~name:id ~v ~base:base ~op list  ~e=
     add_binding name rhs
   else
     failwith (Printf.sprintf "Liquid type error: %s does not satisfy its annotation" name)
-
-(* Prefer the original source name of an identifier so it matches Elocal {source=...} *)
 let zident_pretty (z : Zident.t) : string =
   let s = Zident.name z in
   (* Strip a trailing _<digits> if present, e.g., "e_2" -> "e" *)
@@ -533,24 +527,6 @@ let install_fby_binding ~(name:string)
                         ~(ann_pred:Zparsetree.exp)
                         rhs1 rhs2
   : unit =
-  (* Recover φ, ψ from the annotated predicate: we expect something like
-       hd(φ) && X(G(M(ψ)))
-     but we robustly strip modalities to get the cores. *)
-  (* let phi_hd, psi_tl =
-    match ann_pred.desc with
-    | Zparsetree.Eapp (_,
-        {desc = Zparsetree.Evar (Name "&&"); _},
-        [p_hd; p_tail]) ->
-        ( p_hd,  p_tail)
-    | _ ->
-        (* fallback: use the same core for both sides if the user gave a single φ *)
-        let core =  ann_pred in
-        (core, core)
-  in *)
-  (* let ok1 = check_against_phi ~fname:name ~binder ~base ~phi:phi_hd e1 in
-  let ok2 = check_against_phi ~fname:name ~binder ~base ~phi:psi_tl e2 in
-  if not (ok1 && ok2) then
-    failwith (Printf.sprintf "Liquid type error: %s fby parts don't satisfy φ/ψ" name); *)
 
   let pred = build_fby_pred_with_ghosts ~binder ~base rhs1 rhs2 in
   let rhs_ty =
@@ -635,8 +611,6 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                  else failwith (Printf.sprintf "Liquid type error: FBY checks failed for %s" x))
               | _ -> failwith "Here";
            )
-    
-         (* Previous ITE branch you added — keep it! *)
          | Zelus.Eop (Zelus.Eifthenelse, i :: t_then :: t_else :: []) ->
              let lhs_then =
                singleton_type_of_const { desc = vc_gen_expression t_then; loc = dummy_loc } base_name
