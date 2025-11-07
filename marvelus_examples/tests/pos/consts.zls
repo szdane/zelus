@@ -1,0 +1,9 @@
+(* ==== POS 1: NF on constants; strip X(G(..)) vs X(true) ==== *)
+let five  : {v:int | v = 5 && x(g(v = 5))} = 2+3-0
+let five' : {v:int | v = 5 && x(true)}    = 5         
+
+
+let dt = 0.1 
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = five in
+        (print_int x; print_newline ())) else ()

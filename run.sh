@@ -5,8 +5,9 @@ dune clean
 dune build @install
 dune install
 cd marvelus_examples/
-cd simple
-make clean
+cd tests
+cd pos
+# make clean
 make sim
 
 echo "All done "

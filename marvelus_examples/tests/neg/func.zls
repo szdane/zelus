@@ -1,0 +1,8 @@
+(* ==== NEG 6: Return now-part violated ==== *)
+let node nonneg_bad (x:{(v:int)| true}) : {(v:int) | v >= 0} =
+  -1
+(* Head v=-1 ⊑ v≥0 fails ⇒ FAIL *)
+
+
+
+let hybrid main () = ()

@@ -1,0 +1,4 @@
+(* ==== NEG 1: Wrong head equality ==== *)
+let bad_head : {v:int | v = 6} = 5    (* should FAIL *)
+
+let hybrid main () = ()

@@ -1,0 +1,8 @@
+(* ==== POS 5: Boolean ops with fby; ==== *)
+let b:{v:bool | g(v = true)} = true
+let node edge b:{(v:bool) | v=false && x(g(m(v=true)))} = (false fby b)
+
+let dt = 0.1 
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = edge (b) in
+        (print_string (string_of_bool x); print_newline ())) else ()

@@ -1,0 +1,9 @@
+(* ==== POS 6: “tmp” style rewrite tolerance in env ==== *)
+let ok_tmp : {v:int | v >= 0 && x(g(v >= 0))} = 7
+let pin   : {v:int | x(g(v = ok_tmp))}       = ok_tmp
+
+let dt = 0.1 
+
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = pin in
+        (print_int x; print_newline ())) else ()
