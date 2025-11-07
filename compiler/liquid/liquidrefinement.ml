@@ -103,7 +103,6 @@ let mk_eq_v_to_zls (e_zls : Zelus.exp) : Zparsetree.exp =
 
 let nf_eq_v_rhs (rhs_zls:Zelus.exp) : Zparsetree.exp =
   let v_eq = mk_eq_v_to_zls rhs_zls in
-  (* your “const” scheme: v=rhs ∧ X(G(v=rhs)) *)
   mk_and v_eq (mk_X (mk_G v_eq))
 let normalize_pred_with_next ~(binder:string) (pred:Zelus.exp) : Zparsetree.exp =
   let loc = dummy_loc in
@@ -176,7 +175,12 @@ let zpt_pred_to_nf ~(binder:string) (pred_zpt) : Zparsetree.exp =
       if contains_X pred_zpt
       then pred_zpt                    
       else mk_and pred_zpt (mk_X (mk_true))
-  
+    
+let split_tuple_nf ~(binders:string list) (phi_zpt: Zparsetree.exp)
+   : Zparsetree.exp * Zparsetree.exp =
+   let nf = zpt_pred_to_nf ~binder:(List.hd binders) phi_zpt in
+   split_nf nf
+ 
 let debug_nf (tag:string) ~(binder:string) (pred_zls:Zelus.exp) : unit =
     let nf = zls_pred_to_nf ~binder pred_zls in
     let s_now =
@@ -732,11 +736,7 @@ let install_fby_binding ~(name:string)
   (* Make {v = rhs} as ZPT expr (no type wrapper) *)
   let zpt_eq_v_rhs (rhs_zls:Zelus.exp) : Zparsetree.exp =
     mk_eq (mk_v ()) { desc = vc_gen_expression rhs_zls; loc = dummy_loc }
-  
-  (* Our new branch builder:
-      1) Conjoin the guard with v = rhs at the ZPT level:  (guard ∧ v=rhs)
-      2) Normalize that *whole* conjunction to NF using your general normalizer.
-  *)
+
   let nf_guarded_eq
       ~(binder:string)
       ~(cond_zpt:Zparsetree.exp)
@@ -1036,9 +1036,6 @@ let install_scalar_arg (x:string) (ann:Zelus.type_expression) : unit =
   let ty_nf = to_nf_refine ann in
   add_binding x ty_nf
 
-(* Install a tuple argument pattern with a labeled-tuple refinement. 
-   Pattern:  (x1, x2, ..., xk) : {(v1:T1)*(v2:T2)*... | φ}
-   We bind each xi with the SAME φ over its own base, like your tuple-let. *)
 let install_tuple_arg (ps:Zelus.pattern list) (ann:Zelus.type_expression) : unit =
   (* Build xi list from pattern *)
   let xs =
@@ -1098,8 +1095,6 @@ let install_fun_arg (p:Zelus.pattern) : unit =
           failwith "Function arg: unsupported constrained pattern (expected var or tuple)"
     end
   | Zelus.Evarpat id ->
-      (* un-annotated arg: treat as {v:Any | true}? Usually you’ll want a base. *)
-      (* If your surface language requires annotations, you can fail here instead. *)
       failwith "Function arg: un-annotated parameter (add a type/refinement)"
   | _ ->
       failwith "Function arg: unsupported pattern"
@@ -1124,9 +1119,6 @@ let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
       in
       add_binding x ann_zpt_nf
   | _ ->
-      (* Unannotated or non-variable arg pattern:
-          - If you want to require annotations, you can fail here.
-          - For now, we just skip binding to avoid false assumptions. *)
       ()
 
 
@@ -1381,7 +1373,6 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
           if n = "main" then (
             debug "skipping main function for now, fix this bug";
           ) else (
-            (* Extract return info as you already do *)
             let (ret_pred_exp, var_req, ret_base_ty) =
               match rettype.desc with
               | Zelus.Erefinement ((n,t), exp) -> debug_nf "ret" ~binder:n exp; (exp, n, t)

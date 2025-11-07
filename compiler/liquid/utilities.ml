@@ -205,7 +205,6 @@ let is_temporal_head (e:Zparsetree.exp) : bool =
     | Zparsetree.Evar (Name t) -> String.equal s t
     | _ -> false
   
-  (* Utilities.ml (or near your other small helpers) *)
 let rec is_true (e:Zparsetree.exp) : bool =
   match e.desc with
   | Zparsetree.Econst (Ebool true) -> true
@@ -366,4 +365,6 @@ let pp_nf_as_type ~(binder:string) ~(base:string) (nf:Zparsetree.exp) : string =
 
 
 (* Build ZPT guard from a Zelus condition *)
+
+
 
