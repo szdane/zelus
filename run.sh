@@ -5,8 +5,7 @@ dune clean
 dune build @install
 dune install
 cd marvelus_examples/
-cd tests
-cd pos
+cd simple/
 # make clean
 make sim
 

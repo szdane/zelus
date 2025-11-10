@@ -1,0 +1,14 @@
+(* ==== POS 4: FBY in return; synthesized head/tail matches ==== *)
+let node hold_first_then (a:{(v:int)| true}) : {(v:int) | v = 0 && x(g(m(v = a)))} =
+  0 fby a
+(* LHS NF ~ v=0 && X(G(M(v=a))) exactly matches the spec *)
+
+let dt = 0.1 
+let b:{v:int|v=5} = 5
+let node exec ():{v:int | true} = 
+  let (y:{v:int | v>=0}) = hold_first_then (b) in y
+
+
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = hold_first_then (b) in
+        (print_int x; print_newline ())) else ()

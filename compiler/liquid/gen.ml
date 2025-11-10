@@ -8,7 +8,7 @@ let fresh =
   fun () -> incr counter; !counter
 
 (* Turn one Erefinement into a  (“bind …”) line and return its fresh id  *)
-let bind_line_of_ty (ty : type_expression) : int * string =
+let bind_line_of_ty name (ty : type_expression) : int * string =
   match ty.desc with
   | Erefinement ((v, base_ty), pred_ty) ->
       let id      = fresh () in
@@ -17,8 +17,10 @@ let bind_line_of_ty (ty : type_expression) : int * string =
       (id, line)
   | _ ->
       invalid_arg "Environment element is not a refinement type"
+      
 
 let to_fq
+    name
     ~(cid : int)
     ~(lhs  : type_expression)
     ~(rhs  : type_expression)
@@ -27,7 +29,7 @@ let to_fq
     : string
   =
   (* 1 . produce one bind line per env-type, gather their ids *)
-  let ids, bind_lines = List.split (List.map bind_line_of_ty env) in
+  let ids, bind_lines = List.split (List.map (bind_line_of_ty name) env) in
 
   (* 2 . pretty-print lhs / rhs *)
   let lhs_s = Pprint.string_of_type lhs in
