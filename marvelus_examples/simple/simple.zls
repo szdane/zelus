@@ -10,7 +10,10 @@ let node exec1 () : {(v:int) | v=5} =
   let (e:{v:int | g(v=5)}) = 5 in
   (*let rec (temp:{v:int | v<=0 && x(g(m(v<=0)))}) = 0 fby (temp-1) in *)
   let rec ((x1,y):{ (vx:int)*(vy:int) | vx = vy*vy}) = (4,2) fby ((y+1)*(y+1), y+1) in
-  let rec ((x1,y,z):{ (vx:int)*(vy:int)*(vz:int) | (vy=vx+1 && vz=6)&& x(g(vy=vx+1 && vz=6))}) = (4,5,6) fby (x1,y,z) in e
+  let rec ((x1,y,z):{ (vx:int)*(vy:int)*(vz:int) | (vy=vx+1 && vz=6)&& x(g(vy=vx+1 && vz=6))}) = (4,5,6) fby (x1,y,z) in 
+  let rec automaton
+      | Idle -> do active = active+1 until (active <= 0) then Active
+      | Active -> do active = active-1 until (active >=0) then Idle in e
 
 
 (*let node exec () : {(v:int) | x(v>=0)} =

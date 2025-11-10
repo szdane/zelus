@@ -694,3 +694,27 @@ let singleton_left_eq_v_zpt ~(left_name:string) ~(base:string)
   { Zparsetree.loc = dummy_loc
   ; desc = Zparsetree.Erefinement (("v", base_ty), pred)
   }
+  (* Add explicit parentheses where needed so printing preserves grouping *)
+let rec paren_for_prec (e : Zparsetree.exp) : Zparsetree.exp =
+  let wrap_if_sum (x : Zparsetree.exp) : Zparsetree.exp =
+    match x.desc with
+    | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name op); _ }, _)
+      when op = "+" || op = "-" ->
+        mk_paren x
+    | _ -> x
+  in
+  match e.desc with
+  | Zparsetree.Eapp (f, ({ desc = Zparsetree.Evar (Name "*"); _ } as op), [a; b]) ->
+      let a' = paren_for_prec a |> wrap_if_sum in
+      let b' = paren_for_prec b |> wrap_if_sum in
+      { e with desc = Zparsetree.Eapp (f, op, [a'; b']) }
+
+  (* Recurse generically for other apps *)
+  | Zparsetree.Eapp (f, op, args) ->
+      { e with desc = Zparsetree.Eapp (f, op, List.map paren_for_prec args) }
+
+  (* Keep traversing tuples too, just in case *)
+  | Zparsetree.Etuple es ->
+      { e with desc = Zparsetree.Etuple (List.map paren_for_prec es) }
+
+  | _ -> e

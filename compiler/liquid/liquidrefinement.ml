@@ -1312,7 +1312,8 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
     let base_i = List.nth bases i in
     let ui_zpt = { Zparsetree.loc = dummy_loc; desc = vc_gen_expression ui } in
     let ui_sub = subst_xs_to_ts ~rhs_zpt:ui_zpt ~xs ~t_names in
-    let ty_vv  = singleton_eq_zpt ~binder:(List.nth vv_names i) ~base:base_i ~rhs:ui_sub in
+    let ui_sub_paren = paren_for_prec ui_sub in
+    let ty_vv  = singleton_eq_zpt ~binder:(List.nth vv_names i) ~base:base_i ~rhs:ui_sub_paren in
     add_binding (List.nth vv_names i) ty_vv
   ) e2_comps;
 
