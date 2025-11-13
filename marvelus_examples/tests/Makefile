@@ -86,7 +86,7 @@ sim-neg:
 	else \
 	  for z in $(NEG_ZLS); do \
 	    d=$$(dirname "$$z"); f=$$(basename "$$z"); \
-	    echo "==> Verifying (expect failure) $$z"; \
+	    echo "==> Verifying $$z"; \
 	    if (cd "$$d" && $(ZELUC) $(ZFLAGS) "$$f" $(if $(VERBOSE),,>/dev/null 2>&1)); then \
 	      echo "-- FAIL (unexpected success): $$z"; \
 	    else \
