@@ -5,7 +5,7 @@ liquidrefinement.ml – prototype integration of the Zelus AST to
 For each binding we
 1. synthesise a singleton type for the rhs,
 2. query LiqF to check the singleton ≤ refinement type,
-3. if SAFE we extend Γ with `x : annotation`.
+3. if SAFE we extend  with `x : annotation`.
 
 Usage with the test AST:
 ocamlfind ocamlopt -I ../global -I ../parsing ../global/zlocation.ml ../parsing/zparsetree.ml pprint.ml gen.ml liquidrefinement.ml testliquid.ml -o example_
@@ -97,7 +97,7 @@ let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
   | Zelus.Elast(id) -> Zparsetree.Evar(Name ("last_"^(zident_pretty id)))
   | _ -> failwith(Printf.sprintf "Not handling this expression")
 
-(* v = e  &&  X true  — good "head-only" NF for comparing against φ_now *)
+(* v = e  &&  X true  — good "head-only" NF for comparing against _now *)
 let nf_eq_v_rhs_head (e:Zelus.exp) : Zparsetree.exp =
   let v_eq = mk_eq (mk_v ()) { desc = vc_gen_expression e; loc = dummy_loc } in
   mk_and v_eq (mk_X mk_true)
@@ -189,8 +189,8 @@ let pred_nf_of_refine ~binder (ty:Zparsetree.type_expression) : Zparsetree.exp *
           | _ -> failwith "pred_nf_of_refine: base must be Etypeconstr(Name,[])"
         end)
     | _ -> failwith "pred_nf_of_refine: expected refinement type"
-(* Helper: extract binder, base-name, and predicate from a refinement type in Γ
-   Assumes we always store canonical NF refinements in Γ. *)
+(* Helper: extract binder, base-name, and predicate from a refinement type in 
+   Assumes we always store canonical NF refinements in . *)
 let refine_parts_of_gamma_ty (ty : Zparsetree.type_expression)
   : (string * string * Zparsetree.exp) =
   match ty.desc with
@@ -315,7 +315,7 @@ let run_subtyping_pred ~cid ~(name:string) ~(binder:string) ~(base:string)
 let nf_match_and_check ~cid ~(name:string) ~(binder:string) ~(base:string)
   (lhs_pred_nf:Zparsetree.exp) (rhs_pred_nf:Zparsetree.exp)
     : bool =
-    (* 1. split into φ && x ψ *)
+    (* 1. split into  && x  *)
     let (phi_lhs, psi_lhs) = split_nf lhs_pred_nf in
     let (phi_rhs, psi_rhs) = split_nf rhs_pred_nf in
 
@@ -345,7 +345,7 @@ let nf_check_tail_ite_guard_on_lhs
     ~(name:string)
     ~(binder:string)
     ~(base:string)
-    ~(ann_full:Zparsetree.exp)   (* φ_full after bvars→xs substitution *)
+    ~(ann_full:Zparsetree.exp)   
     ~(cond:Zelus.exp)
     ~(t_then:Zelus.exp)
     ~(t_else:Zelus.exp)
@@ -354,7 +354,7 @@ let nf_check_tail_ite_guard_on_lhs
     let loc     = dummy_loc in
     let rhs_nf  = zpt_pred_to_nf ~binder ann_full in
     (* debug (Printf.sprintf "%s" name); *)
-    (* Build GUARD and ¬GUARD directly as ZPT *)
+    (* Build GUARD and !GUARD directly as ZPT *)
     let guard_zpt     = { desc = vc_gen_expression cond; loc } in
     let guard_not_zpt = mk_not guard_zpt in
   
@@ -418,7 +418,7 @@ let process_eq ~(name:string)
 
   let check_ite_branch_nf
     ~(name:string)          (* name/id for logging *)
-    ~(binder:string)        (* 'v' usually *)
+    ~(binder:string)        (* 'v' ... *)
     ~(base:string)          (* "Int", "Bool", ... *)
     ~(cond:Zelus.exp)       (* the ITE condition c *)
     ~(rhs_branch:Zelus.exp) (* t_then or t_else *)
@@ -433,8 +433,8 @@ let process_eq ~(name:string)
     let (phi_now, _psi_later) = split_nf ann_nf in
 
     (* 3) Guarded HEAD implication:
-          THEN:  v = rhs ⊑ (c => phi_now)
-          ELSE:  v = rhs ⊑ (¬c => phi_now)
+          THEN:  v = rhs sub (c => phi_now)
+          ELSE:  v = rhs sub (!c => phi_now)
           (These are plain Fixpoint checks over the "now" part.)
     *)
     let lhs_head =
@@ -652,7 +652,7 @@ let process_tuple_let_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
     if ar1 <> ar2 || arx <> ar1 then
       failwith "Tuple fby: arity mismatch";
   
-    (* 3) Convert annotation to ZPT, extract field bases and φ *)
+    (* 3) Convert annotation to ZPT, extract field bases and  *)
     let ann_zpt = to_zpt_type ann_zelus in
     let (bvars, bases, phi) =
       match ann_zpt.desc with
@@ -666,11 +666,11 @@ let process_tuple_let_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
             ) fields
           in
           (bnames, bsorts, phi)
-      | _ -> failwith "Tuple fby: expected labeled-tuple refinement {(v1:τ1)*... | φ}"
+      | _ -> failwith "Tuple fby: expected labeled-tuple refinement {(v1:τ1)*... | }"
     in
   
     (* 4) **Install ghosts FIRST** for head values of ALL components:
-          Each call adds vi = e1_i ∧ (hd_i = (vi = e1_i)) ∧ X(G(M(hd_i))) to Γ *)
+          Each call adds vi = e1_i && (hd_i = (vi = e1_i)) && X(G(M(hd_i))) to  *)
     let _ghosts_now : Zparsetree.type_expression list =
       List.mapi (fun i ei1 ->
         let bi   = List.nth bvars i in
@@ -686,13 +686,11 @@ let process_tuple_let_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
     let e1_k    = List.nth e1_comps k in
     let e2_k    = List.nth e2_comps k in
   
-    (* LHS NF: (bk = e1_k) ∧ X(G(M(bk = e2_k))) *)
     let v_k      = mk_var bk in
     let v_eq_e1  = mk_eq v_k { desc = vc_gen_expression e1_k; loc = dummy_loc } in
     let v_eq_e2  = mk_eq v_k { desc = vc_gen_expression e2_k; loc = dummy_loc } in
     let lhs_nf_k = mk_and v_eq_e1 (mk_X (mk_G (mk_M v_eq_e2))) in
   
-    (* RHS NF: normalize φ with respect to bk (full φ; we won't split/use run_fq) *)
     let ann_nf_k = zpt_pred_to_nf ~binder:bk phi in
     
     let ok_nf =
@@ -708,13 +706,12 @@ let process_tuple_let_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
     (* 6) If OK, install the normalized annotation for each bound name *)
     let ann_nf = zpt_pred_to_nf ~binder:(List.hd bvars) phi in
     for i = 0 to arx - 1 do
-      let xi      = List.nth xs i in          (* program var name: x1, y, z *)
-      let comp_bv = List.nth bvars i in       (* tuple binder name: vx, vy, vz *)
+      let xi      = List.nth xs i in         
+      let comp_bv = List.nth bvars i in       
       let base    = List.nth bases i in
       let base_ty =
         mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base), []))
       in
-      (* IMPORTANT: use comp_bv (vx/vy/vz) as the refinement binder *)
       let ty_i =
         mk_type (Zparsetree.Erefinement ((comp_bv, base_ty), ann_nf))
       in
@@ -767,7 +764,7 @@ let process_tuple_let_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
               | _ -> failwith "Tuple let: each component base must be Etypeconstr(Name,[])") fields
           in
           (bnames, bsorts, phi)
-      | _ -> failwith "Tuple let: expected labeled-tuple refinement {(vx,vy,...) | φ}"
+      | _ -> failwith "Tuple let: expected labeled-tuple refinement {(vx,vy,...) | }"
     in
     let ar = List.length xs in
     if List.length bvars <> ar || List.length bases <> ar then
@@ -791,7 +788,7 @@ let process_tuple_let_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
     let k       = ar - 1 in
     let bk      = List.nth bvars k in
     let base_k  = List.nth bases k in
-    let lhs_k   = List.nth ghosts k in   (* {bk | bk = ek} *)
+    let lhs_k   = List.nth ghosts k in   
     let rhs_k   =
       mk_type (Zparsetree.Erefinement ((bk,
                  mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_k), []))),
@@ -855,7 +852,6 @@ let install_fby_binding ~(name:string)
   let zpt_of_not (p:Zparsetree.exp) : Zparsetree.exp =
     mk_app (mk_var "not") [p]
   
-  (* Make {v = rhs} as ZPT expr (no type wrapper) *)
   let zpt_eq_v_rhs (rhs_zls:Zelus.exp) : Zparsetree.exp =
     mk_eq (mk_v ()) { desc = vc_gen_expression rhs_zls; loc = dummy_loc }
 
@@ -865,10 +861,8 @@ let install_fby_binding ~(name:string)
       ~(rhs_zls:Zelus.exp)
     : Zparsetree.exp =
     let guard_and_eq = mk_and cond_zpt (zpt_eq_v_rhs rhs_zls) in
-    (* Put the whole guarded predicate into NF (φ && X ψ) *)
     zpt_pred_to_nf ~binder  (mk_and (mk_paren guard_and_eq) (mk_X (mk_G (mk_paren guard_and_eq))))
   
-  (* High-level: check an ITE via guard-first NF on both branches *)
   
 
   let handle_let_ite
@@ -878,7 +872,7 @@ let install_fby_binding ~(name:string)
   ~(ann_pred:Zelus.exp)
   (i:Zelus.exp) (t_then:Zelus.exp) (t_else:Zelus.exp)
   : unit =
-  (* 1) Synthesized NFs for each branch: v = <rhs> ∧ X(G(v = <rhs>)) *)
+  (* 1) Synthesized NFs for each branch: v = <rhs> && X(G(v = <rhs>)) *)
   let nf_then = nf_eq_v_rhs t_then "v" in
   let nf_else = nf_eq_v_rhs t_else "v" in
   debug (Printf.sprintf "[NF:let LHS then] %s"
@@ -968,12 +962,12 @@ let ite_check_via_nf
     let ok_else = nf_match_and_check ~cid:5 ~name:(name^":else") ~binder ~base else_nf ann_nf in
     ok_then && ok_else
 
-(* v = e1  ∧  X(G(M(v = e2)))  → normalize whole thing to NF *)
+(* v = e1  &&  X(G(M(v = e2)))  → normalize whole thing to NF *)
 let nf_fby_eq ~(binder:string) ~(e1:Zelus.exp) ~(e2:Zelus.exp) : Zparsetree.exp =
   let v_eq_e1 = zpt_eq_v_rhs e1 in
   let v_eq_e2 = zpt_eq_v_rhs e2 in
   let whole   = mk_and v_eq_e1 (mk_X (mk_G (mk_M v_eq_e2))) in
-  (* Feed through the same normalizer so we consistently end up as φ && X ψ *)
+  (* Feed through the same normalizer so we consistently end up as  && X  *)
   zpt_pred_to_nf ~binder whole
 
 let refine_to_marvelus_nf (binder:string) (pred:Zparsetree.exp) : Zparsetree.exp =
@@ -981,7 +975,7 @@ let refine_to_marvelus_nf (binder:string) (pred:Zparsetree.exp) : Zparsetree.exp
   let cleaned = inline_witness_bools pred in
   zpt_pred_to_nf ~binder cleaned
 
-(* Extract (binder, base, NF) from a type in Γ, in Marvelus NF form *)
+(* Extract (binder, base, NF) from a type in , in Marvelus NF form *)
 let env_refine_nf_of_type (ty:Zparsetree.type_expression)
   : (string * string * Zparsetree.exp) =
   match ty.desc with
@@ -1002,7 +996,7 @@ let env_refine_nf_of_type (ty:Zparsetree.type_expression)
 let nf_eq_v_rhs_fby_tail (e2: Zelus.exp) : Zparsetree.exp =
   let v = mk_v () in
   let v_eq = mk_eq v { desc = vc_gen_expression e2; loc = dummy_loc } in
-  (* v = e2  ∧  X(G(M(v = e2))) *)
+  (* v = e2  &&  X(G(M(v = e2))) *)
   mk_and v_eq (mk_X (mk_G (mk_M v_eq)))
 
 let process_let_rec_fby
@@ -1026,7 +1020,7 @@ let process_let_rec_fby
     ; loc  = dummy_loc
     }
   in
-  (* --- HEAD check: e1 ⊑ phi_now (now-part only) --- *)
+  (* --- HEAD check: e1 sub phi_now (now-part only) --- *)
   let saved_gamma   = !gamma in
   let saved_gamma1 = !gamma1 in
   (match phi_now.desc with
@@ -1064,159 +1058,7 @@ let process_let_rec_fby
   end;
   (* success: keep the binding we already installed *)
   ()
-(* let process_let_rec_tuple_fby
-  (pat : Zelus.pattern)
-  (rhs : Zelus.exp)
-  : unit =
-  (* Pattern must be a type-constrained tuple *)
-  let (xs, ann_zelus) =
-    match pat.p_desc with
-    | Etypeconstraintpat (bp, ann) ->
-        (match bp.p_desc with
-         | Etuplepat ps ->
-             (List.map zelus_var_name_of_pat ps, ann)
-         | _ -> failwith "let rec tuple fby: expected tuple pattern")
-    | _ -> failwith "let rec tuple fby: expected type-constrained tuple pattern"
-  in
-
-  (* RHS must be (e1_tuple) fby (e2_tuple) *)
-  let (e1_comps, e2_comps) =
-    match rhs.e_desc with
-    | Zelus.Eop (Zelus.Efby, [e1; e2]) ->
-        let to_tuple e =
-          match e.e_desc with
-          | Zelus.Etuple ts -> ts
-          | _ -> failwith "let rec tuple fby: both sides must be tuples"
-        in
-        (to_tuple e1, to_tuple e2)
-    | _ -> failwith "let rec tuple fby: RHS must be (tuple1) fby (tuple2)"
-  in
-
-  let ar = List.length xs in
-  if List.length e1_comps <> ar || List.length e2_comps <> ar then
-    failwith "let rec tuple fby: arity mismatch";
-    
-
-  (* Pull {(v1:τ1)*...*(vk:τk) | φ} *)
-  let ann_zpt = to_zpt_type ann_zelus in
-  let (bvars, bases, phi) =
-    match ann_zpt.desc with
-    | Zparsetree.Erefinementlabeledtuple (fields, phi) ->
-        let bnames = List.map fst fields in
-        let bsorts =
-          List.map (fun (_n, ty) ->
-            match ty.desc with
-            | Zparsetree.Etypeconstr (Name b, []) -> b
-            | _ -> failwith "let rec tuple fby: each field base must be Etypeconstr(Name,[])"
-          ) fields
-        in
-        (bnames, bsorts, phi)
-    | _ -> failwith "let rec tuple fby: expected labeled-tuple refinement {(v1:τ1)*... | φ}"
-  in
-  let _ghosts_now : Zparsetree.type_expression list =
-    List.mapi (fun i ei1 ->
-      let bi   = List.nth bvars i in
-      let base = List.nth bases i in
-      add_fby_head_nf_binding ~binder:bi ~base ei1
-    ) e1_comps
-  in
-
-  (* Ensure this is truly recursive: tail mentions at least one of xs *)
-  let tail_mentions_any =
-    List.exists (fun e2i -> expr_mentions_any xs e2i) e2_comps
-  in
-  if not tail_mentions_any then
-    failwith "let rec tuple fby: tail does not mention bound tuple variables";
-
-  (* Decompose φ for FBY-style checking using the last component’s base *)
-  let last_idx  = ar - 1 in
-
-(* Build {bk : base_k | bk = e1_k} — NOTE: binder-specific singleton *)
   
-  let bk        = List.nth bvars last_idx in
-  let base_k    = List.nth bases last_idx in
-  let phi_now, psi_later =
-    match decompose_fby_goal base_k phi with
-    | Some (phi_hd, psi_tail) -> (phi_hd, psi_tail)
-    | None -> failwith "let rec tuple fby: annotation must be of the form hd(φ) && X(...ψ...)"
-  in
-
-  (* --- HEAD check: only the last component is required --- *)
-  let e1_k = List.nth e1_comps last_idx in
-  let e2_k    = List.nth e2_comps last_idx in
-
-  (* LHS NF: (bk = e1_k) ∧ X(G(M(bk = e2_k))) *)
-  let v_k      = mk_var bk in
-  let v_eq_e1  = mk_eq v_k { desc = vc_gen_expression e1_k; loc = dummy_loc } in
-  let v_eq_e2  = mk_eq v_k { desc = vc_gen_expression e2_k; loc = dummy_loc } in
-  let lhs_nf_k = mk_and v_eq_e1 (mk_X (mk_G (mk_M v_eq_e2))) in
-  let ann_nf_k = zpt_pred_to_nf ~binder:bk phi_now in
-
-  let ok_head =
-    nf_match_and_check
-    ~cid:5
-    ~name:(bk ^ ":tuple-fby")
-    ~binder:bk ~base:base_k
-    lhs_nf_k ann_nf_k
-  in
-  if not ok_head then
-    failwith "Liquid type error: let-rec tuple fby head violates its annotation";
-
-  (* --- Provisional install of all components with the FULL φ --- *)
-  let saved_gamma = !gamma in
-  List.iteri (fun i xi ->
-    let xi   = List.nth xs i in
-    let base_i   = List.nth bases i in
-    let base_ty  = mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_i), [])) in
-    let phi_i   = subst_var_in_zpt_exp ~old_nm:(List.nth bvars i) ~new_nm:"v" phi in
-    let ty_i     = { desc = Zparsetree.Erefinement ((xi, base_ty), phi_i); loc = dummy_loc } in
-    add_binding_for_tuples xi ty_i
-  ) xs;
-
-  (* --- TAIL check: only the last component’s tail --- *)
-  let e1_k = List.nth e1_comps last_idx in
-  let e2_k    = List.nth e2_comps last_idx in
-
-  (* LHS NF: (bk = e1_k) ∧ X(G(M(bk = e2_k))) *)
-  let v_k      = mk_var bk in
-  let v_eq_e1  = mk_eq v_k { desc = vc_gen_expression e1_k; loc = dummy_loc } in
-  let v_eq_e2  = mk_eq v_k { desc = vc_gen_expression e2_k; loc = dummy_loc } in
-  let lhs_nf_k = mk_and v_eq_e1 (mk_X (mk_G (mk_M v_eq_e2))) in
-  let lhs_tail_nf = zpt_pred_to_nf lhs_nf_k in
-
-  let ann_nf      = zpt_pred_to_nf ~binder:bk phi in
-  let ok_tail =
-    match e2_k.e_desc with
-    | Zelus.Eop (Zelus.Eifthenelse, [c; t_then; t_else]) ->
-        nf_check_tail_ite_guard_on_lhs
-          ~cid:5
-          ~name:(bk ^ ":rec-tuple-fby")
-          ~binder:bk
-          ~base:base_k
-          ~ann_full:ann_nf
-          ~cond:c ~t_then ~t_else
-    | _ ->
-        (* plain (non-ITE) tail stays the same *)
-        nf_match_and_check
-          ~cid:5
-          ~name:(Printf.sprintf "%s:rec-tuple-fby-tail" bk)
-          ~binder:bk
-          ~base:base_k
-          lhs_nf_k
-          ann_nf
-  in
-
-  if not ok_tail then begin
-    gamma := saved_gamma;  (* rollback *)
-    failwith "Liquid type error: let-rec tuple fby tail violates its annotation"
-  end;
-  
-  if not ok_tail then begin
-    gamma := saved_gamma;              (* rollback provisional Γ entries *)
-    failwith "Liquid type error: let-rec tuple fby tail violates its annotation"
-  end;
-;; *)
-
 let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
   (* 0) Unpack pattern *)
   let (xs, ann_zelus) =
@@ -1259,10 +1101,10 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
           ) fields
         in
         (bvars, bases, phi)
-    | _ -> failwith "tuple fby: expected labeled-tuple refinement {(v1:τ1)*... | Φ}"
+    | _ -> failwith "tuple fby: expected labeled-tuple refinement {(v1:τ1)*... | }"
   in
 
-  (* 2) Normalize annotation Φ *)
+  (* 2) Normalize annotation  *)
   let ann_nf   = zpt_pred_to_nf ~binder:(List.nth bvars (k-1)) phi in
   let (phi_now, _psi_later) = split_nf ann_nf in
 
@@ -1288,7 +1130,7 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
   in
   if not ok_head then failwith "Liquid type error: tuple fby head check failed";
 
-  (* 5) Tail placeholders t_i with Φ_now specialization *)
+  (* 5) Tail placeholders t_i with _now specialization *)
   let t_names = List.map (fun xi -> "t_" ^ xi) xs in
   List.iteri (fun j _ ->
     let base_j = List.nth bases j in
@@ -1327,7 +1169,7 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
     singleton_left_eq_v_zpt ~left_name:vv_k ~base:base_k
   in
 
-  (* Build RHS predicate: Φ_now with v_i -> vv_i, and binder v -> vv_k *)
+  (* Build RHS predicate: _now with v_i -> vv_i, and binder v -> vv_k *)
   let phi_now_vv =
     let subst_name (nm : string) : string option =
       if String.equal nm "v" then Some vv_k
@@ -1351,22 +1193,7 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
   let ok_tail = run_fq ("tuple-fby-tail:" ^ vv_k) lhs_tail_ty rhs_tail_ty in
   if not ok_tail then
     failwith "Liquid type error: tuple fby tail check failed (vv_* form)";
-  (* let u_last =
-    let ui   = List.nth e2_comps idx_last in
-    let ui_z = { Zparsetree.loc = dummy_loc; desc = vc_gen_expression ui } in
-    subst_xs_to_ts ~rhs_zpt:ui_z ~xs ~t_names
-  in
-  let lhs_tail_nf = nf_eq_v_rhs_fby_tail_zpt u_last in
-  let ok_tail =
-    nf_match_and_check
-      ~cid:5
-      ~name:"tuple-fby-tail"
-      ~binder:(List.nth bvars idx_last)
-      ~base:(List.nth bases idx_last)
-      lhs_tail_nf ann_nf
-  in
-  if not ok_tail then failwith "Liquid type error: tuple fby tail check failed";*)
-
+  
   (* 8) Install real program variables x_i with the full normalized annotation *)
   List.iteri (fun i xi ->
     let base_i = List.nth bases i in
@@ -1431,7 +1258,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
        in
        let ann_nf = zls_pred_to_nf ~binder:ret_binder ann_pred_zls in
   
-       (* --- Alias fast-path (applies to any RHS shape): if rhs is a known var, compare Γ(rhs) ⊑ Ann(x) in NF. *)
+       (* --- Alias fast-path (applies to any RHS shape): if rhs is a known var, compare (rhs) sub Ann(x) in NF. *)
        let rhs_bound_ty_opt =
          match rhs.e_desc with
          | Zelus.Elocal  { source = y }      -> find_binding y
@@ -1441,7 +1268,6 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
        (match rhs_bound_ty_opt with
         | Some rhs_ty ->
           let (_vb_rhs, rhs_base, rhs_nf) = refine_parts_of_gamma_ty rhs_ty in
-            (* optional base sanity *)
             if String.lowercase_ascii rhs_base <> String.lowercase_ascii base_name then
               failwith "Base mismatch between RHS variable and annotation";
             let ok =
@@ -1450,7 +1276,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                 rhs_nf ann_nf
             in
             if ok then (
-              (* Store normalized annotation for canonical Γ(x) *)
+              (* Store normalized annotation for canonical (x) *)
               let base_ty' =
                 mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), []))
               in
@@ -1466,7 +1292,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
         | None ->
           (* Not an alias — fall through to shape-based handling *)
           match rhs.e_desc with
-          (* FBY case: use NF rule v = e1 ∧ X(G(M(v = e2))) *)
+          (* FBY case: use NF rule v = e1 && X(G(M(v = e2))) *)
           | Zelus.Eop (Zelus.Efby, e1 :: e2 :: []) ->
             if expr_mentions x e2 then begin
               (* Extract the Zelus predicate from the annotation *)
@@ -1529,7 +1355,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
               else
                 failwith (Printf.sprintf "Liquid type error: let-bound %s (ITE) violates its annotation" x)
   
-          (* Default: synthesize v=rhs ∧ X(G(v=rhs)) and match against ann NF *)
+          (* Default: synthesize v=rhs && X(G(v=rhs)) and match against ann NF *)
           | _ ->
             let ann_pred_zls =
               match ty_ann_zelus.desc with
@@ -1564,7 +1390,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                      else
                        failwith (Printf.sprintf "Liquid type error: alias %s does not satisfy its annotation" x)
                  | None ->
-                     (* Not found in Γ -> fall back to synthesizing v=rhs ∧ X(G(v=rhs)) *)
+                     (* Not found in  -> fall back to synthesizing v=rhs && X(G(v=rhs)) *)
                      let v_eq_rhs = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc = dummy_loc } in
                      let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
                      let ok_nf =
@@ -1627,8 +1453,8 @@ let parts_of_zls_refine (t:Zelus.type_expression) : (string * string * Zelus.exp
       (vb, base, pred)
   | _ -> failwith "expected refinement type in ref environment"
 
-  (* Check (init x) fby x  ⊑  (declared type of "last x" in the *initial* env).
-   If SAFE, install "last x" into Γ with the normalized declared annotation. *)
+  (* Check (init x) fby x  sub  (declared type of "last x" in the *initial* env).
+   If SAFE, install "last x" into  with the normalized declared annotation. *)
 let typecheck_last_x_against_init_env
     ~(x_name:string)
     ~(ref_env:(string * Zelus.type_expression) list)
@@ -1671,7 +1497,7 @@ let typecheck_last_x_against_init_env
     failwith (Printf.sprintf
       "Liquid type error: (%s) violates its initial refinement" last_name);
 
-  (* 6) On success, install 'last x' into Γ with the normalized declared predicate *)
+  (* 6) On success, install 'last x' into  with the normalized declared predicate *)
   let base_ty =
     mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_decl), []))
   in
@@ -1736,7 +1562,7 @@ let check_state_against_env ~(state_name:string)
                     state_name x)
               | Some rhs ->
                   (* Synthesize LHS NF for this state assignment:
-                       lhs_nf = (vb = rhs) ∧ X(G(vb = rhs))
+                       lhs_nf = (vb = rhs) && X(G(vb = rhs))
                      IMPORTANT: use the *same binder* [vb] as in the annotation. *)
                   (* let rhs = to_zpt_type rhs.e_desc in *)
                   let lhs_nf = nf_eq_v_rhs rhs vb in
@@ -1744,7 +1570,6 @@ let check_state_against_env ~(state_name:string)
                   (* Normalize declared predicate to NF wrt binder vb *)
                   let ann_nf = zls_pred_to_nf ~binder:vb pred_zls in
 
-                  (* NF-aware subtyping check *)
                   let ok =
                     nf_match_and_check
                       ~cid:5
@@ -1782,11 +1607,11 @@ let e_false : Zparsetree.exp = { loc = dummy_loc; desc = Zparsetree.Econst (Eboo
 (* G(not guard) from a Zelus expression guard_zls *)
 let g_not_of_guard (guard_zls) : Zparsetree.exp =
   match guard_zls with
-  | None -> mk_true                            (* no guard => true *)
+  | None -> mk_true                            
   | Some g -> g
 
 (* Build the guarded predicate for a state's declared refinement of ex:
-   G(¬guard) ∧ P_state   where P_state is the state's predicate (already has G(...))
+   G(!guard) && P_state   where P_state is the state's predicate (already has G(...))
 *)
 let guarded_state_pred
     ~(state_pred_zls: Zelus.exp)
@@ -1994,8 +1819,6 @@ let process_let_eq (eq : Zelus.eq) : unit =
     ;;
     
     
-  
-  (* === Function-argument binding into Γ ============================== *)
 
 (* Convert a plain base type into {v:Base | true} *)
 let refine_true_of_base (base_name:string) : Zparsetree.type_expression =
@@ -2019,7 +1842,7 @@ let to_nf_refine (t:Zelus.type_expression) : Zparsetree.type_expression =
   | _ ->
       failwith "to_nf_refine: unsupported argument type"
 
-(* Install a single scalar argument "x : T" into Γ. T may be base or refinement. *)
+(* Install a single scalar argument "x : T" into . T may be base or refinement. *)
 let install_scalar_arg (x:string) (ann:Zelus.type_expression) : unit =
   let ty_nf = to_nf_refine ann in
   add_binding x ty_nf
@@ -2040,7 +1863,7 @@ let install_tuple_arg (ps:Zelus.pattern list) (ann:Zelus.type_expression) : unit
                | _ -> failwith "Tuple arg: nested constraint must end at a var")
          | _ -> failwith "Tuple arg: component must be a variable") ps
   in
-  (* Extract bases and φ from the annotated type *)
+  (* Extract bases and  from the annotated type *)
   let (bvars, bases, phi) =
     match (to_zpt_type ann).desc with
     | Zparsetree.Erefinementlabeledtuple (fields, phi) ->
@@ -2052,12 +1875,12 @@ let install_tuple_arg (ps:Zelus.pattern list) (ann:Zelus.type_expression) : unit
             | _ -> failwith "Tuple arg: each base must be Name([])") fields
         in
         (bnames, bsorts, phi)
-    | _ -> failwith "Tuple arg: expected labeled-tuple refinement {(v1:T1)*(v2:T2)*... | φ}"
+    | _ -> failwith "Tuple arg: expected labeled-tuple refinement {(v1:T1)*(v2:T2)*... | }"
   in
   if List.length ps <> List.length bases then
     failwith "Tuple arg: arity mismatch";
 
-  (* Bind each xi : {vi:Base_i | φ} into Γ *)
+  (* Bind each xi : {vi:Base_i | } into  *)
   List.iter2
     (fun xi base_i ->
        let ty_i =
@@ -2166,10 +1989,10 @@ let check_return ~(fname:string)
             "Liquid type error: %s (return fby) does not satisfy its annotation" fname)
   
       | _ ->(
-        (* Normalize the declared return annotation once to NF: φ && X ψ *)
+        (* Normalize the declared return annotation once to NF:  && X  *)
         let ann_nf = zls_pred_to_nf ~binder:ret_binder ret_pred in
 
-        (* ALIAS FAST-PATH: if the returned expression is a variable already in Γ_nf,
+        (* ALIAS FAST-PATH: if the returned expression is a variable already in _nf,
           compare its NF directly to ann_nf; do NOT synthesize v=e && X(G(v=e)). *)
         begin match rhs_var_name e with
         | Some y -> (
@@ -2191,7 +2014,7 @@ let check_return ~(fname:string)
                   failwith (Printf.sprintf
                     "Liquid type error: %s return alias does not satisfy its annotation" fname)
             | None ->
-                (* Variable not found in Γ_nf; fall back to synthesizing *)
+                (* Variable not found in _nf; fall back to synthesizing *)
                 let v_eq = mk_eq (mk_v ()) { desc = vc_gen_expression e; loc = dummy_loc } in
                 let lhs_nf = mk_and v_eq (mk_X (mk_G v_eq)) in
                 let ok_nf =
@@ -2303,7 +2126,6 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               lhs_nf rhs_pred_nf
           in
           if ok_nf then (
-            (* Accept without a full LiqF run; just add the declared binding. *)
             let rhs_ty_zpt =
               { desc =
                   Zparsetree.Erefinement
@@ -2325,7 +2147,6 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                     { e_desc = Zelus.Eglobal{lname = (Name op)}; _ },
                     list) -> process_eapp ~name:id ~v ~base:base ~op list  ~e
                     | Zelus.Eop(_,_) -> failwith (Printf.sprintf "Yes it is an Eop") *)
-                    (*Liquid fixpoint doesn't allow having {v:Int| c or var} only {v:base| true or false} that's why I commented out the following predicate matchings*)
                     (* | Zelus.Elocal{num = i; source = n} -> failwith (Printf.sprintf "Yes it is an Elocal")
                     | Zelus.Eglobal{lname = Modname qualid} -> failwith (Printf.sprintf "Yes it is an Eglobal modname") *)
                     (* | Zelus.Eglobal{lname = Name var} -> process_global id v base var e *)

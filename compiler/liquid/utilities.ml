@@ -140,7 +140,6 @@ let zident_opt_to_string_opt (o : Zident.t option) : string option =
 
     
 let literal_and_base = function
-(*TODO: Fix this issue with int vs other types*)
   | Deftypes.Eint  n  -> Zparsetree.Eint n  , "Int"
   | Deftypes.Efloat f -> Zparsetree.Efloat f, "Real"
   | Ebool b  -> Zparsetree.Ebool b, "Bool"
@@ -244,7 +243,6 @@ let rec is_true (e:Zparsetree.exp) : bool =
     | Some ("m", arg) -> Some (OP_M, arg)
     | _               -> None
   
-  (* ---------- split NF: φ && x(ψ), default ψ = true if absent ---------- *)
   
   let split_nf (p:Zparsetree.exp) : Zparsetree.exp * Zparsetree.exp =
     match view_and p with
@@ -307,7 +305,7 @@ let normalize_pred_for_fixpoint ~(binder:string) (p:Zparsetree.exp)
       | _ ->
           let g = gensym "tmp" in
           ghosts := (g, a) :: !ghosts;
-          (* Register ghost in Γ as {g:bool | g = a} *)
+          (* Register ghost as {g:bool | g = a} *)
           let ty1 = add_bool_ghost g a in 
           mk_var g
     in
@@ -341,8 +339,6 @@ let normalize_pred_for_fixpoint ~(binder:string) (p:Zparsetree.exp)
     | Zparsetree.Etuple es ->
         { desc = Zparsetree.Etuple (List.map norm es);
           loc  = dummy_loc }
-
-    (* Everything else unchanged. *)
     | _ -> e
   in
  
@@ -384,7 +380,6 @@ let add_binding_for_tuples (name:string) (ty:Zparsetree.type_expression) =
     in
     gamma := Env.add name ty' !gamma
     | _ ->
-    (* Non-refinement – just drop in. *)
     gamma := Env.add name ty !gamma
 
 
@@ -445,9 +440,6 @@ let arg_binder_and_base (p : Zelus.pattern) : (string * string) =
   | _ ->
       failwith "Unsupported function argument pattern (tuples/aliases not yet supported)"
 
-(* Given the arg list and a return base, build a curried Etypefun chain:
-     τ1 -> τ2 -> ... -> τn -> τret
-   so that Pprint prints it as func(n,[τ1,...,τn,τret]). *)
 let rec mk_fun_sort_from_args
   (k : Zelus.kind) (args : Zelus.pattern list) (ret_base : string)
   : Zparsetree.type_expression =
@@ -463,7 +455,6 @@ let rec mk_fun_sort_from_args
 let map_find_opt k m =
   try Some (Env.find k m) with Not_found -> None
 
-(* 3) Lookup previously-installed binding from Γ *)
 let find_binding (x : string) : Zparsetree.type_expression option =
   map_find_opt x !gamma1
 
@@ -517,7 +508,7 @@ let conj_list = function
   | []    -> mk_true
   | x::xs -> List.fold_left mk_and2 x xs
 
-(* detect equations of the form: tmp = φ, returning (Some (tmp, φ)) *)
+(* detect equations of the form: tmp = , returning (Some (tmp, )) *)
 let eq_tmp_binding (e:Zparsetree.exp) : (string * Zparsetree.exp) option =
   match e.desc with
   | Zparsetree.Eapp (_,
@@ -537,7 +528,7 @@ let rec subst_var (vname:string) (repl:Zparsetree.exp) (e:Zparsetree.exp) : Zpar
       { e with desc = Zparsetree.Etuple (List.map (subst_var vname repl) es) }
   | _ -> e
 
-(* inline all boolean witness bindings tmp = φ, and drop those equalities *)
+(* inline all boolean witness bindings tmp = , and drop those equalities *)
 let inline_witness_bools (pred:Zparsetree.exp) : Zparsetree.exp =
   let parts = flatten_and pred in
   let (bindings, others) =
@@ -569,7 +560,7 @@ let rec expr_mentions (x : string) (e : Zelus.exp) : bool =
     | Zelus.Eblock _ -> false
     | Zelus.Econst _ -> false
     | Zelus.Elet (lb, body) ->
-        List.exists (fun eq -> (* be conservative: scan rhs of eqs *) 
+        List.exists (fun eq -> 
           match eq.eq_desc with
           | EQeq (_, rhs) -> go rhs
           | _ -> false) lb.l_eq
@@ -663,15 +654,14 @@ let phi_now_for_tj ~(phi_now:Zparsetree.exp)
                    ~(j:int)
   : Zparsetree.exp =
   let f name =
-    (* if name is v_i *)
     match List.find_opt (fun vi -> vi = name) bvars with
     | None -> None
     | Some vi ->
         let i = List.find_index (fun s -> s = vi) bvars in
         match i with 
         | Some(im) ->
-        if (im= j) then Some "v"                       (* v_j -> binder v *)
-        else Some (List.nth t_names im)               (* v_i -> t_i    *)
+        if (im= j) then Some "v"                      
+        else Some (List.nth t_names im)           
   in
   zpt_subst_names phi_now f
 
@@ -727,11 +717,9 @@ let rec paren_for_prec (e : Zparsetree.exp) : Zparsetree.exp =
       let b' = paren_for_prec b |> wrap_if_sum in
       { e with desc = Zparsetree.Eapp (f, op, [a'; b']) }
 
-  (* Recurse generically for other apps *)
   | Zparsetree.Eapp (f, op, args) ->
       { e with desc = Zparsetree.Eapp (f, op, List.map paren_for_prec args) }
 
-  (* Keep traversing tuples too, just in case *)
   | Zparsetree.Etuple es ->
       { e with desc = Zparsetree.Etuple (List.map paren_for_prec es) }
 
