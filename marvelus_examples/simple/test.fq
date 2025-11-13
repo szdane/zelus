@@ -1,22 +1,16 @@
- bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
 bind 1 hd  : {v:func(1, [bool, bool]) | true}
 bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
 bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
 bind 4 i : {v: bool | true} 
 bind 5 j : {v: bool | true} 
-bind 12 e : {v:Int |  (tmp_1 =  (v = 5)) && v = 5 && x (g tmp_1)}
-bind 13 t_x1 : {v:Int | v = t_y * t_y}
-bind 14 t_y : {v:Int | t_x1 = v * v}
-bind 15 tmp_1 : {v:bool | true}
-bind 16 tmp_2 : {v:bool | true}
-bind 17 tmp_3 : {v:bool | true}
-bind 18 vv_x1 : {v:Int | vv_x1 = (t_y + 1) * (t_y + 1)}
-bind 19 vv_y : {v:Int | vv_y = t_y + 1}
-bind 20 vx : {v:Int | v = 4 &&  (tmp_2 =  (v = 4)) && x (g (m tmp_2))}
-bind 21 vy : {v:Int | v = 2 &&  (tmp_3 =  (v = 2)) && x (g (m tmp_3))}
+bind 10 ex : {v:Int |  (tmp_2 =  (v = last_ex + 1)) && v = last_ex + 1 && x (g tmp_2)}
+bind 11 last_ex : {v:Int |  (tmp_1 =  (v > 0 && v < 5)) && v > 0 && v < 5 && x (g tmp_1)}
+bind 12 tmp_1 : {v:bool | true}
+bind 13 tmp_2 : {v:bool | true}
 
 constraint:
-  env [0;1;2;3;4;5;12;13;14;15;16;17;18;19;20;21]
-  lhs {v:Int | vv_y = v}
-  rhs {vv_y:Int | vv_x1 = vv_y * vv_y}
+  env [0;1;2;3;4;5;10;11;12;13]
+  lhs {v:Int | v = stupid}
+  rhs {v:Int | v = stupid}
   id 5 tag []

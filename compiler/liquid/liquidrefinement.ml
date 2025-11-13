@@ -94,6 +94,7 @@ let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
   (* | Zelus.Elet(_,exp) -> match exp.e_desc with
       | Econst(_) -> implementation {desc = vc_gen_expression exp; loc = dummy_loc}
       | _ -> failwith (Printf.sprintf "Not handling non constant let for now") *)
+  | Zelus.Elast(id) -> Zparsetree.Evar(Name ("last_"^(zident_pretty id)))
   | _ -> failwith(Printf.sprintf "Not handling this expression")
 
 (* v = e  &&  X true  — good "head-only" NF for comparing against φ_now *)
@@ -163,7 +164,7 @@ let zpt_pred_to_nf ~(binder:string) (pred_zpt) : Zparsetree.exp =
         | Zparsetree.Eapp (_, _, [q]) -> q
         | _ -> mk_true
       in
-      mk_and inner (mk_X pred_zpt)
+      mk_and (mk_paren inner) (mk_X pred_zpt)
 
   | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "x"); _}, [_]) ->  mk_and (mk_true) pred_zpt
   | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "m"); _}, [_]) ->
@@ -288,7 +289,7 @@ let rec to_zpt_type (t : Zelus.type_expression) : Zparsetree.type_expression =
                                     to_zpt_type out_t))
 
   | _ -> failwith "to_zpt_type: constructor not supported here"
-    
+
  
 
 let run_fq name lhs rhs = 
@@ -323,7 +324,7 @@ let nf_match_and_check ~cid ~(name:string) ~(binder:string) ~(base:string)
     let ok_now =
     run_subtyping_pred ~cid ~name ~binder ~base phi_lhs phi_rhs
     in
-    if not ok_now then (debug "hds are not matching"; false )else
+    if not ok_now then (false )else
     (* 3. strip common x/g/m chain from the “later” part *)
     let psi_lhs', psi_rhs' = strip_matching_ltl psi_lhs psi_rhs in
 
@@ -352,8 +353,7 @@ let nf_check_tail_ite_guard_on_lhs
   
     let loc     = dummy_loc in
     let rhs_nf  = zpt_pred_to_nf ~binder ann_full in
-    debug "Running the ite fby thing";
-    debug (Printf.sprintf "%s" name);
+    (* debug (Printf.sprintf "%s" name); *)
     (* Build GUARD and ¬GUARD directly as ZPT *)
     let guard_zpt     = { desc = vc_gen_expression cond; loc } in
     let guard_not_zpt = mk_not guard_zpt in
@@ -1031,10 +1031,8 @@ let process_let_rec_fby
   let saved_gamma1 = !gamma1 in
   (match phi_now.desc with
   | Zparsetree.Econst (Ebool true) ->
-      debug "I'm a true predicate";
       add_binding x rhs_ty
   | _ -> (
-          debug "NO I'm not true";
         let ok_head =
           check_against_phi
             ~fname:(x ^ ":rec-fby-head")
@@ -1050,7 +1048,6 @@ let process_let_rec_fby
   (* --- TAIL check: compare tail-only NF vs full annotation NF --- *)
   (* Build tail-only NF: v = e2  &&  X(G(M(v = e2))) *)
   let lhs_tail_nf = nf_eq_v_rhs_fby_tail e2 in
-  debug "I'm running the tail stuff";
   let ok_tail =
     nf_match_and_check
       ~cid:5
@@ -1602,8 +1599,291 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
     )
   
     
+let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
+
+let nf_last_of_x ~(binder:string) ~(x_name:string) ~(e_init:Zelus.exp) : Zparsetree.exp =
+  let v_eq_init = mk_eq (mk_v ()) { desc = vc_gen_expression e_init; loc = dummy_loc } in
+  let v_eq_x    = mk_eq (mk_v ()) (mk_var x_name) in
+  zpt_pred_to_nf ~binder (mk_and v_eq_init (mk_X (mk_G (v_eq_init))))
+
+(* Find the declared refinement for a variable in a refinement environment *)
+let find_decl_in_ref_env (name:string)
+                         (ref_env:(string * Zelus.type_expression) list)
+  : Zelus.type_expression option =
+  let rec go = function
+    | [] -> None
+    | (n, ty)::tl -> if String.equal n name then Some ty else go tl
+  in go ref_env
+
+(* Extract (binder, base, predicate(Zelus)) from a Zelus refinement type *)
+let parts_of_zls_refine (t:Zelus.type_expression) : (string * string * Zelus.exp) =
+  match t.desc with
+  | Zelus.Erefinement ((vb, base_ty), pred) ->
+      let base =
+        match base_ty.desc with
+        | Zelus.Etypeconstr (Name b, []) -> b
+        | _ -> failwith "expected Etypeconstr(Name,[]) for base"
+      in
+      (vb, base, pred)
+  | _ -> failwith "expected refinement type in ref environment"
+
+  (* Check (init x) fby x  ⊑  (declared type of "last x" in the *initial* env).
+   If SAFE, install "last x" into Γ with the normalized declared annotation. *)
+let typecheck_last_x_against_init_env
+    ~(x_name:string)
+    ~(ref_env:(string * Zelus.type_expression) list)
+  : unit =
+  (* 1) Get init x; error if missing *)
+  let len = Hashtbl.length init_table in
+  let e_init =
+    match Hashtbl.find_opt init_table x_name with
+    | Some e -> e
+    | None ->
+        failwith (Printf.sprintf "Automaton: missing 'init %s = ...' for last %s" x_name x_name)
+  in
+
+  (* 2) Pull the declared refinement for "last x" *)
+  let last_name = "last_" ^ x_name in
+  let ty_decl =
+    match find_decl_in_ref_env last_name ref_env with
+    | Some ty -> ty
+    | None ->
+        failwith (Printf.sprintf "Automaton: initial env lacks a declaration for '%s'" last_name)
+  in
+  let (vb_decl, base_decl, pred_decl_zls) = parts_of_zls_refine ty_decl in
+
+  (* 3) LHS NF for (init x) fby x *)
+  let lhs_nf = nf_last_of_x ~binder:vb_decl ~x_name ~e_init in
+
+  (* 4) RHS NF = normalized declared predicate *)
+  let rhs_nf = zls_pred_to_nf ~binder:vb_decl pred_decl_zls in
+
+  (* 5) NF-aware subtyping check *)
+  let ok =
+    nf_match_and_check
+      ~cid:5
+      ~name:(last_name ^ ":init-check")
+      ~binder:vb_decl
+      ~base:base_decl
+      lhs_nf rhs_nf
+  in
+  if not ok then
+    failwith (Printf.sprintf
+      "Liquid type error: (%s) violates its initial refinement" last_name);
+
+  (* 6) On success, install 'last x' into Γ with the normalized declared predicate *)
+  let base_ty =
+    mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_decl), []))
+  in
+  let rhs_ty =
+    { desc = Zparsetree.Erefinement ((vb_decl, base_ty), rhs_nf)
+    ; loc  = dummy_loc
+    }
+  in
+  add_binding last_name rhs_ty
+  
+
+let rhs_for_var_in_block (x:string) (blk : Zelus.eq list Zelus.block) =
+  let rec find_in_eqs = function
+    | [] -> None
+    | eq::tl ->
+      (match eq.eq_desc with
+       | EQeq (pat, rhs) ->
+           (match pat.p_desc with
+            | Etypeconstraintpat (bp, _ann) ->
+                (* pattern is annotated: base must be a variable to match x *)
+                (match bp.p_desc with
+                 | Evarpat id when String.equal (zident_pretty id) x -> Some rhs
+                 | _ -> find_in_eqs tl)
+            | Evarpat id when String.equal (zident_pretty id) x -> Some rhs
+            | _ -> find_in_eqs tl)
+       | _ -> find_in_eqs tl)
+  in
+  find_in_eqs blk.b_body
+
+(* Unwrap a state handler’s optional refenv into a list, or [] *)
+let refenv_list_of_state (sha : Zelus.state_handler_ann) : (string * Zelus.type_expression) list =
+  match sha.sha_refenv with
+  | None -> []
+  | Some { desc = Erefenv lst; _ } -> lst
 
 
+(* Check each (var : refinement) in a state’s refenv against the state body. 
+   For scalar vars, we expect an assignment [var = rhs] in the state’s do-block. *)
+let check_state_against_env ~(state_name:string)
+                            (sha : Zelus.state_handler_ann)
+  : unit =
+  let env = refenv_list_of_state sha in
+  if env = [] then () else begin
+    (* For each (x : {v:Base | phi}) in the state env, locate x’s assignment and check. *)
+    List.iter
+      (fun (x, ty_decl) ->
+         (* Only handle scalar refinements here; tuples can be extended similarly *)
+         match ty_decl.Zelus.desc with
+         | Zelus.Erefinement ((vb, base_ty), pred_zls) ->
+             (* Base sort name *)
+             let base_name =
+               match base_ty.desc with
+               | Zelus.Etypeconstr (Name b, []) -> b
+               | _ -> failwith "State env: base must be Etypeconstr(Name,[])"
+             in
+             (* Find [x = rhs] in the state body *)
+             let rhs_opt = rhs_for_var_in_block x sha.sha_handler.s_body in
+             (match rhs_opt with
+              | None ->
+                  failwith (Printf.sprintf
+                    "Automaton[%s]: no assignment found for '%s' in state body"
+                    state_name x)
+              | Some rhs ->
+                  (* Synthesize LHS NF for this state assignment:
+                       lhs_nf = (vb = rhs) ∧ X(G(vb = rhs))
+                     IMPORTANT: use the *same binder* [vb] as in the annotation. *)
+                  (* let rhs = to_zpt_type rhs.e_desc in *)
+                  let lhs_nf = nf_eq_v_rhs rhs vb in
+
+                  (* Normalize declared predicate to NF wrt binder vb *)
+                  let ann_nf = zls_pred_to_nf ~binder:vb pred_zls in
+
+                  (* NF-aware subtyping check *)
+                  let ok =
+                    nf_match_and_check
+                      ~cid:5
+                      ~name:(Printf.sprintf "%s.%s" state_name x)
+                      ~binder:vb
+                      ~base:base_name
+                      lhs_nf ann_nf
+                  in
+                  if not ok then
+                    failwith (Printf.sprintf
+                      "Liquid type error: state %s: assignment to '%s' violates its refinement"
+                      state_name x)
+                  else
+                    (* Success: store normalized annotation for x while inside this state *)
+                    let base_ty' =
+                      mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), []))
+                    in
+                    let rhs_ty' =
+                      { desc = Zparsetree.Erefinement ((vb, base_ty'), ann_nf)
+                      ; loc  = dummy_loc
+                      }
+                    in
+                    add_binding x rhs_ty'
+             )
+         | Zelus.Erefinementlabeledtuple _ ->
+             failwith "State env: labeled tuple refinements not handled yet"
+         | _ ->
+             failwith "State env: expected scalar refinement {v:Base | ...}"
+      )
+      env
+  end
+
+let e_false : Zparsetree.exp = { loc = dummy_loc; desc = Zparsetree.Econst (Ebool false) }
+
+(* G(not guard) from a Zelus expression guard_zls *)
+let g_not_of_guard (guard_zls) : Zparsetree.exp =
+  match guard_zls with
+  | None -> mk_true                            (* no guard => true *)
+  | Some g -> g
+
+(* Build the guarded predicate for a state's declared refinement of ex:
+   G(¬guard) ∧ P_state   where P_state is the state's predicate (already has G(...))
+*)
+let guarded_state_pred
+    ~(state_pred_zls: Zelus.exp)
+    ~(guard_zls: exp option)
+  : Zparsetree.exp =
+  let p_state = { loc = dummy_loc; desc = vc_gen_expression state_pred_zls } in
+  let g_not   = g_not_of_guard guard_zls in
+  mk_and g_not p_state
+
+let state_refine_for_ex var_name (sha : Zelus.state_handler_ann) =
+  match sha.sha_refenv with
+  | None -> None
+  | Some { desc = Zelus.Erefenv lst; _ } ->
+      let rec go = function
+        | [] -> None
+        | (nm, ty)::tl ->
+            if String.equal nm var_name then
+              match ty.Zelus.desc with
+              | Zelus.Erefinement ((vb, base_ty), pred) ->
+                  let base =
+                    match base_ty.desc with
+                    | Zelus.Etypeconstr (Name b, []) -> b
+                    | _ -> failwith "State env ex: base must be Name([])"
+                  in
+                  Some (vb, base, (strip_once pred))
+              | _ -> failwith "State env ex: expected scalar refinement"
+            else go tl
+      in go lst
+let zpt_of_cond (c:Zelus.exp) : Zparsetree.exp =
+  { desc = vc_gen_expression c; loc = dummy_loc }
+
+
+let cond_of_escape t =
+  match t.Zelus.e_cond.desc with
+  | Zelus.Econdexp(guard) -> Some(guard)
+  | _ -> failwith "Not handling transitions except Econdexp"
+
+
+let staying_guard_of_state (sha : Zelus.state_handler_ann) : Zparsetree.exp =
+  let negs_zpt =
+    sha.sha_handler.s_trans
+    |> List.filter_map cond_of_escape
+    |> List.map (fun g_zls -> mk_not { loc = dummy_loc; desc = vc_gen_expression g_zls })
+  in
+  match negs_zpt with
+  | []      -> e_true
+  | g :: gs -> List.fold_left mk_and g gs
+let check_automaton_states_against_return
+    ~(ret_var_name:string)  
+    ~(ret_binder:string)        (* e.g., "v" from {ex:{v:int | ...}}  *)
+    ~(ret_base:string)          (* e.g., "int"                         *)
+    ~(ret_pred:Zelus.exp)       (* Zelus predicate in the returned env *)
+    (states : Zelus.state_handler_ann list)
+  : unit =
+  (* Collect guarded predicates for states that declare ex in their refenv *)
+  let guarded_preds : Zparsetree.exp list =
+    states
+    |> List.filter_map (fun sha ->
+         match state_refine_for_ex ret_var_name sha with
+         | None -> None
+         | Some (_vb, _base, pred_ex_zls) ->
+             let guard_opt = staying_guard_of_state sha in
+             Some (guarded_state_pred ~state_pred_zls:pred_ex_zls ~guard_zls:(Some(guard_opt))))
+  in
+  if guarded_preds = [] then
+    ()  (* nothing to check *)
+  else
+    (* Disjunction of all guarded state preds *)
+    let disj =
+      List.fold_left (fun acc p -> if acc == e_false then p else mk_or (mk_paren acc) (mk_paren p))
+        e_false guarded_preds
+    in
+    (* LHS/RHS refinements with the same binder/base *)
+    let lhs = mk_refine ret_binder ret_base disj in
+    let rhs =
+      mk_refine ret_binder ret_base { loc = dummy_loc; desc = vc_gen_expression ret_pred }
+    in
+    let lhs_nf = zpt_pred_to_nf ~binder:ret_binder (mk_G disj) in
+    let rhs_nf = zls_pred_to_nf ~binder:ret_binder ret_pred in
+    let ok =
+      nf_match_and_check
+        ~cid:5
+        ~name:"automaton:states-vs-ret"
+        ~binder:ret_binder
+        ~base:ret_base
+        lhs_nf rhs_nf
+    in
+    let rhs_ty_zpt =
+      { desc =
+          Zparsetree.Erefinement
+            ( ("v", { desc = Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base), []); loc = dummy_loc })
+            , lhs_nf);
+        loc = dummy_loc }
+    in
+    if ok then add_binding ret_var_name rhs_ty_zpt;
+    if not ok then
+      failwith "Liquid type error: union of guarded state refinements does not satisfy the return environment"
 let process_let_eq (eq : Zelus.eq) : unit =
       match eq.eq_desc with
       | EQeq (pat, rhs) -> begin
@@ -1639,6 +1919,77 @@ let process_let_eq (eq : Zelus.eq) : unit =
             end
           | _ -> ()
         end
+      | EQinit(id,e) -> debug((zident_pretty id)); Hashtbl.add init_table ((zident_pretty id)) e
+      | EQautomatonRef (is_weak, None, _states, _init_state, _ret_env) ->
+        ()
+      | EQautomatonRef (is_weak, Some ref, _states, _init_state, _ret_env) ->
+        let re = match ref.desc with
+        | Erefenv(lst) -> lst in 
+        let xs_from_env =
+          List.filter_map
+            (fun (n,_ty) ->
+              if String.length n >= 5 && String.sub n 0 5 = "last_"
+              then Some (String.sub n 5 (String.length n - 5))
+              else None)
+            re
+        in
+        match xs_from_env with
+        | [] ->
+            failwith "Automaton: couldn't find any 'last <x>' entry in the initial refinement env"
+        | xs ->
+            let xs = List.sort_uniq String.compare xs in
+            let failures =
+              List.filter_map
+                (fun x ->
+                   try
+                     typecheck_last_x_against_init_env ~x_name:x ~ref_env:re;
+                     None
+                   with exn ->
+                     Some (Printf.sprintf "last_%s: %s" x (Printexc.to_string exn)))
+                xs
+            in
+            (match failures with
+             | [] -> ()
+             | errs ->
+                 failwith
+                   (Printf.sprintf
+                      "Automaton: %d initial refinement error(s):\n%s"
+                      (List.length errs)
+                      (String.concat "\n" errs)));
+        List.iter
+      (fun sha ->
+         let st_name =
+           match sha.Zelus.sha_handler.s_state.desc with
+           | Estate0pat id -> zident_pretty id
+           | Estate1pat (id, _params) -> zident_pretty id
+         in
+         check_state_against_env ~state_name:st_name sha
+      )
+      _states;
+      begin match _ret_env with
+        | None -> ()
+        | Some { desc = Zelus.Erefenv lst; _ } ->
+            List.iter
+              (fun (ret_var_name, ret_ty) ->
+                match ret_ty.Zelus.desc with
+                | Zelus.Erefinement ((ret_binder, base_ty), ret_pred_zls) ->
+                    let ret_base =
+                      match base_ty.desc with
+                      | Zelus.Etypeconstr (Name b, []) -> b
+                      | _ ->
+                          failwith "Return env: base must be Etypeconstr(Name,[])."
+                    in
+                    check_automaton_states_against_return
+                      ~ret_var_name
+                      ~ret_binder
+                      ~ret_base
+                      ~ret_pred:ret_pred_zls
+                      _states
+                | _ ->
+                    failwith "Return env: expected scalar refinement {v:Base | ...}.")
+              lst
+        end)
+      | EQautomaton(_,_,_) -> ()
       | _ -> ()
     ;;
     
@@ -1905,7 +2256,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
     match e.e_desc with
     | Zelus.Eop (Zelus.Eifthenelse, i :: t_then :: t_else :: []) ->
       (* rhs_ty is known to be a refinement here *)
-      begin match rhs_ty.desc with
+      begin match rhs_ty.Zelus.desc with
       | Zelus.Erefinement ((v, base_ty), ann_pred) ->
           begin match base_ty.desc with
           | Zelus.Etypeconstr (Name base_name, []) ->
@@ -2011,7 +2362,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
             debug (Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
 
             if n = "main" then (
-              debug "skipping main function for now, fix this bug";
+              debug "skipping main function";
             ) else (
               (* Parse declared return refinement exactly like before *)
               let (ret_pred_exp, ret_binder, ret_base_ty) =

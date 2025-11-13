@@ -208,6 +208,15 @@ and pdesc =
 
 and eq = eqdesc localized
 
+and refenv = refenv_desc localized
+and refenv_desc =
+  | Erefenv of (name * type_expression) list
+
+and state_handler_ann = {
+  sha_handler : eq list state_handler;
+  sha_refenv  : refenv option;
+}
+
 and eqdesc =
   | EQeq of pattern * exp
     (* [p = e] *)
@@ -224,6 +233,7 @@ and eqdesc =
   (*added here
   | EQstore of robot_input*)
   | EQautomaton of eq list state_handler list * state_exp option
+  | EQautomatonRef of refenv option * state_handler_ann list * state_exp option * refenv option
   | EQpresent of eq list block present_handler list * eq list block option
   | EQmatch of exp * eq list block match_handler list
   | EQifthenelse of exp * eq list block * eq list block option

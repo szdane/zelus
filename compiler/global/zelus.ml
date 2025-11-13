@@ -209,6 +209,15 @@ and eq =
     eq_safe: bool; (* does it have a side effect *)
     mutable eq_write: Deftypes.defnames; (* the set of names it defines *) }
 
+and refenv = refenv_desc localized
+and refenv_desc =
+  | Erefenv of (name * type_expression) list
+
+and state_handler_ann = {
+  sha_handler : state_handler;
+  sha_refenv  : refenv option;
+}
+
 and eqdesc =
   | EQeq of pattern * exp
   (* [p = e] *)
@@ -221,6 +230,7 @@ and eqdesc =
   | EQpluseq of Zident.t * exp
   (* [n += e] *)
   | EQautomaton of is_weak * state_handler list * state_exp option
+  | EQautomatonRef of is_weak * refenv option * state_handler_ann list * state_exp option * refenv option
   (*added here
   | EQr_move of exp*)
   | EQpresent of eq list block present_handler list * eq list block option

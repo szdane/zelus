@@ -448,6 +448,10 @@ and exp_less_than is_continuous env e expected_ti =
 and equation_list is_continuous env eq_list =
   List.iter (equation is_continuous env) eq_list
 
+and unwrap_state_handlers_ann (hs_ann : state_handler_ann list) :
+  state_handler list =
+  List.map (fun sha -> sha.sha_handler) hs_ann
+  
 and equation is_continuous env
     { eq_desc = eq_desc; eq_loc = loc; eq_write = defnames } =
   match eq_desc with
@@ -513,6 +517,55 @@ and equation is_continuous env
       let shared = Deftypes.cur_names Zident.S.empty defnames in
       (* do a special treatment for the initial state *)
       let first_s_h, remaining_s_h_list = split se_opt s_h_list in
+      (* first type the initial branch *)
+      handler shared env first_s_h;
+      (* if the initial state has only weak transition then all *)
+      (* variables from [defined_names] do have a last value *)
+      (* in this version of the language, weak and strong cannot be mixed *)
+      let last_names =
+        Deftypes.cur_names Zident.S.empty first_s_h.s_body.b_write in
+      let env =
+        if is_weak then add_last_to_env is_continuous env last_names else env in
+      List.iter (handler shared env) remaining_s_h_list;
+      (* every defined variable must be initialized *)
+      initialized loc env shared;
+      (* finaly check the initialisation *)
+      ignore (Zmisc.optional_map (state env) se_opt)
+    | EQautomatonRef(is_weak,_, s_h_list, se_opt,_) ->
+      (* state *)
+      let state env { desc = desc } =
+        match desc with
+        | Estate0 _ -> ()
+        | Estate1(_, e_list) -> 
+            List.iter
+              (fun e -> exp_less_than_on_i false env e izero) e_list in
+      (* Compute the set of names defined by a state *)
+      let cur_names_in_state b trans =
+        let block acc { b_write = w } = Deftypes.cur_names acc w in
+        let escape acc { e_block = b_opt } = Zmisc.optional block acc b_opt in
+        block (List.fold_left escape Zident.S.empty trans) b in
+      (* transitions *)
+      let escape shared env
+          { e_cond = sc; e_block = b_opt; e_next_state = ns; e_env = e_env } =
+        let env = build_env sc.loc is_continuous e_env env in
+        scondpat is_continuous env sc;
+        let env = 
+          match b_opt with
+          | None -> env | Some(b) -> block_eq_list shared false env b in
+        state env ns in
+      (* handler *)
+      let handler shared env
+          { s_state = state; s_body = b; s_trans = trans; s_env = s_env } =
+        (* remove from [shared] names defined in the current state *)
+        let shared = Zident.S.diff shared (cur_names_in_state b trans) in
+        let env = build_env state.loc is_continuous s_env env in
+        let env = block_eq_list shared is_continuous env b in
+        List.iter (escape shared env) trans in
+      (* compute the set of shared names *)
+      let shared = Deftypes.cur_names Zident.S.empty defnames in
+      (* do a special treatment for the initial state *)
+      let sh_list = unwrap_state_handlers_ann s_h_list in
+      let first_s_h, remaining_s_h_list = split se_opt sh_list in
       (* first type the initial branch *)
       handler shared env first_s_h;
       (* if the initial state has only weak transition then all *)

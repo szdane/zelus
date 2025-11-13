@@ -350,6 +350,11 @@ and build_list check_linear acc p_list =
 let rec build_equation_list defnames eq_list = 
   List.fold_left build_equation defnames eq_list
 
+
+and unwrap_state_handlers_ann (hs_ann : Zparsetree.state_handler_ann list) :
+    eq list Zparsetree.state_handler list =
+  List.map (fun sha -> sha.sha_handler) hs_ann
+
 and build_equation defnames eq =
   match eq.desc with
     | EQeq(pat, _) -> build false defnames pat
@@ -360,7 +365,13 @@ and build_equation defnames eq =
         List.fold_left 
           (fun acc 
 	    { desc = { s_block = b; s_until = until; s_unless = unless } } -> 
-              build_automaton_handler acc b until unless) defnames s_h_list
+              build_automaton_handler acc b until unless) defnames s_h_list  
+    | EQautomatonRef(_, states, _, _) ->
+                let s_h_list = unwrap_state_handlers_ann states in
+                List.fold_left
+                  (fun acc { desc = { s_block = b; s_until = until; s_unless = unless } } ->
+                     build_automaton_handler acc b until unless)
+                  defnames s_h_list
     | EQmatch(_, m_h_list) ->
         List.fold_left 
           (fun acc { m_body = b } -> snd (build_block_equation_list acc b)) 
@@ -449,6 +460,7 @@ and build_automaton_handler defnames b until unless =
   let bounded_names, defnames = build_block_equation_list defnames b in
   S.union defnames
 	  (S.union (S.diff def_in_until bounded_names) def_in_unless)
+
 
 (** Renaming of a pattern *)
 let rec check_pattern env p =
@@ -616,7 +628,33 @@ let block locals body env_pat env
   env, { Zelus.b_vars = vardec_list; Zelus.b_locals = l_list; Zelus.b_body = b;
          Zelus.b_loc = loc; Zelus.b_write = empty;
          Zelus.b_env = Rename.typ_env env_n_m_list }
+(* Translate refinement environments {x: ty; ...} *)
+let refenv_types env re =
+  match re.Zparsetree.desc with
+  | Erefenv lst ->
+      let lst' = List.map (fun (n, ty) -> (n, types env ty)) lst in
+      { Zelus.desc = Zelus.Erefenv lst'; Zelus.loc = re.Zparsetree.loc }
 
+let refenv_types_opt env = function
+  | None -> None
+  | Some re -> Some (refenv_types env re)     
+  
+let state_handler_ann_list_scoped
+  (env)
+  (anns : Zparsetree.state_handler_ann list)
+  (scoped_handlers : Zelus.state_handler list)
+: Zelus.state_handler_ann list =
+(* lengths must match: one annotation per handler *)
+if List.length anns <> List.length scoped_handlers then
+  invalid_arg "state_handler_ann_list_scoped: length mismatch";
+List.map2
+  (fun ann h_scoped ->
+     let ref_env' = refenv_types_opt env ann.Zparsetree.sha_refenv in
+     {
+       Zelus.sha_handler = h_scoped;
+       Zelus.sha_refenv  = ref_env';
+     })
+  anns scoped_handlers
 (** Scoping an expression *)
 let rec expression env { desc = desc; loc = loc } =
   let desc = match desc with
@@ -811,6 +849,21 @@ and equation env_pat env eq_list { desc = desc; loc = loc } =
      let is_weak, s_h_list, st_opt =
        state_handler_eq_list loc env_pat env s_h_list se_opt in
      eqmake loc (Zelus.EQautomaton(is_weak, s_h_list, st_opt)) :: eq_list
+  | EQautomatonRef (ref_env, states_ann, se_opt, ret_env) ->
+    let s_h_list = unwrap_state_handlers_ann states_ann in
+    let (_is_weak, s_h_list_scoped, st_opt_scoped) =
+      state_handler_eq_list loc env_pat env s_h_list se_opt
+    in
+    let ret_env_scoped = refenv_types_opt env ret_env in
+    let ref_env_scoped = refenv_types_opt env ref_env in
+    let states_ann_scoped =
+      state_handler_ann_list_scoped env states_ann s_h_list_scoped
+    in
+    (* If your later phase expects an init refinement env in arg #2,
+        pass None here unless you also parse one at the head: *)
+    eqmake loc
+      (Zelus.EQautomatonRef (_is_weak, ref_env_scoped, states_ann_scoped, st_opt_scoped, ret_env_scoped))
+    :: eq_list
   | EQmatch(e, m_h_list) ->
     eqmake loc
       (Zelus.EQmatch(ref false, expression env e, 

@@ -487,6 +487,10 @@ and exp_less_than env c_free e expected_tc =
 (** Typing a list of equations [env |-c eq list] *)
 and equation_list env c_free eq_list = List.iter (equation env c_free) eq_list
 
+and unwrap_state_handlers_ann (hs_ann : state_handler_ann list) :
+    state_handler list =
+  List.map (fun sha -> sha.sha_handler) hs_ann
+
 (** Typing of an equation. [env |-cfree eq] *)
 and equation env c_free { eq_desc = desc; eq_write = defnames; eq_loc = loc } =
   match desc with
@@ -588,6 +592,68 @@ and equation env c_free { eq_desc = desc; eq_write = defnames; eq_loc = loc } =
         let c_trans = Causal.intro_less_c c_body in
         let c_scpat = Causal.intro_less_c c_trans in
         List.iter (strong shared env c_body c_body c_scpat) s_h_list
+  | EQautomatonRef(is_weak, _, s_h_list, se_opt,_) ->
+      (* Typing a state expression *)
+      let state env c_free c_e { desc = desc } =
+        match desc with
+        | Estate0 _ -> ()
+        | Estate1(_, e_list) ->
+            List.iter (fun e -> exp_less_than_on_c env c_free e c_e) e_list in
+      (* Compute the set of names defined by a state *)
+      let cur_names_in_state b trans =
+        let block acc { b_write = w } = Deftypes.cur_names acc w in
+        let escape acc { e_block = b_opt } = Zmisc.optional block acc b_opt in
+        block (List.fold_left escape Zident.S.empty trans) b in
+      (* Typing of handlers *)
+      (* scheduling is done this way: *)
+      (* - Automata with strong preemption: *)
+      (*   1. compute unless conditions; *)
+      (*   2. execute the corresponding handler. *)
+      (* - Automata with weak preemption: *)
+      (*   1. compute the body; 2. compute the next active state. *)
+      (* the causality constraints must reproduce this scheduling *)
+      let escape shared env c_free c_spat
+          { e_cond = sc; e_block = b_opt; e_next_state = ns; e_env = e_env } =
+        let env = build_env e_env env in
+        let actual_c = scondpat env c_free sc in
+        less_than_c sc.loc env actual_c c_spat;
+        let env =
+          Zmisc.optional
+            (fun env b -> block_eq_list shared env c_free b) env b_opt in
+        state env c_free c_spat ns in
+      let weak shared env c_body c_trans c_scpat
+          { s_body = b; s_trans = trans; s_env = s_env } =
+        (* remove from [shared] names defined in the current state *)
+        let shared = Zident.S.diff shared (cur_names_in_state b trans) in
+        let env = build_env s_env env in
+        let env = block_eq_list shared env c_body b in
+        List.iter (escape shared env c_trans c_scpat) trans in
+      let strong shared env c_body c_trans c_scpat
+          { s_body = b; s_trans = trans; s_env = s_env } =
+        (* remove from [shared] names defined in the current state *)
+        let shared = Zident.S.diff shared (cur_names_in_state b trans) in
+        let env = build_env s_env env in
+        List.iter (escape shared env c_trans c_scpat) trans;
+        ignore (block_eq_list shared env c_body b) in
+      let c_automaton = Causal.intro_less_c c_free in
+      Zmisc.optional_unit (state env c_free) c_automaton se_opt;
+      (* Every branch of the automaton is considered to be executed atomically *)
+      let shared, env = def_env_on_c loc defnames env c_automaton in
+      (* the causality tag for the transition conditions *)
+      if is_weak then
+        (* first the body; then the escape condition *)
+        let c_trans = Causal.intro_less_c c_automaton in
+        let c_scpat = Causal.intro_less_c c_trans in
+        let c_body = Causal.intro_less_c c_scpat in
+        let sh_list = unwrap_state_handlers_ann s_h_list in
+        List.iter (weak shared env c_body c_body c_scpat) sh_list
+      else
+        (* first the escape condition; then the body *)
+        let c_body = Causal.intro_less_c c_automaton in
+        let c_trans = Causal.intro_less_c c_body in
+        let c_scpat = Causal.intro_less_c c_trans in
+        let sh_list = unwrap_state_handlers_ann s_h_list in
+        List.iter (strong shared env c_body c_body c_scpat) sh_list
   | EQmatch(_, e, m_h_list) ->
       let c_body = Causal.intro_less_c c_free in
       let c_e = Causal.intro_less_c c_body in

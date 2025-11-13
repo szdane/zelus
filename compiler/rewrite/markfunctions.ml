@@ -89,6 +89,10 @@ let funexp_info { f_args = p_list; f_body = ({ e_caus = tc } as e) } =
        exp c_set p2
 
   and local c_set { l_eq = eq_list } = List.fold_left equation c_set eq_list
+
+  and unwrap_state_handlers_ann (hs_ann : state_handler_ann list) :
+    state_handler list =
+    List.map (fun sha -> sha.sha_handler) hs_ann
       
   and equation c_set { eq_desc = desc } =
     match desc with
@@ -111,6 +115,21 @@ let funexp_info { f_args = p_list; f_body = ({ e_caus = tc } as e) } =
                    state c_set se)
                  acc s_trans)
             c_set s_h_list in
+        Zmisc.optional state c_set se_opt
+    | EQautomatonRef(_, _, s_h_list, se_opt,_) ->
+      let sh_list = unwrap_state_handlers_ann s_h_list in
+        let c_set =
+          List.fold_left
+            (fun acc { s_body = b_eq_list; s_trans = s_trans } ->
+               let acc = block_eq_list acc b_eq_list in
+               List.fold_left
+                 (fun acc
+                   { e_cond = scpat; e_block = b_opt; e_next_state = se } ->
+                   let c_set = scondpat acc scpat in
+                   let c_set = Zmisc.optional block_eq_list c_set b_opt in
+                   state c_set se)
+                 acc s_trans)
+            c_set sh_list in
         Zmisc.optional state c_set se_opt
     | EQpresent(p_h_list, b_opt) ->
         let c_set =
@@ -276,6 +295,10 @@ let funexp_mark_to_inline info ({ f_body = e } as funexp) =
   and local ({ l_eq = eq_list } as l) =
   { l with l_eq = List.map equation eq_list }
 
+  and unwrap_state_handlers_ann (hs_ann : state_handler_ann list) :
+  state_handler list =
+  List.map (fun sha -> sha.sha_handler) hs_ann
+
   and equation ({ eq_desc = desc } as eq) =
     let desc = match desc with
       | EQeq(p, e) -> EQeq(p, exp e)
@@ -289,6 +312,9 @@ let funexp_mark_to_inline info ({ f_body = e } as funexp) =
       | EQautomaton(is_weak, s_h_list, se_opt) ->
           EQautomaton(is_weak, List.map state_handler s_h_list,
 		      Zmisc.optional_map state se_opt)
+      | EQautomatonRef(is_weak, ref_env, s_h_list, se_opt, ret_env) ->
+          EQautomatonRef(is_weak, ref_env, s_h_list,
+		      Zmisc.optional_map state se_opt, ret_env)
       | EQpresent(p_h_list, b_opt) ->
           EQpresent(List.map (present_handler scondpat block_eq_list) p_h_list,
 		    Zmisc.optional_map block_eq_list b_opt)

@@ -8,11 +8,11 @@ MLFLAGS=-linkpkg -package zelus
 sim: zelus-compile 
 
 
-main.ml: fby01_test.zls
-	$(ZELUC) $(ZFLAGS) fby01_test.zls
+main.ml: automaton.zls
+	$(ZELUC) $(ZFLAGS) automaton.zls
 
 zelus-compile: main.ml
-	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o fby01_test.opt fby01_test.ml main.ml
+	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o automaton.opt automaton.ml main.ml
 
 clean: 
-	rm fby01_test.opt *.cmi *.cmx *.o *.zci main.ml fby01_test.ml 
+	rm automaton.opt *.cmi *.cmx *.o *.zci main.ml automaton.ml 

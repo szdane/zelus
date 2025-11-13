@@ -131,6 +131,7 @@ let block l lo eq_list startpos endpos =
 %token AS             /* "as" */
 %token FORALL         /* "forall" */
 %token AUTOMATON      /* "automaton" */
+%token AUTOMATON_REF /* "automaton_ref" */
 %token ATOMIC         /* "atomic" */
 %token INLINE         /* "inline" */
 %token CONTINUE       /* "continue" */
@@ -219,6 +220,7 @@ let block l lo eq_list startpos endpos =
 %right prec_list
 %left EVERY
 %left AUTOMATON
+%left AUTOMATON_REF
 %left INIT
 %left UNTIL
 %left UNLESS
@@ -579,12 +581,37 @@ optional_init:
    eq = localized(equation_desc) { eq }
 ;
 
+/* ---------- Refinement environments { x : t; y : u } ---------- */
+refenv:
+  | LBRACE rl = refenv_bindings RBRACE
+      { make (Erefenv (List.rev rl)) $startpos $endpos }
+  | LBRACE RBRACE
+      { make (Erefenv []) $startpos $endpos }
+;
+
+refenv_bindings:
+  | i = IDENT COLON t = type_expression
+      { [(i, t)] }
+  | rl = refenv_bindings SEMI i = IDENT COLON t = type_expression
+      { (i, t) :: rl }
+;
+
+refenv_opt:
+  | /* empty */ { None }
+  | r = refenv  { Some r }
+;
+
 equation_desc:
   | AUTOMATON opt_bar a = automaton_handlers(equation_empty_list) opt_end
     { EQautomaton(List.rev a, None) }
   | AUTOMATON opt_bar a = automaton_handlers(equation_empty_list)
     INIT s = state
     { EQautomaton(List.rev a, Some(s)) }
+  | AUTOMATON_REF COLON aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list) opt_end ret = refenv_opt opt_bar
+    { EQautomatonRef ( aut, List.rev a, None, ret) }  
+  | AUTOMATON_REF COLON aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list)
+      INIT s = state ret = refenv_opt opt_bar
+    { EQautomatonRef ( aut, List.rev a, Some s, ret) }
   | MATCH e = seq_expression WITH opt_bar
     m = match_handlers(block_of_equation_list) opt_end
     { EQmatch(e, List.rev m) }
@@ -658,6 +685,11 @@ simple_equation_desc:
   | AUTOMATON opt_bar a = automaton_handlers(equation_empty_list)
     INIT s = state
     { EQautomaton(List.rev a, Some(s)) }
+  | AUTOMATON_REF aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list) opt_end ret = refenv_opt opt_bar END
+    { EQautomatonRef ( aut, List.rev a, None, ret) }   
+  | AUTOMATON_REF aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list)
+      INIT s = state ret = refenv_opt opt_bar END
+    { EQautomatonRef ( aut, List.rev a, Some s, ret) }
   | MATCH e = seq_expression WITH opt_bar
     m = match_handlers(block_of_equation_list) END
     { EQmatch(e, List.rev m) }
@@ -756,6 +788,79 @@ automaton_handler(X):
     { make { s_state = sp; s_block = b;
 	     s_until = List.rev e_until; s_unless = List.rev e_unless }
       $startpos $endpos }
+;
+
+automaton_handlers_ref(X):
+  | a = automaton_handler_ref(X)
+      { [a] }
+  | ahs = automaton_handlers_ref(X) BAR a = automaton_handler_ref(X)
+      { a :: ahs }
+;
+
+/* Same shapes as automaton_handler, but with `refenv_opt` right after state pattern. */
+automaton_handler_ref(X):
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) DONE
+     {
+       let sh = make { s_state = sp; s_block = b; s_until = []; s_unless = [] } $startpos $endpos in
+       { sha_handler = sh; sha_refenv = re }  (* ⚠ adjust field names if needed *)
+     }
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) THEN st = state
+    {
+      let sh =
+        make { s_state = sp; s_block = b;
+               s_until = [{ e_cond = scond_true $endpos(b) $startpos(st);
+                            e_reset = true; e_block = None; e_next_state = st }];
+               s_unless = [] } $startpos $endpos in
+      { sha_handler = sh; sha_refenv = re }
+    }
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) CONTINUE st = state
+    {
+      let sh =
+        make { s_state = sp; s_block = b;
+               s_until = [{ e_cond = scond_true $endpos(b) $startpos(st);
+                            e_reset = false; e_block = None; e_next_state = st }];
+               s_unless = [] } $startpos $endpos in
+      { sha_handler = sh; sha_refenv = re }
+    }
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) THEN emit = emission st = state
+    {
+      let sh =
+        make { s_state = sp; s_block = b;
+               s_until = [{ e_cond = scond_true $endpos(b) $startpos(emit);
+                            e_reset = true; e_block = Some(emit); e_next_state = st }];
+               s_unless = [] } $startpos $endpos in
+      { sha_handler = sh; sha_refenv = re }
+    }
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) CONTINUE emit = emission st = state
+    {
+      let sh =
+        make { s_state = sp; s_block = b;
+               s_until = [{ e_cond = scond_true $endpos(b) $startpos(emit);
+                            e_reset = false; e_block = Some(emit); e_next_state = st }];
+               s_unless = [] } $startpos $endpos in
+      { sha_handler = sh; sha_refenv = re }
+    }
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) UNTIL e_until = escape_list
+    {
+      let sh = make { s_state = sp; s_block = b; s_until = List.rev e_until; s_unless = [] }
+                     $startpos $endpos in
+      { sha_handler = sh; sha_refenv = re }
+    }
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) UNLESS e_unless = escape_list
+    {
+      let sh = make { s_state = sp; s_block = b; s_until = []; s_unless = List.rev e_unless }
+                     $startpos $endpos in
+      { sha_handler = sh; sha_refenv = re }
+    }
+  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X)
+      UNTIL e_until = escape_list UNLESS e_unless = escape_list
+    {
+      let sh =
+        make { s_state = sp; s_block = b;
+               s_until = List.rev e_until; s_unless = List.rev e_unless }
+             $startpos $endpos in
+      { sha_handler = sh; sha_refenv = re }
+    }
 ;
 
 escape:

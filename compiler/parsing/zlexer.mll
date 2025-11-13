@@ -35,6 +35,7 @@ List.iter (fun (str,tok) -> Hashtbl.add keyword_table str tok) [
   "as", AS;
   "forall", FORALL;
   "automaton", AUTOMATON;
+  "automaton_ref", AUTOMATON_REF;
   "atomic", ATOMIC;
   "inline", INLINE;
   "continue", CONTINUE;

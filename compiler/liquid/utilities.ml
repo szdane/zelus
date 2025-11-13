@@ -33,6 +33,7 @@ let mk_type desc =
 let mk_app f args     = { desc = Zparsetree.Eapp ({app_inline=false; app_statefull=false}, f, args); loc = dummy_loc }
 let mk_var s          = { desc = Zparsetree.Evar (Name s); loc = dummy_loc }
 let mk_and a b = mk_app (mk_var "&&") [a; b]
+let mk_or p q = mk_app (mk_var "||") [p; q]
 let mk_paren (e : Zparsetree.exp) : Zparsetree.exp =
   { desc =
       Zparsetree.Eapp (
@@ -218,6 +219,12 @@ let rec is_true (e:Zparsetree.exp) : bool =
     match e.desc with
     | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name f); _}, [arg]) -> Some (f,arg)
     | _ -> None
+  let view_unary_app_name_zls (e:Zelus.exp) : (string * Zelus.exp) option =
+    match e.e_desc with
+    | Zelus.Eapp (_, {e_desc = Zelus.Eglobal {lname = Name f}; _}, [arg]) -> Some (f,arg)
+    | Zelus.Eapp (_, {e_desc = Zelus.Elocal {source = f}; _}, [arg]) -> Some (f,arg)
+    | _ -> None
+  
   
   (* ---------- LTL ops: we now only use plain "x", "g", "m" ---------- *)
   
@@ -225,6 +232,13 @@ let rec is_true (e:Zparsetree.exp) : bool =
   
   let view_ltl (e:Zparsetree.exp) : (ltl_op * Zparsetree.exp) option =
     match view_unary_app_name e with
+    | Some ("x", arg) -> Some (OP_X, arg)
+    | Some ("g", arg) -> Some (OP_G, arg)
+    | Some ("m", arg) -> Some (OP_M, arg)
+    | _               -> None
+
+  let view_ltl_zls (e:Zelus.exp) : (ltl_op * Zelus.exp) option =
+    match view_unary_app_name_zls e with
     | Some ("x", arg) -> Some (OP_X, arg)
     | Some ("g", arg) -> Some (OP_G, arg)
     | Some ("m", arg) -> Some (OP_M, arg)
@@ -245,11 +259,15 @@ let rec is_true (e:Zparsetree.exp) : bool =
   
   let rec strip_matching_ltl (a:Zparsetree.exp) (b:Zparsetree.exp)
     : Zparsetree.exp * Zparsetree.exp =
-    debug "I'm inside the ltl matching func";
     match view_ltl a, view_ltl b with
     | Some (op1, a1), Some (op2, b1) -> if (op1 = op2 || op1 == OP_G) then
         strip_matching_ltl a1 b1 else failwith "no matching between LTL"
     | _ -> (a, b)
+
+  let strip_once a = 
+    match view_ltl_zls a with 
+    | Some(op1, a1) -> a1
+    | None -> a
   
   (* ---------- “LTL-free” = no head x/g/m, and any && parts are LTL-free ---------- *)
   

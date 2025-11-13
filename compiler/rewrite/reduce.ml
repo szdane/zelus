@@ -303,6 +303,10 @@ and local venv (renaming, fun_defs) ({ l_eq = eq_list; l_env = env } as l) =
     Zmisc.map_fold (equation venv renaming) fun_defs eq_list in
   { l with l_eq = eq_list; l_env = env }, (renaming, fun_defs)
 
+and unwrap_state_handlers_ann (hs_ann : state_handler_ann list) :
+    state_handler list =
+  List.map (fun sha -> sha.sha_handler) hs_ann
+
 (** Simplify an equation. *)
 and equation venv renaming fun_defs ({ eq_desc = desc } as eq) = 
   let desc, fun_defs =
@@ -433,6 +437,63 @@ and equation venv renaming fun_defs ({ eq_desc = desc } as eq) =
        List.fold_left build_state_names renaming s_h_list in
      let s_h_list, fun_defs =
        Zmisc.map_fold (body venv renaming) fun_defs s_h_list in
+     let se_opt, fun_defs =
+       Zmisc.optional_with_map (state_exp venv renaming) fun_defs se_opt in
+     EQautomaton(is_weak, s_h_list, se_opt), fun_defs
+  | EQautomatonRef(is_weak, _, s_h_list, se_opt,_) ->
+     let build_state_names renaming { s_state = { desc = desc } } =
+       match desc with
+       | Estate0pat(n) | Estate1pat(n, _) ->
+	   let m = Zident.fresh (Zident.source n) in
+           Env.add n m renaming in
+     let statepat renaming ({ desc = desc } as spat) =
+	 match desc with
+	 | Estate0pat(x) -> { spat with desc = Estate0pat(rename x renaming) }
+	 | Estate1pat(x, x_list) ->
+	    let x = rename x renaming in
+	    let x_list = List.map (fun x -> rename x renaming) x_list in
+	    { spat with desc = Estate1pat(x, x_list) } in
+     let state_exp venv renaming fun_defs ({ desc = desc } as se) =
+       match desc with
+       | Estate0(x) -> { se with desc = Estate0(rename x renaming) }, fun_defs
+       | Estate1(x, e_list) ->
+	  let e_list, fun_defs =
+	    Zmisc.map_fold (expression venv renaming) fun_defs e_list in
+	  { se with desc = Estate1(rename x renaming, e_list) }, fun_defs in
+     let escape venv renaming fun_defs
+         ({ e_cond = scpat; e_block = b_opt;
+	    e_next_state = se; e_env = env } as esc) =
+       let env, renaming0 = build env in
+       let venv = remove renaming0 venv in
+       let renaming = Env.append renaming0 renaming in
+       let renaming, fun_defs, b_opt =
+	 match b_opt with
+         | None -> renaming, fun_defs, None
+         | Some(b) ->
+	     let b, (renaming, fun_defs) = block venv (renaming, fun_defs) b
+             in renaming, fun_defs, Some(b) in
+       let scpat, fun_defs = scondpat venv renaming fun_defs scpat in
+       let se, fun_defs = state_exp venv renaming fun_defs se in
+       { esc with e_cond = scpat; e_block = b_opt; e_next_state = se;
+                  e_env = env },
+       fun_defs in
+     let body venv renaming fun_defs
+         ({ s_state = spat; s_body = b; s_trans = esc_list;
+            s_env = env } as h) =
+       let env, renaming0 = build env in
+       let venv = remove renaming0 venv in
+       let renaming = Env.append renaming0 renaming in
+       let spat = statepat renaming spat in
+       let b, (renaming, fun_defs) = block venv (renaming, fun_defs) b in
+       let esc_list, fun_defs =
+	 Zmisc.map_fold (escape venv renaming) fun_defs esc_list in
+       { h with s_state = spat; s_body = b; s_trans = esc_list; s_env = env },
+       fun_defs in
+     let sh_list = unwrap_state_handlers_ann s_h_list in
+     let renaming =
+       List.fold_left build_state_names renaming sh_list in
+     let s_h_list, fun_defs =
+       Zmisc.map_fold (body venv renaming) fun_defs sh_list in
      let se_opt, fun_defs =
        Zmisc.optional_with_map (state_exp venv renaming) fun_defs se_opt in
      EQautomaton(is_weak, s_h_list, se_opt), fun_defs

@@ -1,23 +1,50 @@
 (* The Zelus compiler, version 2.2-dev
-  (2025-11-10-6:19) *)
+  (2025-11-12-21:26) *)
 open Ztypes
-type ('b , 'a) _exec1 =
-  { mutable m_33 : 'b ; mutable m_30 : 'a }
+type _exec1 = unit
 
 let exec1  = 
-  
-  let exec1_alloc _ =
-    ();
-    { m_33 = ((42 , 42 , 42):int * int * int) ; m_30 = ((42 , 42):int * int) } in
+   let exec1_alloc _ = () in
   let exec1_reset self  =
-    ((self.m_30 <- (3 , 1) ; self.m_33 <- (4 , 5 , 6)):unit) in 
+    ((()):unit) in 
   let exec1_step self () =
-    ((let ((e_24:int): int) = 5 in
-      let ((x_31:int) , (x_32:int)) = self.m_30 in
-      let (((x1_25:int) , (y_26:int)): (int  * int)) = (x_31 , x_32) in
-      self.m_30 <- (((+) x1_25  3) , ((+) y_26  1)) ;
-      (let ((x_34:int) , (x_35:int) , (x_36:int)) = self.m_33 in
-       let (((x1_27:int) , (y_28:int) , (z_29:int)): (int  * int  * int)) =
-           (x_34 , x_35 , x_36) in
-       self.m_33 <- (x1_27 , y_28 , z_29) ; e_24)):int) in
+    ((let ((e_22:int): int) = 5 in
+      e_22):int) in
   Node { alloc = exec1_alloc; reset = exec1_reset ; step = exec1_step }
+let dt = 0.1
+
+type ('e , 'd , 'c , 'b , 'a) _main =
+  { mutable major_24 : 'e ;
+    mutable h_31 : 'd ;
+    mutable i_29 : 'c ; mutable h_27 : 'b ; mutable result_26 : 'a }
+
+let main (cstate_34:Ztypes.cstate) = 
+  
+  let main_alloc _ =
+    ();
+    { major_24 = false ;
+      h_31 = 42. ;
+      i_29 = (false:bool) ; h_27 = (42.:float) ; result_26 = (():unit) } in
+  let main_step self ((time_23:float) , ()) =
+    ((self.major_24 <- cstate_34.major ;
+      (let (result_39:unit) =
+           let h_30 = ref (infinity:float) in
+           (if self.i_29 then self.h_27 <- (+.) time_23  0.) ;
+           (let (z_28:bool) = (&&) self.major_24  ((>=) time_23  self.h_27) in
+            self.h_27 <- (if z_28 then (+.) self.h_27  dt else self.h_27) ;
+            h_30 := min !h_30  self.h_27 ;
+            self.h_31 <- !h_30 ;
+            self.i_29 <- false ;
+            (let (trigger_25:zero) = z_28 in
+             (begin match trigger_25 with
+                    | true ->
+                        let () = () in
+                        let ((e_33:int): int) = 5 in
+                        let (x_32:int) = e_33 in
+                        let _ = print_int x_32 in
+                        self.result_26 <- print_newline ()
+                    | _ -> self.result_26 <- ()  end) ; self.result_26)) in
+       cstate_34.horizon <- min cstate_34.horizon  self.h_31 ; result_39)):
+    unit) in  let main_reset self  =
+                (self.i_29 <- true:unit) in
+  Node { alloc = main_alloc; step = main_step ; reset = main_reset }

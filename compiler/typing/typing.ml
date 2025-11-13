@@ -359,6 +359,10 @@ let vardec_list expected_k n_list inames =
     Env.add n { t_typ = expected_ty; t_sort = sort } h0 in
   List.fold_left vardec Env.empty n_list
 
+and unwrap_state_handlers_ann (hs_ann : state_handler_ann list) :
+    state_handler list =
+  List.map (fun sha -> sha.sha_handler) hs_ann
+
 (** Computes the set of names defined in a list of definitions *)
 let rec build (names, inames) { eq_desc = desc } =
   (* block *)
@@ -405,6 +409,22 @@ let rec build (names, inames) { eq_desc = desc } =
          (if is_weak then S.diff esc_inames bounded else esc_inames)
      in
      List.fold_left handler (names, inames) sh_list
+  | EQautomatonRef(is_weak, _, sh_list, _, _) ->
+     (* escape handler *)
+     let escape (names, inames) { e_block = b_opt } =
+       Zmisc.optional block (names, inames) b_opt in
+     (* automaton handler *)
+     let handler (names, inames) { s_body = b; s_trans = esc_list } =
+       let bounded, (names, inames) =
+         block_with_bounded (names, inames) b in
+       let esc_names, esc_inames =
+         List.fold_left escape (names, inames) esc_list in
+       S.union names (if is_weak then S.diff esc_names bounded else esc_names),
+       S.union inames
+         (if is_weak then S.diff esc_inames bounded else esc_inames)
+     in
+     let s_h_list = unwrap_state_handlers_ann sh_list in
+     List.fold_left handler (names, inames) s_h_list
   | EQforall { for_index = in_list; for_init = init_list } ->
      let index (names, inames) { desc = desc } =
        match desc with
@@ -955,6 +975,11 @@ and equation expected_k h ({ eq_desc = desc; eq_loc = loc } as eq) =
         (* automata are only valid in continuous or discrete context *)
         check_statefull loc expected_k;
         automaton_handlers is_weak loc expected_k h s_h_list se_opt
+    | EQautomatonRef(is_weak, _, s_h_list, se_opt, _) ->
+        (* automata are only valid in continuous or discrete context *)
+        check_statefull loc expected_k;
+        let sh_list = unwrap_state_handlers_ann s_h_list in
+        automaton_handlers is_weak loc expected_k h sh_list se_opt
     | EQmatch(total, e, m_h_list) ->
         let expected_pat_ty = expression expected_k h e in
         match_handler_block_eq_list
