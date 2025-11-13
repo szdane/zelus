@@ -1,0 +1,10 @@
+let node exec () : {(v:int) | true} =
+  let rec ((y,z):{ (vy:int)*(vz:int) | vy = vz*vz}) = (4,2) fby ((z+1)*(z+1), z+1) in y
+
+let dt = 0.1 
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = exec () in
+        (print_int x; print_newline ())) else ()
+
+

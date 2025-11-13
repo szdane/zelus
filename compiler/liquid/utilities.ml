@@ -724,3 +724,28 @@ let rec paren_for_prec (e : Zparsetree.exp) : Zparsetree.exp =
       { e with desc = Zparsetree.Etuple (List.map paren_for_prec es) }
 
   | _ -> e
+
+
+
+(* ---- Function signature table ------------------------------------------ *)
+type fun_param = {
+  p_name   : string;              (* source name from pattern, for debugging *)
+  p_binder : string;              (* binder inside the refinement, e.g. "v"  *)
+  p_base   : string;              (* base sort name, e.g. "int"              *)
+  p_nf     : Zparsetree.exp;      (* normalized predicate NF for the param   *)
+}
+
+type fun_sig = {
+  params     : fun_param list;    (* in declaration order                    *)
+  ret_binder : string;            (* binder used in the return refinement    *)
+  ret_base   : string;            (* base sort for the return                *)
+  ret_nf     : Zparsetree.exp;    (* normalized predicate NF for the return  *)
+}
+
+let fun_sigs : (string, fun_sig) Hashtbl.t = Hashtbl.create 17
+
+let zpt_base_name (ty:Zparsetree.type_expression) : string =
+  match ty.desc with
+  | Zparsetree.Etypeconstr (Name b, []) -> b
+  | _ -> failwith "Expected base Etypeconstr(Name,[])"
+

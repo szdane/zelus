@@ -597,8 +597,44 @@ let singleton_with ~(binder:string) (e:Zparsetree.exp) (base_name:string)
                   loc = dummy_loc } in
   mk_type (Zparsetree.Erefinement ((binder, base_ty), pred))
 
-  
-let add_fby_head_nf_binding ~(binder:string) ~(base:string) (e_head:Zelus.exp) =
+let actual_name_or_ghost (e:Zelus.exp) (base:string) : string =
+  match rhs_var_name e with
+  | Some nm -> nm
+  | None ->
+      let g = gensym "arg" in
+      let ez = { Zparsetree.loc = dummy_loc; desc = vc_gen_expression e } in
+      let ty = singleton_with ~binder:g ez base in
+      add_binding g ty;
+      g
+
+let instantiate_fun_ret_nf (fsig:fun_sig) (args:Zelus.exp list) : Zparsetree.exp =
+  if List.length args <> List.length fsig.params then
+    failwith "Arity mismatch at call";
+  (* Build map: param name -> actual name/ghost *)
+  let name_map : (string * string) list =
+    List.mapi (fun i pi ->
+      let ai = List.nth args i in
+      let act = actual_name_or_ghost ai pi.p_base in
+      (pi.p_name, act)
+    ) fsig.params
+  in
+  let subst_name (nm:string) : string option =
+    List.assoc_opt nm name_map
+  in
+  zpt_subst_names fsig.ret_nf subst_name
+
+let rewrite_caller_ann_with_actuals
+          (fsig:fun_sig)
+          (args:Zelus.exp list)
+          (caller_ann_nf:Zparsetree.exp)
+        : Zparsetree.exp =
+        let name_map =
+          List.mapi (fun i pi ->
+            let ai = List.nth args i in
+            (pi.p_name, actual_name_or_ghost ai pi.p_base)
+          ) fsig.params
+        in
+        zpt_subst_names caller_ann_nf (fun nm -> List.assoc_opt nm name_map)let add_fby_head_nf_binding ~(binder:string) ~(base:string) (e_head:Zelus.exp) =
     (* v = e_head *)
     let v_eq_e =
       mk_eq { desc = Zparsetree.Evar (Name "v"); loc = dummy_loc }
@@ -1211,7 +1247,119 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
   ) xs 
 
 
+let zls_ref_to_nf_parts (t:Zelus.type_expression)
+  : (string * string * Zparsetree.exp) =
+  (* returns (binder, base, NF(pred)) *)
+  match t.desc with
+  | Zelus.Erefinement ((vb, base_ty), pred_zls) ->
+      let base =
+        match base_ty.desc with
+        | Zelus.Etypeconstr (Name b, []) -> b
+        | _ -> failwith "Param/ret base must be Etypeconstr(Name,[])"
+      in
+      let nf = zls_pred_to_nf ~binder:vb pred_zls in
+      (vb, base, nf)
+  | _ -> failwith "Expected scalar refinement {v:T | phi}"
+let param_from_pattern (p:Zelus.pattern) : fun_param option  =
+  match p.p_desc with
+  | Zelus.Etypeconstraintpat (bp, ann) ->
+      let p_name = zelus_var_name_of_pat bp in
+      let (vb, base, nf) = zls_ref_to_nf_parts ann in
+      Some({ p_name; p_binder = vb; p_base = base; p_nf = nf })
+  | _ -> None
 
+
+  let nf_of_expr_or_alias ~(binder:string) ~(base:string) (e:Zelus.exp) : Zparsetree.exp =
+  match rhs_var_name e with
+  | Some y -> (
+      match find_binding y with
+      | Some ty ->
+          let (_vb, base_y, nf_y) = refine_parts_of_gamma_ty ty in
+          if String.lowercase_ascii base_y <> String.lowercase_ascii base
+          then failwith "Base mismatch in argument alias vs. parameter";
+          nf_y
+      | None ->
+          let v_eq = mk_eq (mk_v ()) { desc = vc_gen_expression e; loc = dummy_loc } in
+          mk_and v_eq (mk_X (mk_G v_eq))
+    )
+  | None ->
+      let v_eq = mk_eq (mk_v ()) { desc = vc_gen_expression e; loc = dummy_loc } in
+      mk_and v_eq (mk_X (mk_G v_eq))
+
+  let check_fun_call
+  ~(x_name:string)
+  ~(ret_ann_zls:Zelus.type_expression)
+  ~(fname:string)
+  ~(actuals:Zelus.exp list)
+  : unit =
+  (* 1) Lookup signature *)
+  let sig_entry =
+    match Hashtbl.find_opt fun_sigs fname with
+    | None -> failwith (Printf.sprintf "Unknown function '%s' (no signature recorded)" fname)
+    | Some s -> s
+  in
+  (* 2) Arity *)
+  let formals = sig_entry.params in
+  if List.length formals <> List.length actuals then
+    failwith (Printf.sprintf "Arity mismatch in call to %s" fname);
+
+  (* 3) For each argument: NF(actual)  <:  NF(formal) *)
+  List.iter2
+    (fun (fp:fun_param) (ea:Zelus.exp) ->
+       let lhs_nf = nf_of_expr_or_alias ~binder:fp.p_binder ~base:fp.p_base ea in
+       let ok =
+         nf_match_and_check
+           ~cid:5
+           ~name:(Printf.sprintf "arg:%s.%s" fname fp.p_name)
+           ~binder:fp.p_binder
+           ~base:fp.p_base
+           lhs_nf fp.p_nf
+       in
+       if not ok then
+         failwith (Printf.sprintf
+           "Liquid type error: in call to %s, argument '%s' violates its annotation"
+           fname fp.p_name))
+    formals actuals;
+
+  (* 4) Return: NF(f_ret)  <:  NF(LHS annotation for x) *)
+  let (lhs_ret_binder, lhs_ret_base, lhs_ret_nf) =
+    match ret_ann_zls.desc with
+    | Zelus.Erefinement ((vb, base_ty), pred) ->
+        let base =
+          match base_ty.desc with
+          | Zelus.Etypeconstr (Name b, []) -> b
+          | _ -> failwith "LHS annotation base must be Etypeconstr(Name,[])"
+        in
+        (vb, base, zls_pred_to_nf ~binder:vb pred)
+    | _ -> failwith "Let-bound LHS must be annotated with a scalar refinement"
+  in
+  if String.lowercase_ascii sig_entry.ret_base
+     <> String.lowercase_ascii lhs_ret_base
+  then failwith "Base mismatch between function return and LHS annotation";
+
+  let ok_ret =
+    nf_match_and_check
+      ~cid:5
+      ~name:(Printf.sprintf "%s:ret" fname)
+      ~binder:lhs_ret_binder
+      ~base:lhs_ret_base
+      sig_entry.ret_nf lhs_ret_nf
+  in
+  if not ok_ret then
+    failwith (Printf.sprintf
+      "Liquid type error: return of %s does not satisfy the annotation of %s"
+      fname x_name);
+
+  (* 5) On success, install x with the normalized LHS annotation *)
+  let base_ty' =
+    mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii lhs_ret_base), []))
+  in
+  let rhs_ty' =
+    { desc = Zparsetree.Erefinement ((lhs_ret_binder, base_ty'), lhs_ret_nf)
+    ; loc  = dummy_loc
+    }
+  in
+  add_binding x_name rhs_ty'
 
 let process_scalar_eq base_pat ty_ann_zelus rhs =
     debug "Processing let eq with annotation";
@@ -1354,7 +1502,55 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                 add_binding x rhs_ty'
               else
                 failwith (Printf.sprintf "Liquid type error: let-bound %s (ITE) violates its annotation" x)
-  
+          | Zelus.Eapp (_ai, fexp, args) ->
+            let fname =
+              match fexp.e_desc with
+              | Zelus.Eglobal { lname = Name n } -> n
+              | Zelus.Eglobal { lname = Modname q } -> q.id
+              | _ -> failwith "Unsupported function expression"
+            in
+            let fsig =
+              match Hashtbl.find_opt fun_sigs fname with
+              | Some s -> s
+              | None -> failwith ("No signature recorded for function " ^ fname)
+            in
+          
+            (* 1) Callee return NF instantiated with actuals (a -> b/c/ghost) *)
+            let callee_ret_nf = instantiate_fun_ret_nf fsig args in
+          
+            (* 2) Caller annotation NF *)
+            let (ret_binder, ret_base_name, caller_ann_nf) =
+              match (to_zpt_type ty_ann_zelus).desc with
+              | Zparsetree.Erefinement ((vb, base_ty), pred) ->
+                  let base =
+                    match base_ty.desc with
+                    | Zparsetree.Etypeconstr (Name b, []) -> b
+                    | _ -> failwith "Call-site annotation base must be Etypeconstr(Name,[])"
+                  in
+                  (vb, base, zpt_pred_to_nf ~binder:vb pred)
+              | _ -> failwith "Expected refinement on call-site binding"
+            in
+          
+            (* 3) Rewrite caller ann free occurrences of param names to actuals too *)
+            let caller_ann_nf' = rewrite_caller_ann_with_actuals fsig args caller_ann_nf in
+          
+            (* 4) Subtyping: (callee_ret_nf ⊑ caller_ann_nf') in NF *)
+            let ok =
+              nf_match_and_check
+                ~cid:5 ~name:(fname ^ ":call-ret")
+                ~binder:ret_binder ~base:ret_base_name
+                callee_ret_nf caller_ann_nf'
+            in
+            if not ok then
+              failwith ("Liquid type error: call to " ^ fname ^ " does not satisfy the declared type")
+            else
+              (* Record y with the normalized, rewritten caller annotation *)
+              let base_ty' =
+                mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base_name), []))
+              in
+              add_binding x { loc = dummy_loc
+                            ; desc = Zparsetree.Erefinement ((ret_binder, base_ty'), caller_ann_nf') }
+          
           (* Default: synthesize v=rhs && X(G(v=rhs)) and match against ann NF *)
           | _ ->
             let ann_pred_zls =
@@ -1621,7 +1817,7 @@ let guarded_state_pred
   let g_not   = g_not_of_guard guard_zls in
   mk_and g_not p_state
 
-let state_refine_for_ex var_name (sha : Zelus.state_handler_ann) =
+let state_refine_for_x var_name (sha : Zelus.state_handler_ann) =
   match sha.sha_refenv with
   | None -> None
   | Some { desc = Zelus.Erefenv lst; _ } ->
@@ -1670,7 +1866,7 @@ let check_automaton_states_against_return
   let guarded_preds : Zparsetree.exp list =
     states
     |> List.filter_map (fun sha ->
-         match state_refine_for_ex ret_var_name sha with
+         match state_refine_for_x ret_var_name sha with
          | None -> None
          | Some (_vb, _base, pred_ex_zls) ->
              let guard_opt = staying_guard_of_state sha in
@@ -1913,6 +2109,7 @@ let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
       add_binding x ann_zpt_nf
   | _ ->
       ()
+  
 
 
   let with_env_snapshot (f : unit -> unit) : unit =
@@ -2071,7 +2268,8 @@ let check_return ~(fname:string)
     | _ ->
         check_return ~fname ~ret_binder ~ret_base ~ret_pred e
   
-  
+
+
       
 let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
   match impl.desc with
@@ -2186,6 +2384,8 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               debug "skipping main function";
             ) else (
               (* Parse declared return refinement exactly like before *)
+              let saved_gamma   = !gamma in
+              let saved_gamma1 = !gamma1 in
               let (ret_pred_exp, ret_binder, ret_base_ty) =
                 match rettype.desc with
                 | Zelus.Erefinement ((vret, tbase), pred) ->
@@ -2215,7 +2415,20 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               let fun_as_value_ty =
                 mk_type (Zparsetree.Erefinement (("v", base_ty), ret_pred_nf))
               in
-              add_binding n fun_as_value_ty
+              add_binding n fun_as_value_ty;
+              gamma   := saved_gamma;
+              gamma1 := saved_gamma1; 
+              
+              let params_sig =
+                List.filter_map param_from_pattern p_list
+              in
+              let sig_entry = {
+                params     = params_sig;
+                ret_binder = ret_binder;
+                ret_base   = ret_base;
+                ret_nf     = ret_pred_nf;  
+              } in
+              Hashtbl.replace fun_sigs n sig_entry;
             )
 
 
