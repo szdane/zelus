@@ -1922,7 +1922,7 @@ let process_let_eq (eq : Zelus.eq) : unit =
       | EQinit(id,e) -> debug((zident_pretty id)); Hashtbl.add init_table ((zident_pretty id)) e
       | EQautomatonRef (is_weak, None, _states, _init_state, _ret_env) ->
         ()
-      | EQautomatonRef (is_weak, Some ref, _states, _init_state, _ret_env) ->
+      | EQautomatonRef (is_weak, Some ref, _states, _init_state, _ret_env) -> (
         let re = match ref.desc with
         | Erefenv(lst) -> lst in 
         let xs_from_env =
