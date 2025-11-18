@@ -80,7 +80,10 @@ let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
   | Zelus.Eglobal{lname = Modname qualid} -> Zparsetree.Evar(Name qualid.id)
   | Zelus.Elocal{num = i; source = n} -> Zparsetree.Evar(Name n)
   (* | Zelus.Etuple(exp_list) -> Zparsetree.Etuple(List.map (fun exp -> {desc = vc_gen_expression exp; loc = dummy_loc}) exp_list) *)
-  | Zelus.Etuple(exp_list) -> failwith (Printf.sprintf "Not handling tuple for now")
+  | Zelus.Etuple exp_list ->
+    Zparsetree.Etuple
+      (List.map (fun exp -> { desc = vc_gen_expression exp; loc = dummy_loc }) exp_list)
+
   (* | Zelus.Eapp({ app_inline = i; app_statefull = r }, e, e_list) -> Zparsetree.Eapp({ app_inline = i; app_statefull = r }, {desc = (vc_gen_expression e); loc = dummy_loc}, vc_gen_exp_list e_list) *)
   | Zelus.Eapp ({ app_inline = i; app_statefull = r }, e, e_list) ->
     Zparsetree.Eapp
@@ -702,7 +705,7 @@ let process_tuple_let_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
             ) fields
           in
           (bnames, bsorts, phi)
-      | _ -> failwith "Tuple fby: expected labeled-tuple refinement {(v1:τ1)*... | }"
+      | _ -> failwith "Tuple fby: expected labeled-tuple refinement {(v1:1)*... | }"
     in
   
     (* 4) **Install ghosts FIRST** for head values of ALL components:
@@ -1137,7 +1140,7 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
           ) fields
         in
         (bvars, bases, phi)
-    | _ -> failwith "tuple fby: expected labeled-tuple refinement {(v1:τ1)*... | }"
+    | _ -> failwith "tuple fby: expected labeled-tuple refinement {(v1:1)*... | }"
   in
 
   (* 2) Normalize annotation  *)
@@ -1534,7 +1537,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
             (* 3) Rewrite caller ann free occurrences of param names to actuals too *)
             let caller_ann_nf' = rewrite_caller_ann_with_actuals fsig args caller_ann_nf in
           
-            (* 4) Subtyping: (callee_ret_nf ⊑ caller_ann_nf') in NF *)
+            (* 4) Subtyping: (callee_ret_nf  caller_ann_nf') in NF *)
             let ok =
               nf_match_and_check
                 ~cid:5 ~name:(fname ^ ":call-ret")
@@ -1647,62 +1650,190 @@ let parts_of_zls_refine (t:Zelus.type_expression) : (string * string * Zelus.exp
         | _ -> failwith "expected Etypeconstr(Name,[]) for base"
       in
       (vb, base, pred)
+  | Zelus.Erefinementlabeledtuple(lst, pred) -> failwith "Erefinementlabeledtuple"
   | _ -> failwith "expected refinement type in ref environment"
 
   (* Check (init x) fby x  sub  (declared type of "last x" in the *initial* env).
    If SAFE, install "last x" into  with the normalized declared annotation. *)
-let typecheck_last_x_against_init_env
-    ~(x_name:string)
-    ~(ref_env:(string * Zelus.type_expression) list)
+   let typecheck_last_x_against_init_env
+   ~(x_name:string)
+   ~(ref_env:(string * Zelus.type_expression) list)
+ : unit =
+ (* fetch init x *)
+ let e_init =
+   match Hashtbl.find_opt init_table x_name with
+   | Some e -> e
+   | None ->
+       failwith (Printf.sprintf "Automaton: missing 'init %s = ...' for last %s" x_name x_name)
+ in
+
+ let last_name = "last_" ^ x_name in
+ let ty_decl =
+   match find_decl_in_ref_env last_name ref_env with
+   | Some ty -> ty
+   | None ->
+       failwith (Printf.sprintf "Automaton: initial env lacks a declaration for '%s'" last_name)
+ in
+
+ match ty_decl.Zelus.desc with
+ | Zelus.Erefinement ((vb_decl, base_ty), pred_decl_zls) ->
+     let base_decl =
+       match base_ty.desc with
+       | Zelus.Etypeconstr (Name b, []) -> b
+       | _ -> failwith "Return base is not Etypeconstr(Name,[])"
+     in
+     (* LHS NF for (init x) fby x *)
+     let lhs_nf = nf_last_of_x ~binder:vb_decl ~x_name ~e_init in
+     let rhs_nf = zls_pred_to_nf ~binder:vb_decl pred_decl_zls in
+     let ok =
+       nf_match_and_check
+         ~cid:5
+         ~name:(last_name ^ ":init-check")
+         ~binder:vb_decl
+         ~base:base_decl
+         lhs_nf rhs_nf
+     in
+     if not ok then
+       failwith (Printf.sprintf
+         "Liquid type error: (%s) violates its initial refinement" last_name);
+     (* install normalized predicate for last_x *)
+     let base_ty' =
+       mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_decl), []))
+     in
+     let rhs_ty =
+       { desc = Zparsetree.Erefinement ((vb_decl, base_ty'), rhs_nf)
+       ; loc  = dummy_loc
+       }
+     in
+     add_binding last_name rhs_ty
+
+ | Zelus.Erefinementlabeledtuple (_fields, _phi) ->
+     (* This ‘last_x’ is typed by a labeled-tuple refinement. We don’t try to
+        project scalar constraints here; rely on the tuple-head check that
+        verifies all components together. *)
+     ()
+
+ | _ ->
+     failwith "Automaton: expected a refinement type for last_x in the initial env"
+     let find_tuple_decl_in_env
+     (re : (string * Zelus.type_expression) list)
+     (names : string list)
+   : Zelus.type_expression option =
+   let label =
+     "(" ^ String.concat "," (List.map (fun s -> "last_" ^ s) names) ^ ")"
+   in
+   match List.find_opt (fun (nm, _) -> String.equal nm label) re with
+   | Some (_, ty) -> Some ty
+   | None -> None
+ 
+ (* Extract the shared labeled-tuple refinement {(v1:T1)*... | phi} from any last_<name>. *)
+ let tuple_refine_from_last_or_fail
+     (re : (string * Zelus.type_expression) list)
+     (names : string list)
+   : (string list * string list * Zparsetree.exp) =
+   let pick name =
+     match find_decl_in_ref_env ("last_" ^ name) re with
+     | Some ty -> to_zpt_type ty
+     | None ->
+         failwith (Printf.sprintf "Automaton:init: missing declaration for 'last_%s'" name)
+   in
+   (* Take the first as the canonical shape *)
+   let ann1 = pick (List.hd names) in
+   let (bvars1, bases1, phi1) =
+     match ann1.desc with
+     | Zparsetree.Erefinementlabeledtuple (fields, phi) ->
+         let bvars = List.map fst fields in
+         let bases =
+           List.map (fun (_n, t) ->
+             match t.desc with
+             | Zparsetree.Etypeconstr (Name b, []) -> b
+             | _ -> failwith "Automaton:init: tuple component base must be Name([])")
+             fields
+         in
+         (bvars, bases, phi)
+     | _ ->
+         failwith "Automaton:init: last_* entries must have a labeled-tuple refinement"
+   in
+   (* Verify others share the same labeled-tuple shape *)
+   List.iter (fun nm ->
+     let ann = pick nm in
+     match ann.desc with
+     | Zparsetree.Erefinementlabeledtuple (fields, _phi) ->
+         let bvars = List.map fst fields in
+         if bvars <> bvars1 then
+           failwith "Automaton:init: inconsistent labeled-tuple shapes among last_*"
+     | _ ->
+         failwith "Automaton:init: last_* entries must have a labeled-tuple refinement"
+   ) (List.tl names);
+   (bvars1, bases1, phi1)
+ 
+let install_tuple_component_ghosts ~(bvars:string list) ~(bases:string list) (es: Zelus.exp list)
   : unit =
-  (* 1) Get init x; error if missing *)
-  let len = Hashtbl.length init_table in
-  let e_init =
-    match Hashtbl.find_opt init_table x_name with
-    | Some e -> e
-    | None ->
-        failwith (Printf.sprintf "Automaton: missing 'init %s = ...' for last %s" x_name x_name)
-  in
-
-  (* 2) Pull the declared refinement for "last x" *)
-  let last_name = "last_" ^ x_name in
-  let ty_decl =
-    match find_decl_in_ref_env last_name ref_env with
-    | Some ty -> ty
-    | None ->
-        failwith (Printf.sprintf "Automaton: initial env lacks a declaration for '%s'" last_name)
-  in
-  let (vb_decl, base_decl, pred_decl_zls) = parts_of_zls_refine ty_decl in
-
-  (* 3) LHS NF for (init x) fby x *)
-  let lhs_nf = nf_last_of_x ~binder:vb_decl ~x_name ~e_init in
-
-  (* 4) RHS NF = normalized declared predicate *)
-  let rhs_nf = zls_pred_to_nf ~binder:vb_decl pred_decl_zls in
-
-  (* 5) NF-aware subtyping check *)
-  let ok =
-    nf_match_and_check
-      ~cid:5
-      ~name:(last_name ^ ":init-check")
-      ~binder:vb_decl
-      ~base:base_decl
-      lhs_nf rhs_nf
-  in
-  if not ok then
-    failwith (Printf.sprintf
-      "Liquid type error: (%s) violates its initial refinement" last_name);
-
-  (* 6) On success, install 'last x' into  with the normalized declared predicate *)
-  let base_ty =
-    mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_decl), []))
-  in
-  let rhs_ty =
-    { desc = Zparsetree.Erefinement ((vb_decl, base_ty), rhs_nf)
-    ; loc  = dummy_loc
-    }
-  in
-  add_binding last_name rhs_ty
+  List.iteri (fun i ei ->
+    let bi   = List.nth bvars i in
+    let base = List.nth bases i in
+    let ei_z = { Zparsetree.desc = vc_gen_expression ei; loc = dummy_loc } in
+    let ty_i = singleton_with ~binder:bi ei_z base in
+    add_binding bi ty_i
+  ) es
+ (* NEW: no longer requires the tuple label to exist in the env *)
+ let check_automaton_tuple_inits_as_head
+   ~(names:string list)
+   ~(init_env:(string * Zelus.type_expression) list)
+   : unit =
+   (* Get annotation from either an explicit tuple entry or from the scalar last_* ones *)
+   let (bvars, bases, phi_last) =
+     match find_tuple_decl_in_env init_env names with
+     | Some ty ->
+         let ann_zpt = to_zpt_type ty in
+         tuple_refine_parts ann_zpt     (* (bvars,bases,phi) *)
+     | None ->
+         tuple_refine_from_last_or_fail init_env names
+   in
+ 
+   (* Collect init expressions init_table[xi] *)
+   let init_es =
+     List.map (fun xi ->
+       match Hashtbl.find_opt init_table xi with
+       | Some e -> e
+       | None ->
+           failwith (Printf.sprintf "Automaton:init: missing 'init %s = ...'" xi)
+     ) names
+   in
+ 
+   (* Install ghosts vi = init(xi) *)
+   install_tuple_component_ghosts ~bvars ~bases init_es;
+ 
+   (* One NF check on the last component *)
+   let k      = List.length names - 1 in
+   let bk     = List.nth bvars k in
+   let base_k = List.nth bases k in
+   let ek     = List.nth init_es k in
+ 
+   let lhs_nf = nf_eq_v_rhs ek bk in
+   let rhs_nf = zpt_pred_to_nf ~binder:bk phi_last in
+ 
+   let ok =
+     nf_match_and_check
+       ~cid:5 ~name:"automaton:init-head"
+       ~binder:bk ~base:base_k
+       lhs_nf rhs_nf
+   in
+   if not ok then
+     failwith "Liquid type error: automaton init (head) violates its 'last' tuple refinement";
+ 
+   (* Keep normalized annotation for each last_xi in Γ *)
+   let ann_nf_all = zpt_pred_to_nf ~binder:(List.hd bvars) phi_last in
+   List.iteri (fun i xi ->
+     let base_i = List.nth bases i in
+     let base_ty =
+       mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_i), []))
+     in
+     let ty_i =
+       mk_type (Zparsetree.Erefinement (("v", base_ty), ann_nf_all))
+     in
+     add_binding ("last_" ^ xi) ty_i
+   ) names
   
 
 let rhs_for_var_in_block (x:string) (blk : Zelus.eq list Zelus.block) =
@@ -1727,7 +1858,7 @@ let rhs_for_var_in_block (x:string) (blk : Zelus.eq list Zelus.block) =
 let refenv_list_of_state (sha : Zelus.state_handler_ann) : (string * Zelus.type_expression) list =
   match sha.sha_refenv with
   | None -> []
-  | Some { desc = Erefenv lst; _ } -> lst
+  | Some { desc = Zelus.Erefenv lst; _ } -> lst
 
 
 (* Check each (var : refinement) in a state’s refenv against the state body. 
@@ -1790,13 +1921,211 @@ let check_state_against_env ~(state_name:string)
                     in
                     add_binding x rhs_ty'
              )
-         | Zelus.Erefinementlabeledtuple _ ->
-             failwith "State env: labeled tuple refinements not handled yet"
+         | Zelus.Erefinementlabeledtuple _ -> ()
          | _ ->
              failwith "State env: expected scalar refinement {v:Base | ...}"
       )
       env
   end
+
+(* binder-aware equality:  binder = rhs_zls *)
+let zpt_eq_binder_rhs ~(binder:string) (rhs_zls:Zelus.exp) : Zparsetree.exp =
+  mk_eq (mk_var binder) { desc = vc_gen_expression rhs_zls; loc = dummy_loc }
+
+(* v=binder-aware head NF: binder = rhs && X(G(binder = rhs)) *)
+let nf_eq_binder_rhs ~(binder:string) (rhs_zls:Zelus.exp) : Zparsetree.exp =
+  let b_eq = zpt_eq_binder_rhs ~binder rhs_zls in
+  mk_and b_eq (mk_X (mk_G b_eq))
+
+(* tail-only NF for fby tails with the correct binder *)
+let nf_eq_binder_rhs_fby_tail ~(binder:string) (e2: Zelus.exp) : Zparsetree.exp =
+  let b_eq = zpt_eq_binder_rhs ~binder e2 in
+  mk_and b_eq (mk_X (mk_G (mk_M b_eq)))
+
+(* guarded head NF: (cond ∧ (binder=rhs)) normalized *)
+let nf_guarded_eq_binder
+  ~(binder:string)
+  ~(cond_zpt:Zparsetree.exp)
+  ~(rhs_zls:Zelus.exp)
+: Zparsetree.exp =
+  let guard_and_eq = mk_and cond_zpt (zpt_eq_binder_rhs ~binder rhs_zls) in
+  zpt_pred_to_nf ~binder (mk_and (mk_paren guard_and_eq) (mk_X (mk_G (mk_paren guard_and_eq))))
+
+
+(* ---------- GROUP identical labeled-tuple refinements into virtual tuples ---------- *)
+
+(* Key the tuple type by its pretty-printed ZPT to group identical shapes. *)
+let ltuple_signature_of_ty (ty_zls : Zelus.type_expression)
+  : (string list * string list * Zparsetree.exp * string) option =
+  match (to_zpt_type ty_zls).desc with
+  | Zparsetree.Erefinementlabeledtuple (fields, phi) ->
+      let bvars =
+        List.map fst fields in
+      let bases =
+        List.map (fun (_n,t) ->
+          match t.desc with
+          | Zparsetree.Etypeconstr (Name b, []) -> b
+          | _ -> failwith "State tuple: base must be Name([])"
+        ) fields
+      in
+      let key = Pprint.string_of_type (to_zpt_type ty_zls) in
+      Some (bvars, bases, phi, key)
+  | _ -> None
+
+(* Collect virtual tuple groups from a Zelus refenv:
+   returns a list of (names_in_state_env, bvars, bases, phi) *)
+let names_from_refenv_label (nm : string) : string list =
+   let len = String.length nm in
+   if len >= 2 && nm.[0] = '(' && nm.[len - 1] = ')' then
+     let inner = String.sub nm 1 (len - 2) in
+     inner |> String.split_on_char ',' |> List.map String.trim
+   else
+     [nm]
+ 
+ (* Collect virtual tuple groups from a Zelus refenv:
+    returns a list of (names_in_state_env, bvars, bases, phi) *)
+ let collect_virtual_tuple_groups_in_refenv
+     (re : (string * Zelus.type_expression) list)
+   : (string list * string list * string list * Zparsetree.exp) list =
+   (* key → (bvars, bases, phi, component_names_accumulated) *)
+   let tbl : (string, (string list * string list * Zparsetree.exp * string list)) Hashtbl.t =
+     Hashtbl.create 7
+   in
+   List.iter (fun (nm, ty) ->
+     match ltuple_signature_of_ty ty with
+     | None -> ()
+     | Some (bvars, bases, phi, key) ->
+         let comps = names_from_refenv_label nm in
+         (match Hashtbl.find_opt tbl key with
+          | None ->
+              Hashtbl.add tbl key (bvars, bases, phi, comps)
+          | Some (bvars0, bases0, phi0, names0) ->
+              if bvars <> bvars0 || bases <> bases0 then
+                failwith "State env: inconsistent labeled-tuple shapes for a group";
+              (* accumulate, then dedup *)
+              let names' =
+                List.sort_uniq String.compare (List.rev_append comps names0)
+              in
+              Hashtbl.replace tbl key (bvars0, bases0, phi0, names'))
+   ) re;
+ 
+   (* finalize: prefer binder order if component names match binders *)
+   let groups = ref [] in
+   Hashtbl.iter (fun _key (bvars, bases, phi, names_unsorted) ->
+     let index_of x lst =
+       let rec go i = function
+         | [] -> None
+         | y::ys -> if String.equal x y then Some i else go (i+1) ys
+       in go 0 lst
+     in
+     let names =
+       if List.for_all (fun n -> Option.is_some (index_of n bvars)) names_unsorted then
+         List.sort
+           (fun a b ->
+              compare (Option.get (index_of a bvars)) (Option.get (index_of b bvars)))
+           names_unsorted
+       else
+         names_unsorted
+     in
+     (* sanity: we only keep groups that actually have all components *)
+     if List.length names = List.length bvars then
+       groups := (names, bvars, bases, phi) :: !groups
+     else
+       ()
+   ) tbl;
+   List.rev !groups
+let find_tuple_assignment (names:string list) (blk:Zelus.eq list Zelus.block)
+  : Zelus.exp list option =
+  let tuple_pat_matches (p:Zelus.pattern) =
+    match p.p_desc with
+    | Zelus.Etuplepat ps ->
+        List.map zelus_var_name_of_pat ps = names
+    | Zelus.Etypeconstraintpat (bp, _) ->
+        (match bp.p_desc with
+         | Zelus.Etuplepat ps -> List.map zelus_var_name_of_pat ps = names
+         | _ -> false)
+    | _ -> false
+  in
+  let rec go = function
+    | [] -> None
+    | eq::tl ->
+      (match eq.eq_desc with
+       | EQeq (pat, rhs) when tuple_pat_matches pat ->
+           (match rhs.e_desc with
+            | Zelus.Etuple es -> Some es
+            | _ -> None)
+       | _ -> go tl)
+  in go blk.b_body
+(* ---------- Get per-component RHSs from the state body, even if not using tuple pattern ---------- *)
+
+let rhs_list_for_names_in_block (names:string list) (blk : Zelus.eq list Zelus.block)
+  : Zelus.exp list =
+  match find_tuple_assignment names blk with
+  | Some es -> es
+  | None ->
+      (* fallback: expect separate assignments x = rhs for each component *)
+      let es =
+        List.map (fun x ->
+          match rhs_for_var_in_block x blk with
+          | Some e -> e
+          | None ->
+              failwith (Printf.sprintf
+                "Automaton[state]: no assignment found for '%s' (tuple component)" x))
+        names
+      in
+      es
+
+(* ---------- Tail check on a state for a virtual tuple group ---------- *)
+
+let check_state_tuple_tail_v2
+  ~(state_name:string)
+  ~(names:string list)
+  ~(bvars:string list)
+  ~(bases:string list)
+  ~(phi_state:Zparsetree.exp)
+  (sha:Zelus.state_handler_ann)
+: unit =
+  let ar = List.length names in
+  if ar <> List.length bvars || ar <> List.length bases then
+    failwith "State tuple: arity mismatch";
+
+  let es = rhs_list_for_names_in_block names sha.sha_handler.s_body in
+
+  (* Optional: install head ghosts vi = ei for richer env; harmless *)
+  install_tuple_component_ghosts ~bvars ~bases es;
+
+  (* Tail NF on the last component *)
+  let k      = ar - 1 in
+  let bk     = List.nth bvars k in
+  let base_k = List.nth bases k in
+  let ek     = List.nth es k in
+
+  let lhs_tail_nf = nf_eq_binder_rhs_fby_tail ~binder:bk ek in
+  let rhs_nf      = zpt_pred_to_nf ~binder:bk phi_state in
+  let ok =
+    nf_match_and_check
+      ~cid:5 ~name:(state_name ^ ":tuple-tail")
+      ~binder:bk ~base:base_k
+      lhs_tail_nf rhs_nf
+  in
+  if not ok then
+    failwith (Printf.sprintf
+      "Liquid type error: state %s tuple tail violates its refinement" state_name)
+  else begin
+    (* Keep normalized state refinement for each component in Γ (optional) *)
+    let ann_nf_all = zpt_pred_to_nf ~binder:(List.hd bvars) phi_state in
+    List.iteri (fun i xi ->
+      let base_i = List.nth bases i in
+      let base_ty =
+        mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_i), []))
+      in
+      let ty_i =
+        mk_type (Zparsetree.Erefinement (("v", base_ty), ann_nf_all))
+      in
+      add_binding xi ty_i
+    ) names
+  end
+
 
 let e_false : Zparsetree.exp = { loc = dummy_loc; desc = Zparsetree.Econst (Ebool false) }
 
@@ -1833,7 +2162,12 @@ let state_refine_for_x var_name (sha : Zelus.state_handler_ann) =
                     | _ -> failwith "State env ex: base must be Name([])"
                   in
                   Some (vb, base, (strip_once pred))
-              | _ -> failwith "State env ex: expected scalar refinement"
+              | Zelus.Erefinementlabeledtuple _ ->
+                (* Not a scalar binding for [var_name]; ignore here and let
+                    the tuple-specific checker handle it. *)
+                None
+            | _ ->
+                None
             else go tl
       in go lst
 let zpt_of_cond (c:Zelus.exp) : Zparsetree.exp =
@@ -1905,6 +2239,255 @@ let check_automaton_states_against_return
     if ok then add_binding ret_var_name rhs_ty_zpt;
     if not ok then
       failwith "Liquid type error: union of guarded state refinements does not satisfy the return environment"
+
+let strip_last s =
+  if String.length s >= 5 && String.sub s 0 5 = "last_"
+  then String.sub s 5 (String.length s - 5)
+  else s
+
+(* True if both types are the same labeled-tuple refinement once converted to ZPT *)
+let same_ltuple_type (t1:Zelus.type_expression) (t2:Zelus.type_expression) : bool =
+  let open Zparsetree in
+  let z1 = to_zpt_type t1 in
+  let z2 = to_zpt_type t2 in
+  match z1.desc, z2.desc with
+  | Erefinementlabeledtuple (f1, p1), Erefinementlabeledtuple (f2, p2) ->
+      (* conservative, but robust: compare pretty-printed forms *)
+      Pprint.string_of_type z1 = Pprint.string_of_type z2
+  | _ -> false
+
+(* Scan a Zelus refenv and, if it contains exactly two "last_*" scalar names that
+   share the same labeled-tuple refinement, return the component names and that tuple type. *)
+let find_virtual_tuple_in_refenv
+    (re : (string * Zelus.type_expression) list)
+  : (string list * Zelus.type_expression) option =
+  (* keep only entries whose *type* is a labeled-tuple refinement *)
+  let ltuple_entries =
+    List.filter (fun (_nm, ty) ->
+      match (to_zpt_type ty).desc with
+      | Zparsetree.Erefinementlabeledtuple _ -> true
+      | _ -> false) re
+  in
+  match ltuple_entries with
+  | (n1, ty1) :: (n2, ty2) :: [] when same_ltuple_type ty1 ty2 ->
+      let names = [strip_last n1; strip_last n2] in
+      Some (names, ty1)   (* return *one* of the identical types *)
+  | _ -> None
+
+
+
+(* TAIL check for each state: NF(vk=ek ∧ X(G(M(vk=ek))))  NF(_state) *)
+let check_state_tuple_tail
+  ~(state_name:string)
+  ~(names:string list)
+  (sha:Zelus.state_handler_ann)
+: unit =
+  (* Pull the state’s tuple refinement {(v1:1)*... | _state} for (names) *)
+  let tuple_decl_opt =
+    match sha.sha_refenv with
+    | None -> None
+    | Some { desc = Zelus.Erefenv lst; _ } ->
+      let wanted = "(" ^ (String.concat "," names) ^ ")" in
+      List.find_map
+        (fun (nm, ty) ->
+           if String.equal nm wanted then
+             let ann_zpt = to_zpt_type ty in
+             match ann_zpt.desc with
+             | Zparsetree.Erefinementlabeledtuple (fields, phi_state) ->
+                 let bvars = List.map fst fields in
+                 let bases =
+                   List.map (fun (_n, t) ->
+                     match t.desc with
+                     | Zparsetree.Etypeconstr (Name b, []) -> b
+                     | _ -> failwith "state tuple base must be Name([])") fields
+                 in
+                 Some (bvars, bases, phi_state)
+             | _ -> None
+           else None)
+        lst
+  in
+  match tuple_decl_opt with
+  | None -> ()  (* this state doesn’t bind the tuple *)
+  | Some (bvars, bases, phi_state) ->
+      let ar = List.length names in
+      (* Find (x1,...,xk)=(e1,...,ek) *)
+      let es =
+        match find_tuple_assignment names sha.sha_handler.s_body with
+        | Some es when List.length es = ar -> es
+        | _ ->
+            failwith (Printf.sprintf
+              "Automaton[%s]: expected tuple assignment for (%s)"
+              state_name (String.concat "," names))
+      in
+      (* Optional: head-like ghosts vi=ei (keeps environment rich; harmless) *)
+      install_tuple_component_ghosts ~bvars ~bases es;
+
+      (* Tail NF on last component *)
+      let k      = ar - 1 in
+      let bk     = List.nth bvars k in
+      let base_k = List.nth bases k in
+      let ek     = List.nth es k in
+
+      let lhs_tail_nf = nf_eq_v_rhs_fby_tail ek in
+      let rhs_nf = zpt_pred_to_nf ~binder:bk phi_state in
+      let ok =
+        nf_match_and_check
+          ~cid:5 ~name:(state_name ^ ":tuple-tail")
+          ~binder:bk ~base:base_k
+          lhs_tail_nf rhs_nf
+      in
+      if not ok then
+        failwith (Printf.sprintf
+          "Liquid type error: state %s tuple tail violates its refinement"
+          state_name)
+      else begin
+        (* keep normalized state refinement for the tuple in Γ, if useful *)
+        let ann_nf_all = zpt_pred_to_nf ~binder:(List.hd bvars) phi_state in
+        List.iteri (fun i xi ->
+          let base_i = List.nth bases i in
+          let base_ty =
+            mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_i), []))
+          in
+          let ty_i =
+            mk_type (Zparsetree.Erefinement (("v", base_ty), ann_nf_all))
+          in
+          add_binding xi ty_i
+        ) names
+      end
+
+
+      
+let check_automaton_return_tuple_from_states
+      ~(names:string list)
+      (states:Zelus.state_handler_ann list)
+      (ret_ty:Zelus.type_expression)   (* {(v1:τ1)*…*(vk:τk) | φ_ret} *)
+    : unit =
+      (* Unpack the return tuple type (as ZPT) *)
+      let ann_zpt = to_zpt_type ret_ty in
+      let (bvars_ret, bases_ret, phi_ret) = tuple_refine_parts ann_zpt in
+      let ar = List.length names in
+      if ar <> List.length bvars_ret || ar <> List.length bases_ret
+      then failwith "Automaton:return: tuple arity mismatch";
+    
+      (* Helpers *)
+    
+      (* Check if two Zelus types are the same labeled-tuple refinement (up to α/pretty) *)
+      let same_ltuple_type_zls (t1:Zelus.type_expression) (t2:Zelus.type_expression) : bool =
+        let z1 = to_zpt_type t1 in
+        let z2 = to_zpt_type t2 in
+        match z1.desc, z2.desc with
+        | Zparsetree.Erefinementlabeledtuple _, Zparsetree.Erefinementlabeledtuple _ ->
+            Pprint.string_of_type z1 = Pprint.string_of_type z2
+        | _ -> false
+      in
+    
+      (* Extract φ_state from a state env either from explicit "(a,b,...)" or as a “virtual tuple”. *)
+      let tuple_phi_from_state_env ~(names:string list)
+          (lst : (string * Zelus.type_expression) list)
+        : (Zparsetree.exp * string list) option =
+        let wanted = "(" ^ (String.concat "," names) ^ ")" in
+        (* 1) Try explicit labeled tuple *)
+        match List.find_map
+                (fun (nm, ty_zls) ->
+                   if String.equal nm wanted then
+                     match (to_zpt_type ty_zls).desc with
+                     | Zparsetree.Erefinementlabeledtuple (_fields, phi_s) ->
+                         (* Collect the binders inside this state’s tuple refinement *)
+                         let (bvars_s, _, _) = tuple_refine_parts (to_zpt_type ty_zls) in
+                         Some (phi_s, bvars_s)
+                     | _ -> None
+                   else None)
+                lst
+        with
+        | Some p -> Some p
+        | None ->
+            (* 2) Otherwise, reconstruct from scalars that share the same labeled-tuple type. *)
+            let ltuple_entries =
+              List.filter (fun (_nm, ty) ->
+                  match (to_zpt_type ty).desc with
+                  | Zparsetree.Erefinementlabeledtuple _ -> true
+                  | _ -> false)
+                lst
+            in
+            (* Pairwise (or extend to k-ary if needed) *)
+            begin match ltuple_entries with
+            | (n1, ty1) :: (n2, ty2) :: _ when same_ltuple_type_zls ty1 ty2 ->
+                let zpt = to_zpt_type ty1 in
+                begin match zpt.desc with
+                | Zparsetree.Erefinementlabeledtuple (_fields, phi_s) ->
+                    let (bvars_s, _, _) = tuple_refine_parts zpt in
+                    (* Names come from env entry names, e.g., ["flow"; "level"] *)
+                    Some (phi_s, bvars_s)
+                | _ -> None
+                end
+            | _ -> None
+            end
+      in
+      
+    
+      (* Build guarded disjunction over states: G(&&_s (guard_s ∧ φ_s)) *)
+      let guarded_preds : Zparsetree.exp list =
+        states
+        |> List.filter_map (fun sha ->
+             match sha.Zelus.sha_refenv with
+             | None -> None
+             | Some { desc = Zelus.Erefenv lst; _ } ->
+                 match tuple_phi_from_state_env ~names lst with
+                 | None -> None
+                 | Some (phi_s, bvars_s) ->
+                     (* Normalize binders to match return tuple binders *)
+                     let phi_s_norm = rename_state_last_binder_to_return ~bvars_state:bvars_s ~bvars_ret:bvars_ret phi_s in
+                     let guard = staying_guard_of_state sha in
+                     Some (mk_and guard phi_s_norm))
+      in
+    
+      (* If no state binds the tuple, nothing to check *)
+      if guarded_preds = [] then
+        ()
+      else begin
+        (* disjunction = p1 && p2 && ... && pn *)
+        let disj =
+          match guarded_preds with
+          | p :: ps -> List.fold_left (fun acc q -> mk_or (mk_paren acc) (mk_paren q)) p ps
+          | [] -> e_false
+        in
+    
+        let k      = ar - 1 in
+        let bk     = List.nth bvars_ret k in
+        let base_k = List.nth bases_ret k in
+        let lhs_nf = zpt_pred_to_nf ~binder:bk (mk_G disj) in
+        let rhs_nf = zpt_pred_to_nf ~binder:bk phi_ret in
+        let ok =
+          nf_match_and_check
+            ~cid:5 ~name:"automaton:return-tuple"
+            ~binder:bk ~base:base_k
+            lhs_nf rhs_nf
+        in
+        if not ok then
+          failwith "Liquid type error: automaton return (tuple) not implied by union of states"
+      end
+    
+
+
+(* Pull tuple labels like "(last_flow,last_level)" or "(flow,level)" from a refenv *)
+let tuple_labels_from_refenv (re:(string * Zelus.type_expression) list) : string list list =
+  re
+  |> List.filter_map (fun (nm, ty) ->
+       match ty.Zelus.desc with
+       | Zelus.Erefinementlabeledtuple _ ->
+           if String.length nm >= 2 && nm.[0]='(' && nm.[String.length nm - 1]=')' then
+             let inner = String.sub nm 1 (String.length nm - 2) in
+             Some (inner |> String.split_on_char ',' |> List.map String.trim)
+           else None
+       | _ -> None)
+
+
+let strip_last_prefixes (names:string list) : string list =
+  List.map (fun s ->
+    if String.length s >= 5 && String.sub s 0 5 = "last_"
+    then String.sub s 5 (String.length s - 5)
+    else s) names
+
 let process_let_eq (eq : Zelus.eq) : unit =
       match eq.eq_desc with
       | EQeq (pat, rhs) -> begin
@@ -1945,7 +2528,7 @@ let process_let_eq (eq : Zelus.eq) : unit =
         ()
       | EQautomatonRef (is_weak, Some ref, _states, _init_state, _ret_env) ->(
         let re = match ref.desc with
-        | Erefenv(lst) -> lst in 
+        | Zelus.Erefenv(lst) -> lst in 
         let xs_from_env =
           List.filter_map
             (fun (n,_ty) ->
@@ -1977,6 +2560,117 @@ let process_let_eq (eq : Zelus.eq) : unit =
                       "Automaton: %d initial refinement error(s):\n%s"
                       (List.length errs)
                       (String.concat "\n" errs)));
+
+                      let init_tuple_labels = tuple_labels_from_refenv re in
+                      let explicit_last_tuples =
+                        (* keep only explicit tuple labels whose components are all last_* *)
+                        init_tuple_labels
+                        |> List.filter (fun comps ->
+                            List.for_all (fun s -> String.length s >= 5 && String.sub s 0 5 = "last_") comps)
+                      in
+                      let init_tuple =
+                        match explicit_last_tuples with
+                        | names::_ ->
+                            (* strip “last_” → base names, e.g., ["flow"; "level"] *)
+                            Some (strip_last_prefixes names, None)
+                        | [] ->
+                            (* fall back to virtual tuple reconstructed from scalar entries *)
+                            (match find_virtual_tuple_in_refenv re with
+                            | Some (names, ty) -> Some (names, Some ty)   (* names like ["flow"; "level"] *)
+                            | None -> None)
+                      in
+                      match init_tuple with
+                      
+                          
+                      | Some (names, _maybe_ty) ->
+                          (* Reuse existing head check *)
+                          check_automaton_tuple_inits_as_head ~names:xs ~init_env:re;
+
+                      (* ---------- Phase 2: per-state TAIL checks for any tuple bound in states *)
+                     ( List.iter
+                      (fun sha ->
+                         match sha.Zelus.sha_refenv with
+                         | None -> ()
+                         | Some { desc = Zelus.Erefenv lst; _ } ->
+                             let tuple_groups =
+                               collect_virtual_tuple_groups_in_refenv lst
+                               (* each: (names, bvars, bases, phi_state) *)
+                             in
+                             let st_name =
+                               match sha.Zelus.sha_handler.s_state.desc with
+                               | Estate0pat id -> zident_pretty id
+                               | Estate1pat (id, _) -> zident_pretty id
+                             in
+                             List.iter
+                               (fun (names, bvars, bases, phi_state) ->
+                                  check_state_tuple_tail_v2
+                                    ~state_name:st_name
+                                    ~names ~bvars ~bases ~phi_state sha)
+                               tuple_groups)
+                      _states;
+
+                      (* ---------- Phase 3: RETURN tuple check (disjunction over states) *)
+                      begin match _ret_env with
+                        | None -> ()
+                        | Some { desc = Zelus.Erefenv lst; _ } ->
+                            (* Helper: do we have an explicit "(a,b,...)" label with a labeled-tuple type? *)
+                            let explicit_ret_tuple : (string list * Zelus.type_expression) option =
+                              List.find_map
+                                (fun (nm, ty) ->
+                                  match ty.Zelus.desc with
+                                  | Zelus.Erefinementlabeledtuple _ ->
+                                      if String.length nm >= 2 && nm.[0] = '(' && nm.[String.length nm - 1] = ')' then
+                                        let inner = String.sub nm 1 (String.length nm - 2) in
+                                        let names = inner |> String.split_on_char ',' |> List.map String.trim in
+                                        Some (names, ty)
+                                      else None
+                                  | _ -> None)
+                                lst
+                            in
+
+                            (* Helper: same as init-phase “virtual tuple”, but for return env (no "last_" prefix). *)
+                            let same_ltuple_type_zls (t1:Zelus.type_expression) (t2:Zelus.type_expression) : bool =
+                              (* convert both to ZPT and compare pretty text to be robust to alpha-renaming *)
+                              let z1 = to_zpt_type t1 in
+                              let z2 = to_zpt_type t2 in
+                              match z1.desc, z2.desc with
+                              | Zparsetree.Erefinementlabeledtuple _, Zparsetree.Erefinementlabeledtuple _ ->
+                                  Pprint.string_of_type z1 = Pprint.string_of_type z2
+                              | _ -> false
+                            in
+
+                            let find_virtual_tuple_in_ret_env
+                                (re : (string * Zelus.type_expression) list)
+                              : (string list * Zelus.type_expression) option =
+                              let ltuple_entries =
+                                List.filter (fun (_nm, ty) ->
+                                  match (to_zpt_type ty).desc with
+                                  | Zparsetree.Erefinementlabeledtuple _ -> true
+                                  | _ -> false) re
+                              in
+                              match ltuple_entries with
+                              | (n1, ty1) :: (n2, ty2) :: [] when same_ltuple_type_zls ty1 ty2 ->
+                                  (* names are as-is (no "last_" to strip in return env) *)
+                                  Some ([n1; n2], ty1)
+                              | _ -> None 
+                            in
+
+                            (* Prefer explicit tuple; otherwise try virtual tuple. *)
+                            let ret_tuple : (string list * Zelus.type_expression) option =
+                              match explicit_ret_tuple with
+                              | Some p -> Some p
+                              | None   -> debug"here"; find_virtual_tuple_in_ret_env lst
+                            in
+
+                            (match ret_tuple with
+                            | None -> debug "gets matched to none";
+                                (* Nothing to check for tuples in the return env; fine. *)
+                                ()
+                            | Some (names, ty_tuple) ->
+                                (* Run the disjunction-over-states check on the last component binder *)
+                                check_automaton_return_tuple_from_states ~names _states ty_tuple)
+                        end;)
+                        | None ->
         List.iter
       (fun sha ->
          let st_name =
@@ -2006,8 +2700,7 @@ let process_let_eq (eq : Zelus.eq) : unit =
                       ~ret_base
                       ~ret_pred:ret_pred_zls
                       _states
-                | _ ->
-                    failwith "Return env: expected scalar refinement {v:Base | ...}.")
+                | _ ->())
               lst
         end)
       | EQautomaton(_,_,_) -> ()
@@ -2119,15 +2812,81 @@ let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
     | exception ex -> gamma := saved; raise ex
 
 
-  
+
+let tuple_refine_parts (ann_zpt : Zparsetree.type_expression)
+    : (string list * string list * Zparsetree.exp) =
+    match ann_zpt.desc with
+    | Zparsetree.Erefinementlabeledtuple (fields, phi) ->
+        let bvars =
+          List.map fst fields in
+        let bases =
+          List.map (fun (_n, ty) ->
+            match ty.desc with
+            | Zparsetree.Etypeconstr (Name b, []) -> b
+            | _ -> failwith "Return tuple: each base must be Etypeconstr(Name,[])"
+          ) fields
+        in
+        (bvars, bases, phi)
+    | _ -> failwith "Return tuple: expected labeled-tuple refinement"
+
+let install_tuple_component_ghosts ~(bvars:string list) ~(bases:string list) (es: Zelus.exp list)
+  : unit =
+  List.iteri (fun i ei ->
+    let bi   = List.nth bvars i in
+    let base = List.nth bases i in
+    let ei_z = { Zparsetree.desc = vc_gen_expression ei; loc = dummy_loc } in
+    let ty_i = singleton_with ~binder:bi ei_z base in
+    add_binding bi ty_i
+  ) es
+
+let check_return_tuple_plain
+  ~(fname:string)
+  (ret_ann_zelus : Zelus.type_expression)
+  (e_tuple        : Zelus.exp list)
+  : unit =
+  let ann_zpt = to_zpt_type ret_ann_zelus in
+  let (bvars, bases, phi) = tuple_refine_parts ann_zpt in
+  let ar = List.length e_tuple in
+  if ar <> List.length bvars || ar <> List.length bases
+  then failwith "Return tuple: arity mismatch";
+
+  (* 1) Per-component ghosts vi = ei *)
+  install_tuple_component_ghosts ~bvars ~bases e_tuple;
+
+  (* 2) One NF check on the last component against phi  *)
+  let k      = ar - 1 in
+  let bk     = List.nth bvars k in
+  let base_k = List.nth bases k in
+  let ek     = List.nth e_tuple k in
+  let lhs_nf = nf_eq_v_rhs ek bk in
+  let rhs_nf = zpt_pred_to_nf ~binder:bk phi in
+  let ok =
+    nf_match_and_check ~cid:5 ~name:(fname ^ ":ret-tuple") ~binder:bk ~base:base_k lhs_nf rhs_nf
+  in
+  if not ok then
+    failwith "Liquid type error: tuple return does not satisfy its annotated refinement"
+
   
 let check_return ~(fname:string)
                    ~(ret_binder:string)
                    ~(ret_base:string)
                    ~(ret_pred:Zelus.exp)
-                   (e:Zelus.exp) : unit =
+                   (e:Zelus.exp)
+                   (ret_ann_zelus:Zelus.type_expression) : unit =
     
     debug_nf_synth_lhs e;
+  match ret_ann_zelus.desc with
+  (* ---- TUPLE RETURN ---- *)
+  | Zelus.Erefinementlabeledtuple (_fields, _phi_zls) -> ( 
+    debug "inside the tuple return check";
+      match e.e_desc with
+      | Zelus.Etuple es ->
+          check_return_tuple_plain ~fname ret_ann_zelus es
+      | _ ->
+          failwith "Return tuple: expected a tuple, tuple fby tuple, or tuple ITE"
+    )
+
+  | _ ->(
     match e.e_desc with 
     | Zelus.Eop (Zelus.Eifthenelse, i :: t :: el :: []) ->
       let lhs_then =
@@ -2234,21 +2993,22 @@ let check_return ~(fname:string)
             if ok_nf then () else
               failwith (Printf.sprintf
                 "Liquid type error: %s does not satisfy its return annotation" fname)
-        end)
+        end))
 
       
   let rec check_fun_body ~(fname:string)
                          ~(ret_binder:string)
                          ~(ret_base:string)
                          ~(ret_pred:Zelus.exp)
-                         (e:Zelus.exp) : unit =
+                         (e:Zelus.exp) 
+                         rettype : unit =
     match e.e_desc with
     | Zelus.Elet (l_block, r_exp) ->
         with_env_snapshot (fun () ->
           (* handle “let ... and ... and ...” *)
           List.iter process_let_eq l_block.l_eq;
           (* continue into the body; handles further nested lets too *)
-          check_fun_body ~fname ~ret_binder ~ret_base ~ret_pred r_exp
+          check_fun_body ~fname ~ret_binder ~ret_base ~ret_pred r_exp rettype
         )
   
     | Zelus.Eseq (e1, e2) ->
@@ -2262,11 +3022,11 @@ let check_return ~(fname:string)
           | _ -> ()
         in
         process_lets_only e1;
-        check_fun_body ~fname ~ret_binder ~ret_base ~ret_pred e2
+        check_fun_body ~fname ~ret_binder ~ret_base ~ret_pred e2 rettype
 
   
     | _ ->
-        check_return ~fname ~ret_binder ~ret_base ~ret_pred e
+        check_return ~fname ~ret_binder ~ret_base ~ret_pred e rettype
   
 
 
@@ -2406,7 +3166,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               List.iter add_annotated_arg_to_env p_list;
 
               (* Check the function body against the declared return refinement *)
-              check_fun_body n ret_binder ret_base ret_pred_exp f_body;
+              check_fun_body n ret_binder ret_base ret_pred_exp f_body rettype;
 
               let base_ty =
                 mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base), []))

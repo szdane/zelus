@@ -1,20 +1,20 @@
-let dt:{v:float | v > 0.} = 0.1
-let maxflow:{v:float | v > 0.} = 0.5
-let outflow:{v:float | v > 0.} = 0.1
-let minlevel:{v:float | v > 0 && v <5} = 1.
-let maxlevel:{v:float | v > minlevel} = 19.
-let node exec () : {(vf:float)*(vl:float) | true} =
-  let rec ((flow, level):{(f:float)*(l:float) | 
-      ((l >= minlevel && l <= maxlevel) && 
+let dt:{v:float | g(v > 0. && v = 0.1)} = 0.1
+let maxflow:{v:float | g(v > 0. && v=0.5)} = 0.5
+let outflow:{v:float | g(v > 0. && v=0.1)} = 0.1
+let minlevel:{v:float | g(v > 0 && v <15 && v=14.5)} = 14.5
+let maxlevel:{v:float | g(v > minlevel && v > 15. && v= 16.5)} = 16.5
+let node exec () :  {(vf:float)*(vl:float) | true} =
+  let rec init flow = 0.
+  and init level = 15.
+  and automaton_ref : {(last_flow,last_level): {(f:float)*(l:float) | (f = maxflow || f = 0.) && ( l>= minlevel && l <= maxlevel)}}
+      | Up : {(flow,level) : {(vf:float)*(vl:float) | vf = maxflow && vl = last_level + (last_flow - outflow) * dt}}-> do (flow, level) = (maxflow, ((last level) +. ((last flow) -. outflow) *. dt)) unless ((last level) >= maxlevel -. 0.5) then Down
+      | Down : {(flow,level) : {(vf:float)*(vl:float) | vf = 0. && vl = last_level + (last_flow - outflow) * dt }}-> do (flow, level) = (0., ((last level) +. ((last flow) -. outflow) *. dt)) unless ((last level) <= minlevel +. 0.5) then Up
+    end : {(flow,level) : {(f:float)*(l:float) | ((l >= minlevel && l <= maxlevel) && 
       ((l <= (maxlevel -. dt *. (maxflow -. outflow)) && f = maxflow) 
-        || (l >= (minlevel +. dt *. outflow) && f = 0.)))}) =
-    (0., 15.) fby 
-    ((if (level <= (minlevel +. 0.5)) then maxflow else 
-      (if (level >= (maxlevel -. 0.5)) then 0. else flow)),
-      (level +. (flow -. outflow) *. dt) models (robot_get ("level"))) 
-    in (() models robot_str ("flow", flow)); (flow, level)
+        || (l >= (minlevel +. dt *. outflow) && f = 0.))) }}
+    in (flow, level)
 
 let hybrid main () = 
     let rec trigger = (period (dt)) in
-        present (trigger) -> (let (flow, level) = exec () in
-        (print_float flow; print_string ", "; print_float level; print_newline ())) else ()
+        present (trigger) -> (let (flow,level) = exec () in
+        (print_float level; print_string ", "; print_float flow; print_newline ())) else ()

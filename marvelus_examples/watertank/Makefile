@@ -8,11 +8,11 @@ MLFLAGS=-linkpkg -package zelus
 sim: zelus-compile 
 
 
-main.ml: watertank.zls
-	$(ZELUC) $(ZFLAGS) watertank.zls
+main.ml: watertank01.zls
+	$(ZELUC) $(ZFLAGS) watertank01.zls
 
 zelus-compile: main.ml
-	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o watertank.opt watertank.ml main.ml
+	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o watertank01.opt watertank01.ml main.ml
 
 clean: 
-	rm -f watertank.opt *.cmi *.cmx *.o *.zci main.ml watertank.ml 
+	rm -f watertank01.opt *.cmi *.cmx *.o *.zci main.ml watertank01.ml 

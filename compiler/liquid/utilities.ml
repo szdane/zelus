@@ -63,6 +63,10 @@ let mk_v () =
 let mk_not (p : Zparsetree.exp) : Zparsetree.exp =
   mk_app (mk_var "not") [p]
 
+let mk_le a b =  mk_app (mk_var "<") [a;b]
+let mk_ge a b = mk_app (mk_var ">") [a;b]
+
+
 let rec strip_temporal_chain (base:string) (e:Zparsetree.exp) : Zparsetree.exp =
   match e.desc with
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg]) ->
@@ -138,7 +142,6 @@ let to_zpt_kind kind =
 let zident_opt_to_string_opt (o : Zident.t option) : string option =
   Option.map Zident.name o
 
-    
 let literal_and_base = function
   | Deftypes.Eint  n  -> Zparsetree.Eint n  , "Int"
   | Deftypes.Efloat f -> Zparsetree.Efloat f, "Real"
@@ -748,4 +751,67 @@ let zpt_base_name (ty:Zparsetree.type_expression) : string =
   match ty.desc with
   | Zparsetree.Etypeconstr (Name b, []) -> b
   | _ -> failwith "Expected base Etypeconstr(Name,[])"
+
+(* Unpack {(v1:T1)*(v2:T2)*... | phi} into (bvars, bases, phi) *)
+let tuple_refine_parts (ann_zpt : Zparsetree.type_expression)
+  : (string list * string list * Zparsetree.exp) =
+  match ann_zpt.desc with
+  | Zparsetree.Erefinementlabeledtuple (fields, phi) ->
+      let bvars =
+        List.map fst fields in
+      let bases =
+        List.map (fun (_n, ty) ->
+          match ty.desc with
+          | Zparsetree.Etypeconstr (Name b, []) -> b
+          | _ -> failwith "Return tuple: each base must be Etypeconstr(Name,[])"
+        ) fields
+      in
+      (bvars, bases, phi)
+  | _ -> failwith "Return tuple: expected labeled-tuple refinement"
+(* --- 1) Minimal single-var renamer for Zparsetree.exp --- *)
+let zpt_rename_var ~(from:string) ~(to_:string) (e:Zparsetree.exp) : Zparsetree.exp =
+  let open Zparsetree in
+  let rec go (e:exp) : exp =
+    match e.desc with
+    | Evar (Name id) ->
+        if String.equal id from then { e with desc = Evar (Name to_) } else e
+
+    | Econst _ ->
+        e
+
+    | Etuple es ->
+        { e with desc = Etuple (List.map go es) }
+
+    | Eapp (ai, f, args) ->
+        let f'    = go f in
+        let args' = List.map go args in
+        { e with desc = Eapp (ai, f', args') }
+
+    | Erecord fields ->
+        { e with desc = Erecord (List.map (fun (lab, ei) -> (lab, go ei)) fields) }
+
+    (* | Efield (e1, lab) ->
+        { e with desc = Efield (go e1, lab) }
+
+    | Eparen e1 ->
+        { e with desc = Eparen (go e1) } *)
+
+    (* If your AST has more cases (Eif, Elet, etc.), recurse into their children too.
+       This catch-all preserves the node unchanged so the match is exhaustive. *)
+    | _ -> e
+  in
+  go e
+
+
+(* --- 2) Rename a state's LAST tuple binder to match the return binder --- *)
+let rename_state_last_binder_to_return
+  ~(bvars_state:string list) ~(bvars_ret:string list) (phi_state:Zparsetree.exp)
+: Zparsetree.exp =
+  let ks = List.length bvars_state - 1 in
+  let kr = List.length bvars_ret   - 1 in
+  let bs = List.nth bvars_state ks in
+  let br = List.nth bvars_ret   kr in
+  if String.equal bs br then phi_state
+  else zpt_rename_var ~from:bs ~to_:br phi_state
+
 

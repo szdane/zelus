@@ -592,6 +592,7 @@ refenv:
 refenv_bindings:
   | i = IDENT COLON t = type_expression
       { [(i, t)] }
+  | LPAREN i = IDENT COMMA rl = IDENT RPAREN COLON t = type_expression {[(i,t);(rl,t)]}
   | rl = refenv_bindings SEMI i = IDENT COLON t = type_expression
       { (i, t) :: rl }
 ;
@@ -607,7 +608,7 @@ equation_desc:
   | AUTOMATON opt_bar a = automaton_handlers(equation_empty_list)
     INIT s = state
     { EQautomaton(List.rev a, Some(s)) }
-  | AUTOMATON_REF COLON aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list) opt_end ret = refenv_opt opt_bar
+  | AUTOMATON_REF COLON aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list) END COLON ret = refenv_opt opt_bar
     { EQautomatonRef ( aut, List.rev a, None, ret) }  
   | AUTOMATON_REF COLON aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list)
       INIT s = state ret = refenv_opt opt_bar

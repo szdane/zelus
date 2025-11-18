@@ -3,7 +3,7 @@ let node exec1 () : {(v:int) | g(v>0 && v <5)} =
     and automaton_ref : {last_ex : {v:int | g(v>0 && v<5)}}
     | Up : {ex:{v:int | g(v = (last ex) + 1)}} -> do ex = (last ex) + 1 unless ((last ex) >= 4) then Down
     | Down : {ex:{v:int | g(v = (last ex) - 1)}} -> do ex = (last ex) - 1 unless ((last ex) <= 1) then Up
-    end {ex:{v:int | g(v>0 && v <5)}} in ex
+    end : {ex:{v:int | g(v>0 && v <5)}} in ex
 
 
 

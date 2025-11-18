@@ -5,7 +5,7 @@ dune clean
 dune build @install
 dune install
 cd marvelus_examples/
-cd tests/pos/
+cd watertank/
 # make clean
 make sim
 
