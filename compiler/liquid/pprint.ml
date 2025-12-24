@@ -48,8 +48,8 @@ let rec string_of_expr (e : exp) =
   (* Infix ops (binary) *)
   | Eapp (_, { desc = Evar (Name op); _ }, [e1; e2]) when is_infix op ->
     (match op with
-    | "-." | "+." | "*." | "/." -> Printf.sprintf "%s %s %s" (string_of_expr e1) (String.sub op 0 1) (string_of_expr e2)
-    | _ ->  Printf.sprintf "%s %s %s" (string_of_expr e1) op (string_of_expr e2) )
+    | "-." | "+." | "*." | "/." -> Printf.sprintf "(%s %s %s)" (string_of_expr e1) (String.sub op 0 1) (string_of_expr e2)
+    | _ ->  Printf.sprintf "(%s %s %s)" (string_of_expr e1) op (string_of_expr e2) )
 
   (* Generic function application: f(a,b,...) *)
   | Eapp (_, { desc = Evar (Name f); _ }, args) ->
