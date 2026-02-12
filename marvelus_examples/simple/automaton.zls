@@ -1,0 +1,14 @@
+let node exec1 () : {(v:int) | globally(v>0 && v <5)} =
+  let rec init ex = 1
+    and automaton_ref : {last_ex : {v:int | v = 1 && nxt(globally(v>0 && v<5))}}
+    | Up : {ex:{v:int | globally(v>0)}} -> do ex = (last ex) + 1 unless ((last ex) >= 4) then Down
+    | Down : {ex:{v:int | globally(v<5)}} -> do ex = (last ex) - 1 unless ((last ex) <= 1) then Up
+    end : {ex:{v:int | globally(v>0 && v <5)}} in ex
+
+
+
+let dt = 0.1 
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = exec1 () in
+        (print_int x; print_newline ())) else ()
