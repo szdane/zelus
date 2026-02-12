@@ -1,6 +1,6 @@
 (* ==== NEG 2: ITE (constdecl) bad THEN branch when foo>0 ==== *)
-let foo_pos : {v:int | v >= 0 && x(g(v >= 0))} = 3
-let ite_bad_then : {v:int | g(v >= 0)} =
+let foo_pos : {v:int | v >= 0 && nxt(globally(v >= 0))} = 3
+let ite_bad_then : {v:int | globally(v >= 0)} =
   if foo_pos >= 0 then -1*foo_pos else foo_pos
 (* THEN requires -foo_pos ≥ 0, false for foo_pos=3 ⇒ FAIL *)
 

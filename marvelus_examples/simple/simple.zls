@@ -1,24 +1,23 @@
 (* A simple program that counts up from zero. Verify that the number is always non-decreasing *)
-(*let foo:{v:int | x(g(v >=0))} = 2+1
-(*let var:{v:int | x(g(v = foo))} = foo
-let b:{v:bool | g(v = true)} = true
-let dt:{v:float | g(v >= 0.0+0.1)} = 0.1 +. 0.3
-let ite:{v: int | g(v <= 0)} = if foo >= 0 then -1*foo else foo*)*)
+let foo:{v:int | nxt(globally(v >=0))} = 2+1
+let var:{v:int | nxt(globally(v = foo))} = foo
+let b:{v:bool | globally(v = true)} = true
+let ite:{v: int | globally(v <= 0)} = if foo >= 0 then -1*foo else foo
 
 
 let node exec1 () : {(v:int) | true} =
-  let (e:{v:int | g(v=5)}) = 5 in e
-  (*(*let rec (temp:{v:int | v<=0 && x(g(m(v<=0)))}) = 0 fby (temp-1) in *)
+  let (e:{v:int | globally(v=5)}) = 5 in e
+  (*(*let rec (temp:{v:int | v<=0 && nxt(globally(m(v<=0)))}) = 0 fby (temp-1) in *)
   let rec ((x1,y):{ (vx:int)*(vy:int) | vx = vy*vy}) = (4,2) fby ((y+1)*(y+1), y+1) in
   let rec ((x1,y,z):{ (vx:int)*(vy:int)*(vz:int) | (vy=vx+1 && vz=6)&& x(g(vy=vx+1 && vz=6))}) = (4,5,6) fby (x1,y,z) in *)
 
-(*let node exec () : {(v:int) | x(v>=0)} =
+(*let node exec () : {(v:int) | nxt(v>=0)} =
   (* Set up another variable y to keep track of the previous value of x. Then just ensure x >= y *)
-  let (e:{v:int |g(v>=0)}) = if foo > 0 then foo else -1*foo in 
-  let (e1:{v:int | v>=0 && x (g (m(v>=0)))}) = e fby 6 in e1*)
+  let (e:{v:int |globally(v>=0)}) = if foo > 0 then foo else -1*foo in 
+  let (e1:{v:int | v>=0 && nxt(globally (m(v>=0)))}) = e fby 6 in e1*)
 
 let dt = 0.1 
-(*let node edge b:{(v:bool) | v=false && x(g(m(v=true)))} = (false fby b)*)
+(*let node edge b:{(v:bool) | v=false && nxt(globally(m(v=true)))} = (false fby b)*)
 let hybrid main () = 
     let rec trigger = (period (dt)) in
         present (trigger) -> (let (x) = exec1 () in

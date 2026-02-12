@@ -1,5 +1,5 @@
 (* The Zelus compiler, version 2.2-dev
-  (2025-11-14-1:57) *)
+  (2026-02-12-20:23) *)
 open Ztypes
 let b = true
 
@@ -12,8 +12,8 @@ let edge  =
   let edge_reset self  =
     (self.m_27 <- false:unit) in 
   let edge_step self (b_26:bool) =
-    ((let (x_28:bool) = self.m_27 in
-      self.m_27 <- b_26 ; x_28):bool) in
+    ((let (next_28:bool) = self.m_27 in
+      self.m_27 <- b_26 ; next_28):bool) in
   Node { alloc = edge_alloc; reset = edge_reset ; step = edge_step }
 let dt = 0.1
 
@@ -45,9 +45,9 @@ let main (cstate_42:Ztypes.cstate) =
              (begin match trigger_31 with
                     | true ->
                         let (b_39:bool) = b in
-                        let (x_41:bool) = self.m_40 in
+                        let (next_41:bool) = self.m_40 in
                         self.m_40 <- b_39 ;
-                        (let (x_38:bool) = x_41 in
+                        (let (x_38:bool) = next_41 in
                          let _ = print_string (string_of_bool x_38) in
                          self.result_32 <- print_newline ())
                     | _ -> self.result_32 <- ()  end) ; self.result_32)) in

@@ -1,5 +1,5 @@
 (* The Zelus compiler, version 2.2-dev
-  (2025-11-14-1:57) *)
+  (2026-02-12-20:23) *)
 open Ztypes
 type ('a) _exec =
   { mutable m_32 : 'a }
@@ -10,8 +10,8 @@ let exec  =
   let exec_reset self  =
     (self.m_32 <- (4 , 2):unit) in 
   let exec_step self () =
-    ((let ((x_33:int) , (x_34:int)) = self.m_32 in
-      let (((y_30:int) , (z_31:int)): (int  * int)) = (x_33 , x_34) in
+    ((let ((next_33:int) , (next_34:int)) = self.m_32 in
+      let (((y_30:int) , (z_31:int)): (int  * int)) = (next_33 , next_34) in
       self.m_32 <- ((( * ) ((+) z_31  1)  ((+) z_31  1)) , ((+) z_31  1)) ;
       y_30):int) in
   Node { alloc = exec_alloc; reset = exec_reset ; step = exec_step }
@@ -46,9 +46,9 @@ let main (cstate_50:Ztypes.cstate) =
              (begin match trigger_37 with
                     | true ->
                         let () = () in
-                        let ((x_48:int) , (x_49:int)) = self.m_47 in
+                        let ((next_48:int) , (next_49:int)) = self.m_47 in
                         let (((y_45:int) , (z_46:int)): (int  * int)) =
-                            (x_48 , x_49) in
+                            (next_48 , next_49) in
                         self.m_47 <- ((( * ) ((+) z_46  1)  ((+) z_46  1)) ,
                                       ((+) z_46  1)) ;
                         (let (x_44:int) = y_45 in

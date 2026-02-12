@@ -1,0 +1,2724 @@
+zeluc -verify -nodeadcode -s main takeoff.zls
+
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0mcompiling takeoff
+ide: IDENT: vstallflaps
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: vstallclean
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: xinit
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: vinit
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: hinit
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: a
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: dt
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: c
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: hceiling
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: hinit
+ext_ident: ide: hinit
+Desc var
+Simple expression
+expression: INFIX0: e1 > e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: c
+ext_ident: ide: c
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallclean
+ext_ident: ide: vstallclean
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vinit
+ext_ident: ide: vinit
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: c
+ext_ident: ide: c
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallflaps
+ext_ident: ide: vstallflaps
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vinit
+ext_ident: ide: vinit
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: hinit
+ext_ident: ide: hinit
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 > e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: lrunway
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: xinit
+ext_ident: ide: xinit
+Desc var
+Simple expression
+expression: INFIX0: e1 > e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallflaps
+ext_ident: ide: vstallflaps
+Desc var
+Simple expression
+ide: IDENT: vstallflaps
+ext_ident: ide: vstallflaps
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vinit
+ext_ident: ide: vinit
+Desc var
+Simple expression
+ide: IDENT: vinit
+ext_ident: ide: vinit
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: xinit
+ext_ident: ide: xinit
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallflaps
+ext_ident: ide: vstallflaps
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 > e2
+expression_desc: e1 && e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: exec
+ide: IDENT: int
+ext_ident: ide: int
+type constr
+label_type: v:type_expression
+Desc const
+Simple expression
+new-syntax type refinement
+ide: IDENT: x
+ide: IDENT: xinit
+ext_ident: ide: xinit
+Desc var
+Simple expression
+ide: IDENT: vel
+ide: IDENT: vinit
+ext_ident: ide: vinit
+Desc var
+Simple expression
+ide: IDENT: h
+ide: IDENT: hinit
+ext_ident: ide: hinit
+Desc var
+Simple expression
+ide: IDENT: thr
+Desc const
+Simple expression
+ide: IDENT: fl
+Desc const
+Simple expression
+ide: IDENT: lg
+Desc const
+Simple expression
+ide: IDENT: ww
+Desc const
+Simple expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: hceiling
+ext_ident: ide: hceiling
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: x
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+ide: IDENT: vel
+ext_ident: ide: vel
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: lrunway
+ext_ident: ide: lrunway
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: h
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: hceiling
+ext_ident: ide: hceiling
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: vel
+simple_pattern: ide
+ide: IDENT: vel
+Desc last
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: x
+Desc last
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+ide: IDENT: vel
+ext_ident: ide: vel
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: h
+simple_pattern: ide
+ide: IDENT: h
+Desc last
+Simple expression
+ide: IDENT: thr
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: fl
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: lg
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: ww
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallflaps
+ext_ident: ide: vstallflaps
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 > e2
+Desc seq expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: x
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: vel
+ext_ident: ide: vel
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallflaps
+ext_ident: ide: vstallflaps
+Desc var
+Simple expression
+expression: INFIX0: e1 > e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: h
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: c
+ext_ident: ide: c
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: hceiling
+ext_ident: ide: hceiling
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: vel
+simple_pattern: ide
+ide: IDENT: vel
+Desc last
+Simple expression
+ide: IDENT: a
+ext_ident: ide: a
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: x
+Desc last
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+ide: IDENT: vel
+ext_ident: ide: vel
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: h
+simple_pattern: ide
+ide: IDENT: h
+Desc last
+Simple expression
+ide: IDENT: c
+ext_ident: ide: c
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: thr
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: fl
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: lg
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: ww
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: h
+Desc last
+Simple expression
+ide: IDENT: hceiling
+ext_ident: ide: hceiling
+Desc var
+Simple expression
+ide: IDENT: c
+ext_ident: ide: c
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: x
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: vel
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallclean
+ext_ident: ide: vstallclean
+Desc var
+Simple expression
+expression: INFIX0: e1 > e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: h
+Desc last
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: hceiling
+ext_ident: ide: hceiling
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: vel
+simple_pattern: ide
+ide: IDENT: vel
+Desc last
+Simple expression
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: x
+Desc last
+Simple expression
+ide: IDENT: vel
+ext_ident: ide: vel
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: h
+simple_pattern: ide
+ide: IDENT: h
+Desc last
+Simple expression
+ide: IDENT: thr
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: fl
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: lg
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: ww
+simple_pattern: ide
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: vstallclean
+ext_ident: ide: vstallclean
+Desc var
+Simple expression
+expression: INFIX0: e1 > e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+ide: IDENT: hceiling
+ext_ident: ide: hceiling
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: bool
+ext_ident: ide: bool
+type constr
+label_type: v:type_expression
+ide: IDENT: g
+ext_ident: ide: g
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+Simple expression
+ide: IDENT: vel
+ext_ident: ide: vel
+Desc var
+Simple expression
+ide: IDENT: h
+ext_ident: ide: h
+Desc var
+Simple expression
+ide: IDENT: thr
+ext_ident: ide: thr
+Desc var
+Simple expression
+ide: IDENT: fl
+ext_ident: ide: fl
+Desc var
+Simple expression
+ide: IDENT: lg
+ext_ident: ide: lg
+Desc var
+Simple expression
+ide: IDENT: ww
+ext_ident: ide: ww
+Desc var
+Simple expression
+Desc Tuple
+Simple expression
+Kinded refinement function
+ide: IDENT: main
+ide: IDENT: trigger
+simple_pattern: ide
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: trigger
+ext_ident: ide: trigger
+Desc var
+Simple expression
+Desc seq expression
+ide: IDENT: xp
+simple_pattern: ide
+ide: IDENT: vp
+simple_pattern: ide
+ide: IDENT: hp
+simple_pattern: ide
+ide: IDENT: thrp
+simple_pattern: ide
+ide: IDENT: flp
+simple_pattern: ide
+ide: IDENT: lgp
+simple_pattern: ide
+ide: IDENT: wwp
+simple_pattern: ide
+simple_pattern: LPAREN pattern_comma_list RPAREN
+ide: IDENT: exec
+ext_ident: ide: exec
+Desc var
+Desc void
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: xp
+ext_ident: ide: xp
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: vp
+ext_ident: ide: vp
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: hp
+ext_ident: ide: hp
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+ide: IDENT: thrp
+ext_ident: ide: thrp
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+ide: IDENT: flp
+ext_ident: ide: flp
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+ide: IDENT: lgp
+ext_ident: ide: lgp
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+ide: IDENT: wwp
+ext_ident: ide: wwp
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: gettimeofday
+ext_ident: qual_ident
+Desc var
+Desc void
+Desc seq expression
+ide: IDENT: print_newline
+ext_ident: ide: print_newline
+Desc var
+Desc void
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+Desc void
+Simple expression
+Kinded non-refinement function main 
+ [DEBUG] : id vstallflaps
+[DEBUG] : [NF:constdecl] {v | (((v > 0.0) && (v = 20.0)) && x (g (((v > 0.0) && (v = 20.0)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+
+constraint:
+  env [0;1;2;3;4;5]
+  lhs {v:real | (v = 20.0)}
+  rhs {v:real | ((v > 0.0) && (v = 20.0))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+
+constraint:
+  env [0;1;2;3;4;5]
+  lhs {v:real | (v = 20.0)}
+  rhs {v:real | ((v > 0.0) && (v = 20.0))}
+  id 5 tag []
+[DEBUG] : id vstallclean
+[DEBUG] : [NF:constdecl] {v | (((v > 0.0) && (v = 25.0)) && x (g (((v > 0.0) && (v = 25.0)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 6 tmp_1 : {v:bool | true}
+bind 7 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+
+constraint:
+  env [0;1;2;3;4;5;6;7]
+  lhs {v:real | (v = 25.0)}
+  rhs {v:real | ((v > 0.0) && (v = 25.0))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 8 tmp_1 : {v:bool | true}
+bind 9 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+
+constraint:
+  env [0;1;2;3;4;5;8;9]
+  lhs {v:real | (v = 25.0)}
+  rhs {v:real | ((v > 0.0) && (v = 25.0))}
+  id 5 tag []
+[DEBUG] : id xinit
+[DEBUG] : [NF:constdecl] {v | (((v >= 0.0) && (v = 0.0)) && x (g (((v >= 0.0) && (v = 0.0)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 10 tmp_1 : {v:bool | true}
+bind 11 tmp_2 : {v:bool | true}
+bind 12 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 13 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+
+constraint:
+  env [0;1;2;3;4;5;10;11;12;13]
+  lhs {v:real | (v = 0.0)}
+  rhs {v:real | ((v >= 0.0) && (v = 0.0))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 14 tmp_1 : {v:bool | true}
+bind 15 tmp_2 : {v:bool | true}
+bind 16 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 17 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+
+constraint:
+  env [0;1;2;3;4;5;14;15;16;17]
+  lhs {v:real | (v = 0.0)}
+  rhs {v:real | ((v >= 0.0) && (v = 0.0))}
+  id 5 tag []
+[DEBUG] : id vinit
+[DEBUG] : [NF:constdecl] {v | (((v >= 0.0) && (v = 10.0)) && x (g (((v >= 0.0) && (v = 10.0)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 18 tmp_1 : {v:bool | true}
+bind 19 tmp_2 : {v:bool | true}
+bind 20 tmp_3 : {v:bool | true}
+bind 21 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 22 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 23 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;18;19;20;21;22;23]
+  lhs {v:real | (v = 10.0)}
+  rhs {v:real | ((v >= 0.0) && (v = 10.0))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 24 tmp_1 : {v:bool | true}
+bind 25 tmp_2 : {v:bool | true}
+bind 26 tmp_3 : {v:bool | true}
+bind 27 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 28 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 29 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;24;25;26;27;28;29]
+  lhs {v:real | (v = 10.0)}
+  rhs {v:real | ((v >= 0.0) && (v = 10.0))}
+  id 5 tag []
+[DEBUG] : id hinit
+[DEBUG] : [NF:constdecl] {v | (((v >= 0.0) && (v = 0.0)) && x (g (((v >= 0.0) && (v = 0.0)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 30 tmp_1 : {v:bool | true}
+bind 31 tmp_2 : {v:bool | true}
+bind 32 tmp_3 : {v:bool | true}
+bind 33 tmp_4 : {v:bool | true}
+bind 34 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 35 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 36 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 37 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;30;31;32;33;34;35;36;37]
+  lhs {v:real | (v = 0.0)}
+  rhs {v:real | ((v >= 0.0) && (v = 0.0))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 38 tmp_1 : {v:bool | true}
+bind 39 tmp_2 : {v:bool | true}
+bind 40 tmp_3 : {v:bool | true}
+bind 41 tmp_4 : {v:bool | true}
+bind 42 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 43 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 44 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 45 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;38;39;40;41;42;43;44;45]
+  lhs {v:real | (v = 0.0)}
+  rhs {v:real | ((v >= 0.0) && (v = 0.0))}
+  id 5 tag []
+[DEBUG] : id a
+[DEBUG] : [NF:constdecl] {v | (((v > 0.0) && (v = 2.0)) && x (g (((v > 0.0) && (v = 2.0)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 46 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 47 tmp_1 : {v:bool | true}
+bind 48 tmp_2 : {v:bool | true}
+bind 49 tmp_3 : {v:bool | true}
+bind 50 tmp_4 : {v:bool | true}
+bind 51 tmp_5 : {v:bool | true}
+bind 52 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 53 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 54 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 55 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;46;47;48;49;50;51;52;53;54;55]
+  lhs {v:real | (v = 2.0)}
+  rhs {v:real | ((v > 0.0) && (v = 2.0))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 56 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 57 tmp_1 : {v:bool | true}
+bind 58 tmp_2 : {v:bool | true}
+bind 59 tmp_3 : {v:bool | true}
+bind 60 tmp_4 : {v:bool | true}
+bind 61 tmp_5 : {v:bool | true}
+bind 62 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 63 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 64 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 65 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;56;57;58;59;60;61;62;63;64;65]
+  lhs {v:real | (v = 2.0)}
+  rhs {v:real | ((v > 0.0) && (v = 2.0))}
+  id 5 tag []
+[DEBUG] : id dt
+[DEBUG] : [NF:constdecl] {v | (((v > 0.0) && (v = 0.1)) && x (g (((v > 0.0) && (v = 0.1)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 66 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 67 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 68 tmp_1 : {v:bool | true}
+bind 69 tmp_2 : {v:bool | true}
+bind 70 tmp_3 : {v:bool | true}
+bind 71 tmp_4 : {v:bool | true}
+bind 72 tmp_5 : {v:bool | true}
+bind 73 tmp_6 : {v:bool | true}
+bind 74 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 75 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 76 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 77 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;66;67;68;69;70;71;72;73;74;75;76;77]
+  lhs {v:real | (v = 0.1)}
+  rhs {v:real | ((v > 0.0) && (v = 0.1))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 78 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 79 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 80 tmp_1 : {v:bool | true}
+bind 81 tmp_2 : {v:bool | true}
+bind 82 tmp_3 : {v:bool | true}
+bind 83 tmp_4 : {v:bool | true}
+bind 84 tmp_5 : {v:bool | true}
+bind 85 tmp_6 : {v:bool | true}
+bind 86 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 87 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 88 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 89 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;78;79;80;81;82;83;84;85;86;87;88;89]
+  lhs {v:real | (v = 0.1)}
+  rhs {v:real | ((v > 0.0) && (v = 0.1))}
+  id 5 tag []
+[DEBUG] : id c
+[DEBUG] : [NF:constdecl] {v | (((v > 0.0) && (v = 4.0)) && x (g (((v > 0.0) && (v = 4.0)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 90 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 91 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 92 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 93 tmp_1 : {v:bool | true}
+bind 94 tmp_2 : {v:bool | true}
+bind 95 tmp_3 : {v:bool | true}
+bind 96 tmp_4 : {v:bool | true}
+bind 97 tmp_5 : {v:bool | true}
+bind 98 tmp_6 : {v:bool | true}
+bind 99 tmp_7 : {v:bool | true}
+bind 100 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 101 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 102 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 103 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;90;91;92;93;94;95;96;97;98;99;100;101;102;103]
+  lhs {v:real | (v = 4.0)}
+  rhs {v:real | ((v > 0.0) && (v = 4.0))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 104 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 105 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 106 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 107 tmp_1 : {v:bool | true}
+bind 108 tmp_2 : {v:bool | true}
+bind 109 tmp_3 : {v:bool | true}
+bind 110 tmp_4 : {v:bool | true}
+bind 111 tmp_5 : {v:bool | true}
+bind 112 tmp_6 : {v:bool | true}
+bind 113 tmp_7 : {v:bool | true}
+bind 114 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 115 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 116 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 117 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;104;105;106;107;108;109;110;111;112;113;114;115;116;117]
+  lhs {v:real | (v = 4.0)}
+  rhs {v:real | ((v > 0.0) && (v = 4.0))}
+  id 5 tag []
+[DEBUG] : id hceiling
+[DEBUG] : [NF:constdecl] {v | (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 118 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 119 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 120 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 121 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 122 tmp_1 : {v:bool | true}
+bind 123 tmp_2 : {v:bool | true}
+bind 124 tmp_3 : {v:bool | true}
+bind 125 tmp_4 : {v:bool | true}
+bind 126 tmp_5 : {v:bool | true}
+bind 127 tmp_6 : {v:bool | true}
+bind 128 tmp_7 : {v:bool | true}
+bind 129 tmp_8 : {v:bool | true}
+bind 130 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 131 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 132 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 133 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;118;119;120;121;122;123;124;125;126;127;128;129;130;131;132;133]
+  lhs {v:real | (v = 11.3)}
+  rhs {v:real | ((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 134 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 135 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 136 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 137 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 138 tmp_1 : {v:bool | true}
+bind 139 tmp_2 : {v:bool | true}
+bind 140 tmp_3 : {v:bool | true}
+bind 141 tmp_4 : {v:bool | true}
+bind 142 tmp_5 : {v:bool | true}
+bind 143 tmp_6 : {v:bool | true}
+bind 144 tmp_7 : {v:bool | true}
+bind 145 tmp_8 : {v:bool | true}
+bind 146 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 147 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 148 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 149 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;134;135;136;137;138;139;140;141;142;143;144;145;146;147;148;149]
+  lhs {v:real | (v = 11.3)}
+  rhs {v:real | ((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))}
+  id 5 tag []
+[DEBUG] : id lrunway
+[DEBUG] : [NF:constdecl] {v | ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)))))}
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 150 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 151 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 152 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 153 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 154 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 155 tmp_1 : {v:bool | true}
+bind 156 tmp_2 : {v:bool | true}
+bind 157 tmp_3 : {v:bool | true}
+bind 158 tmp_4 : {v:bool | true}
+bind 159 tmp_5 : {v:bool | true}
+bind 160 tmp_6 : {v:bool | true}
+bind 161 tmp_7 : {v:bool | true}
+bind 162 tmp_8 : {v:bool | true}
+bind 163 tmp_9 : {v:bool | true}
+bind 164 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 165 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 166 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 167 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;150;151;152;153;154;155;156;157;158;159;160;161;162;163;164;165;166;167]
+  lhs {v:real | (v = 100.43)}
+  rhs {v:real | (((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 168 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 169 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 170 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 171 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 172 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 173 tmp_1 : {v:bool | true}
+bind 174 tmp_2 : {v:bool | true}
+bind 175 tmp_3 : {v:bool | true}
+bind 176 tmp_4 : {v:bool | true}
+bind 177 tmp_5 : {v:bool | true}
+bind 178 tmp_6 : {v:bool | true}
+bind 179 tmp_7 : {v:bool | true}
+bind 180 tmp_8 : {v:bool | true}
+bind 181 tmp_9 : {v:bool | true}
+bind 182 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 183 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 184 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 185 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;168;169;170;171;172;173;174;175;176;177;178;179;180;181;182;183;184;185]
+  lhs {v:real | (v = 100.43)}
+  rhs {v:real | (((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))}
+  id 5 tag []
+[DEBUG] : Efundecl exec
+
+[DEBUG] : # of Arguments: 1
+
+[DEBUG] : [NF:ret] {v | (true && x true)}
+[DEBUG] : x
+[DEBUG] : vel
+[DEBUG] : h
+[DEBUG] : thr
+[DEBUG] : fl
+[DEBUG] : lg
+[DEBUG] : ww
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 186 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 187 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 188 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 189 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 190 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 191 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 192 tmp_1 : {v:bool | true}
+bind 193 tmp_10 : {v:bool | true}
+bind 194 tmp_2 : {v:bool | true}
+bind 195 tmp_3 : {v:bool | true}
+bind 196 tmp_4 : {v:bool | true}
+bind 197 tmp_5 : {v:bool | true}
+bind 198 tmp_6 : {v:bool | true}
+bind 199 tmp_7 : {v:bool | true}
+bind 200 tmp_8 : {v:bool | true}
+bind 201 tmp_9 : {v:bool | true}
+bind 202 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 203 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 204 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 205 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;186;187;188;189;190;191;192;193;194;195;196;197;198;199;200;201;202;203;204;205]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 206 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 207 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 208 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 209 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 210 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 211 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 212 tmp_1 : {v:bool | true}
+bind 213 tmp_10 : {v:bool | true}
+bind 214 tmp_2 : {v:bool | true}
+bind 215 tmp_3 : {v:bool | true}
+bind 216 tmp_4 : {v:bool | true}
+bind 217 tmp_5 : {v:bool | true}
+bind 218 tmp_6 : {v:bool | true}
+bind 219 tmp_7 : {v:bool | true}
+bind 220 tmp_8 : {v:bool | true}
+bind 221 tmp_9 : {v:bool | true}
+bind 222 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 223 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 224 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 225 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;206;207;208;209;210;211;212;213;214;215;216;217;218;219;220;221;222;223;224;225]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 226 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 227 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 228 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 229 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 230 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 231 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 232 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 233 tmp_1 : {v:bool | true}
+bind 234 tmp_10 : {v:bool | true}
+bind 235 tmp_11 : {v:bool | true}
+bind 236 tmp_2 : {v:bool | true}
+bind 237 tmp_3 : {v:bool | true}
+bind 238 tmp_4 : {v:bool | true}
+bind 239 tmp_5 : {v:bool | true}
+bind 240 tmp_6 : {v:bool | true}
+bind 241 tmp_7 : {v:bool | true}
+bind 242 tmp_8 : {v:bool | true}
+bind 243 tmp_9 : {v:bool | true}
+bind 244 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 245 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 246 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 247 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;226;227;228;229;230;231;232;233;234;235;236;237;238;239;240;241;242;243;244;245;246;247]
+  lhs {v:real | (v = hinit)}
+  rhs {v:real | ((v >= 0.0) && (v < hceiling))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 248 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 249 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 250 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 251 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 252 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 253 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 254 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 255 tmp_1 : {v:bool | true}
+bind 256 tmp_10 : {v:bool | true}
+bind 257 tmp_11 : {v:bool | true}
+bind 258 tmp_2 : {v:bool | true}
+bind 259 tmp_3 : {v:bool | true}
+bind 260 tmp_4 : {v:bool | true}
+bind 261 tmp_5 : {v:bool | true}
+bind 262 tmp_6 : {v:bool | true}
+bind 263 tmp_7 : {v:bool | true}
+bind 264 tmp_8 : {v:bool | true}
+bind 265 tmp_9 : {v:bool | true}
+bind 266 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 267 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 268 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 269 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;248;249;250;251;252;253;254;255;256;257;258;259;260;261;262;263;264;265;266;267;268;269]
+  lhs {v:real | (v = hinit)}
+  rhs {v:real | ((v >= 0.0) && (v < hceiling))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 270 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 271 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 272 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 273 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 274 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 275 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bi
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;95mCrash!: :1:1-1:1: Error
+  Constraint with free vars
+  5
+  [last_vel]
+  Try using the --prune-unsorted flag
+CRASH: -1
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0mnd 276 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 277 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 278 tmp_1 : {v:bool | true}
+bind 279 tmp_10 : {v:bool | true}
+bind 280 tmp_11 : {v:bool | true}
+bind 281 tmp_12 : {v:bool | true}
+bind 282 tmp_2 : {v:bool | true}
+bind 283 tmp_3 : {v:bool | true}
+bind 284 tmp_4 : {v:bool | true}
+bind 285 tmp_5 : {v:bool | true}
+bind 286 tmp_6 : {v:bool | true}
+bind 287 tmp_7 : {v:bool | true}
+bind 288 tmp_8 : {v:bool | true}
+bind 289 tmp_9 : {v:bool | true}
+bind 290 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 291 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 292 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 293 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;270;271;272;273;274;275;276;277;278;279;280;281;282;283;284;285;286;287;288;289;290;291;292;293]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 294 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 295 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 296 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 297 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 298 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 299 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 300 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 301 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 302 tmp_1 : {v:bool | true}
+bind 303 tmp_10 : {v:bool | true}
+bind 304 tmp_11 : {v:bool | true}
+bind 305 tmp_12 : {v:bool | true}
+bind 306 tmp_2 : {v:bool | true}
+bind 307 tmp_3 : {v:bool | true}
+bind 308 tmp_4 : {v:bool | true}
+bind 309 tmp_5 : {v:bool | true}
+bind 310 tmp_6 : {v:bool | true}
+bind 311 tmp_7 : {v:bool | true}
+bind 312 tmp_8 : {v:bool | true}
+bind 313 tmp_9 : {v:bool | true}
+bind 314 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 315 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 316 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 317 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;294;295;296;297;298;299;300;301;302;303;304;305;306;307;308;309;310;311;312;313;314;315;316;317]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 318 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 319 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 320 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 321 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 322 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 323 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 324 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 325 last_lg : {v:bool | ( ((tmp_13 =  ((v = true)))) && ((v = true) && x (g tmp_13)))}
+bind 326 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 327 tmp_1 : {v:bool | true}
+bind 328 tmp_10 : {v:bool | true}
+bind 329 tmp_11 : {v:bool | true}
+bind 330 tmp_12 : {v:bool | true}
+bind 331 tmp_13 : {v:bool | true}
+bind 332 tmp_2 : {v:bool | true}
+bind 333 tmp_3 : {v:bool | true}
+bind 334 tmp_4 : {v:bool | true}
+bind 335 tmp_5 : {v:bool | true}
+bind 336 tmp_6 : {v:bool | true}
+bind 337 tmp_7 : {v:bool | true}
+bind 338 tmp_8 : {v:bool | true}
+bind 339 tmp_9 : {v:bool | true}
+bind 340 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 341 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 342 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 343 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;318;319;320;321;322;323;324;325;326;327;328;329;330;331;332;333;334;335;336;337;338;339;340;341;342;343]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 344 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 345 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 346 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 347 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 348 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 349 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 350 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 351 last_lg : {v:bool | ( ((tmp_13 =  ((v = true)))) && ((v = true) && x (g tmp_13)))}
+bind 352 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 353 tmp_1 : {v:bool | true}
+bind 354 tmp_10 : {v:bool | true}
+bind 355 tmp_11 : {v:bool | true}
+bind 356 tmp_12 : {v:bool | true}
+bind 357 tmp_13 : {v:bool | true}
+bind 358 tmp_2 : {v:bool | true}
+bind 359 tmp_3 : {v:bool | true}
+bind 360 tmp_4 : {v:bool | true}
+bind 361 tmp_5 : {v:bool | true}
+bind 362 tmp_6 : {v:bool | true}
+bind 363 tmp_7 : {v:bool | true}
+bind 364 tmp_8 : {v:bool | true}
+bind 365 tmp_9 : {v:bool | true}
+bind 366 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 367 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 368 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 369 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;344;345;346;347;348;349;350;351;352;353;354;355;356;357;358;359;360;361;362;363;364;365;366;367;368;369]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 370 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 371 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 372 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 373 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 374 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 375 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 376 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 377 last_lg : {v:bool | ( ((tmp_13 =  ((v = true)))) && ((v = true) && x (g tmp_13)))}
+bind 378 last_thr : {v:bool | ( ((tmp_14 =  ((v = true)))) && ((v = true) && x (g tmp_14)))}
+bind 379 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 380 tmp_1 : {v:bool | true}
+bind 381 tmp_10 : {v:bool | true}
+bind 382 tmp_11 : {v:bool | true}
+bind 383 tmp_12 : {v:bool | true}
+bind 384 tmp_13 : {v:bool | true}
+bind 385 tmp_14 : {v:bool | true}
+bind 386 tmp_2 : {v:bool | true}
+bind 387 tmp_3 : {v:bool | true}
+bind 388 tmp_4 : {v:bool | true}
+bind 389 tmp_5 : {v:bool | true}
+bind 390 tmp_6 : {v:bool | true}
+bind 391 tmp_7 : {v:bool | true}
+bind 392 tmp_8 : {v:bool | true}
+bind 393 tmp_9 : {v:bool | true}
+bind 394 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 395 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 396 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 397 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;370;371;372;373;374;375;376;377;378;379;380;381;382;383;384;385;386;387;388;389;390;391;392;393;394;395;396;397]
+  lhs {v:real | (v = vinit)}
+  rhs {v:real | ((v >= 0.0) && (v = (last_vel + (a * dt))))}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 398 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 399 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 400 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 401 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 402 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 403 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 404 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 405 last_lg : {v:bool | ( ((tmp_13 =  ((v = true)))) && ((v = true) && x (g tmp_13)))}
+bind 406 last_thr : {v:bool | ( ((tmp_14 =  ((v = true)))) && ((v = true) && x (g tmp_14)))}
+bind 407 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 408 tmp_1 : {v:bool | true}
+bind 409 tmp_10 : {v:bool | true}
+bind 410 tmp_11 : {v:bool | true}
+bind 411 tmp_12 : {v:bool | true}
+bind 412 tmp_13 : {v:bool | true}
+bind 413 tmp_14 : {v:bool | true}
+bind 414 tmp_2 : {v:bool | true}
+bind 415 tmp_3 : {v:bool | true}
+bind 416 tmp_4 : {v:bool | true}
+bind 417 tmp_5 : {v:bool | true}
+bind 418 tmp_6 : {v:bool | true}
+bind 419 tmp_7 : {v:bool | true}
+bind 420 tmp_8 : {v:bool | true}
+bind 421 tmp_9 : {v:bool | true}
+bind 422 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 423 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 424 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 425 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;398;399;400;401;402;403;404;405;406;407;408;409;410;411;412;413;414;415;416;417;418;419;420;421;422;423;424;425]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 426 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 427 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 428 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 429 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 430 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 431 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 432 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 433 last_lg : {v:bool | ( ((tmp_13 =  ((v = true)))) && ((v = true) && x (g tmp_13)))}
+bind 434 last_thr : {v:bool | ( ((tmp_14 =  ((v = true)))) && ((v = true) && x (g tmp_14)))}
+bind 435 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 436 tmp_1 : {v:bool | true}
+bind 437 tmp_10 : {v:bool | true}
+bind 438 tmp_11 : {v:bool | true}
+bind 439 tmp_12 : {v:bool | true}
+bind 440 tmp_13 : {v:bool | true}
+bind 441 tmp_14 : {v:bool | true}
+bind 442 tmp_2 : {v:bool | true}
+bind 443 tmp_3 : {v:bool | true}
+bind 444 tmp_4 : {v:bool | true}
+bind 445 tmp_5 : {v:bool | true}
+bind 446 tmp_6 : {v:bool | true}
+bind 447 tmp_7 : {v:bool | true}
+bind 448 tmp_8 : {v:bool | true}
+bind 449 tmp_9 : {v:bool | true}
+bind 450 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 451 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 452 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 453 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;426;427;428;429;430;431;432;433;434;435;436;437;438;439;440;441;442;443;444;445;446;447;448;449;450;451;452;453]
+  lhs {v:bool | (v = true)}
+  rhs {v:bool | (v = true)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 454 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 455 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 456 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 457 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 458 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 459 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 460 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 461 last_lg : {v:bool | ( ((tmp_13 =  ((v = true)))) && ((v = true) && x (g tmp_13)))}
+bind 462 last_thr : {v:bool | ( ((tmp_14 =  ((v = true)))) && ((v = true) && x (g tmp_14)))}
+bind 463 last_ww : {v:bool | ( ((tmp_15 =  ((v = true)))) && ((v = true) && x (g tmp_15)))}
+bind 464 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 465 tmp_1 : {v:bool | true}
+bind 466 tmp_10 : {v:bool | true}
+bind 467 tmp_11 : {v:bool | true}
+bind 468 tmp_12 : {v:bool | true}
+bind 469 tmp_13 : {v:bool | true}
+bind 470 tmp_14 : {v:bool | true}
+bind 471 tmp_15 : {v:bool | true}
+bind 472 tmp_2 : {v:bool | true}
+bind 473 tmp_3 : {v:bool | true}
+bind 474 tmp_4 : {v:bool | true}
+bind 475 tmp_5 : {v:bool | true}
+bind 476 tmp_6 : {v:bool | true}
+bind 477 tmp_7 : {v:bool | true}
+bind 478 tmp_8 : {v:bool | true}
+bind 479 tmp_9 : {v:bool | true}
+bind 480 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 481 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 482 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 483 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;454;455;456;457;458;459;460;461;462;463;464;465;466;467;468;469;470;471;472;473;474;475;476;477;478;479;480;481;482;483]
+  lhs {v:real | (v = xinit)}
+  rhs {v:real | (v >= 0.0)}
+  id 5 tag []
+[DEBUG] : bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
+bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
+bind 4 i : {v: bool | true} 
+bind 5 j : {v: bool | true} 
+bind 484 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && x (g tmp_6)))}
+bind 485 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && x (g tmp_8)))}
+bind 486 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && x (g tmp_7)))}
+bind 487 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && x (g tmp_9)))}
+bind 488 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_5)))}
+bind 489 last_fl : {v:bool | ( ((tmp_11 =  ((v = true)))) && ((v = true) && x (g tmp_11)))}
+bind 490 last_h : {v:real | ( ((tmp_12 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && x (g tmp_12)))}
+bind 491 last_lg : {v:bool | ( ((tmp_13 =  ((v = true)))) && ((v = true) && x (g tmp_13)))}
+bind 492 last_thr : {v:bool | ( ((tmp_14 =  ((v = true)))) && ((v = true) && x (g tmp_14)))}
+bind 493 last_ww : {v:bool | ( ((tmp_15 =  ((v = true)))) && ((v = true) && x (g tmp_15)))}
+bind 494 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && x (g tmp_10)))}
+bind 495 tmp_1 : {v:bool | true}
+bind 496 tmp_10 : {v:bool | true}
+bind 497 tmp_11 : {v:bool | true}
+bind 498 tmp_12 : {v:bool | true}
+bind 499 tmp_13 : {v:bool | true}
+bind 500 tmp_14 : {v:bool | true}
+bind 501 tmp_15 : {v:bool | true}
+bind 502 tmp_2 : {v:bool | true}
+bind 503 tmp_3 : {v:bool | true}
+bind 504 tmp_4 : {v:bool | true}
+bind 505 tmp_5 : {v:bool | true}
+bind 506 tmp_6 : {v:bool | true}
+bind 507 tmp_7 : {v:bool | true}
+bind 508 tmp_8 : {v:bool | true}
+bind 509 tmp_9 : {v:bool | true}
+bind 510 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && x (g tmp_4)))}
+bind 511 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && x (g tmp_2)))}
+bind 512 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && x (g tmp_1)))}
+bind 513 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && x (g tmp_3)))}
+
+constraint:
+  env [0;1;2;3;4;5;484;485;486;487;488;489;490;491;492;493;494;495;496;497;498;499;500;501;502;503;504;505;506;507;508;509;510;511;512;513]
+  lhs {v:real | (v = xinit)}
+  rhs {v:real | (v >= 0.0)}
+  id 5 tag []

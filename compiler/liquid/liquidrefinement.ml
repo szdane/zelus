@@ -67,7 +67,7 @@ let fixpoint_is_safe (fq_txt : string) : bool =
 
 let rec contains_X (e:Zparsetree.exp) : bool =
   match e.desc with
-  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name "x"); _ }, _args) -> true
+  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name "nxt"); _ }, _args) -> true
   | Zparsetree.Eapp (_, _f, args) -> List.exists contains_X args
   | Zparsetree.Etuple es          -> List.exists contains_X es
   | _ -> false
@@ -135,7 +135,7 @@ let zls_pred_to_nf ~(binder:string) (pred_zls:Zelus.exp) : Zparsetree.exp =
     (* Top-only behavior for temporal heads; otherwise, append X true
        unless an X(...) already occurs somewhere inside p. *)
     match p.desc with
-    | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "g"); _}, [_]) ->
+    | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "globally"); _}, [_]) ->
         (* e.g., G(phi)  ->  phi && X(G(phi)) *)
         let inner =
           match p.desc with
@@ -144,7 +144,7 @@ let zls_pred_to_nf ~(binder:string) (pred_zls:Zelus.exp) : Zparsetree.exp =
         in
         mk_and inner (mk_X p)
   
-    | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "x"); _}, [_]) ->  mk_and (mk_true) p
+    | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "nxt"); _}, [_]) ->  mk_and (mk_true) p
     | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "m"); _}, [_]) ->
         (* already X(...) or M(...):  true && X(original) *)
         mk_and (mk_true) (mk_X p)
@@ -160,7 +160,7 @@ let zpt_pred_to_nf ~(binder:string) (pred_zpt) : Zparsetree.exp =
   (* Top-only behavior for temporal heads; otherwise, append X true
       unless an X(...) already occurs somewhere inside p. *)
   match pred_zpt.desc with
-  | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "g"); _}, [_]) ->
+  | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "globally"); _}, [_]) ->
       (* e.g., G(phi)  ->  phi && X(G(phi)) *)
       let inner =
         match pred_zpt.desc with
@@ -169,7 +169,7 @@ let zpt_pred_to_nf ~(binder:string) (pred_zpt) : Zparsetree.exp =
       in
       mk_and (mk_paren inner) (mk_X pred_zpt)
 
-  | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "x"); _}, [_]) ->  mk_and (mk_true) pred_zpt
+  | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "nxt"); _}, [_]) ->  mk_and (mk_true) pred_zpt
   | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name "m"); _}, [_]) ->
       (* already X(...) or M(...):  true && X(original) *)
       mk_and (mk_true) (mk_X pred_zpt)

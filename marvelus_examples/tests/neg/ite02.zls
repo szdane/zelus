@@ -1,6 +1,5 @@
-
 (* ==== NEG 3: ITE in let, stricter post on ELSE branch ==== *)
-let node ite_let_bad () : {(v:int) | g(v > 2)} =
+let node ite_let_bad () : {(v:int) | globally(v > 2)} =
   let (foo : {v:int | true}) = -2 in
   let (z   : {v:int | v > 2}) =
     if foo >= 0 then foo else -1*foo in

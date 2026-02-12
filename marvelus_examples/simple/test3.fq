@@ -1,25 +1,10 @@
-bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }
+bind 0 next : {v:func(1, [bool, bool]) | true }
 bind 1 hd  : {v:func(1, [bool, bool]) | true}
-bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}
-bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
-bind 4 i : {v: bool | true} 
-bind 5 j : {v: bool | true} 
-bind 79 dt : {v:real |  (tmp_1 =  (v > 0.0 && v = 0.1)) && v > 0.0 && v = 0.1 && x (g tmp_1)}
-bind 80 flow : {v:real | v = maxflow && x true}
-bind 81 last_flow : {v:real | v = maxflow || v = 0.0 && x true}
-bind 82 last_level : {v:real | v >= minlevel && v <= maxlevel && x true}
-bind 83 maxflow : {v:real |  (tmp_2 =  (v > 0.0 && v = 0.5)) && v > 0.0 && v = 0.5 && x (g tmp_2)}
-bind 84 maxlevel : {v:real |  (tmp_5 =  (v > minlevel && v > 15.0 && v = 16.5)) && v > minlevel && v > 15.0 && v = 16.5 && x (g tmp_5)}
-bind 85 minlevel : {v:real |  (tmp_4 =  (v > 0 && v < 15 && v = 14.5)) && v > 0 && v < 15 && v = 14.5 && x (g tmp_4)}
-bind 86 outflow : {v:real |  (tmp_3 =  (v > 0.0 && v = 0.1)) && v > 0.0 && v = 0.1 && x (g tmp_3)}
-bind 87 tmp_1 : {v:bool | true}
-bind 88 tmp_2 : {v:bool | true}
-bind 89 tmp_3 : {v:bool | true}
-bind 90 tmp_4 : {v:bool | true}
-bind 91 tmp_5 : {v:bool | true}
+bind 2 globally : {v:func(1, [bool, bool]) | true}
+bind 3 m  : {v:func(1, [bool, bool]) | true}
 
 constraint:
-  env [0;1;2;3;4;5;79;80;81;82;83;84;85;86;87;88;89;90;91]
-  lhs {v:real | v = last_level + last_flow - outflow * dt}
-  rhs {v:real | last_flow = maxflow => v = last_level + last_flow - outflow * dt}
+  env [0;1;2;3;4;5]
+  lhs {v:Int | (v = 5)}
+  rhs {v:Int | (v = 5)}
   id 5 tag []

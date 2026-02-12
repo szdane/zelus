@@ -38,13 +38,13 @@ let to_fq
   (* 3 . build the constraint block as plain text *)
   let constraint_lines = [
     "constraint:";
-    Printf.sprintf "  env [%s]" (if (String.trim (String.concat ";" (List.map string_of_int ids)) = "" ) then "0;1;2;3;4;5" else ("0;1;2;3;4;5;" ^ (String.concat ";" (List.map string_of_int ids))));
+    Printf.sprintf "  env [%s]" (if (String.trim (String.concat ";" (List.map string_of_int ids)) = "" ) then "0;1;2;3" else ("0;1;2;3;" ^ (String.concat ";" (List.map string_of_int ids))));
     Printf.sprintf "  lhs %s" lhs_s;
     Printf.sprintf "  rhs %s" rhs_s;
     Printf.sprintf "  id %d tag []" cid
   ] in
 
-  String.concat "\n" (["bind 0 x : {v:func(1, [bool, bool]) | (i => j) => ((x i)=> (x j)) }"] @ ["bind 1 hd  : {v:func(1, [bool, bool]) | true}"] @ ["bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (x j)) && ((g i)=> (m j)))}"] @ ["bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}"] @ ["bind 4 i : {v: bool | true} "] @ ["bind 5 j : {v: bool | true} "] @ bind_lines @ ["" (* blank line *)] @ constraint_lines)
+  String.concat "\n" (["bind 0 nxt : {v:func(1, [bool, bool]) | true }"] @ ["bind 1 hd  : {v:func(1, [bool, bool]) | true}"] @ ["bind 2 globally : {v:func(1, [bool, bool]) | true}"] @ ["bind 3 m  : {v:func(1, [bool, bool]) | true}"] @ bind_lines @ ["" (* blank line *)] @ constraint_lines)
 
 (* let () =
   if Array.length Sys.argv = 2 then begin

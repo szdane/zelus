@@ -1,6 +1,6 @@
 (* ==== POS 3: ITE inside let (node body); per-branch checks ==== *)
 let node ite_let_ok () : {(v:int) | v <= 0} =
-  let (foo : {v:int | v >= 0 && x(g(v >= 0))}) = 2 in
+  let (foo : {v:int | v >= 0 && nxt(globally(v >= 0))}) = 2 in
   let (z   : {v:int | v <= 0}) =
     if foo >= 0 then -1*foo else foo in
   z

@@ -31,7 +31,7 @@ let disc major e =
   let on_op z e = Zaux.and_op z e in
   if Unsafe.exp e
   then (* disc(e)] = [let x = e in major on (x <> (x fby x))] *)
-    let x = Zident.fresh "x" in
+    let x = Zident.fresh "next" in
     let env = Env.singleton x { t_sort = Deftypes.value;
 				t_typ = e.e_typ } in
     let xv = var x e.e_typ in

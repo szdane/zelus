@@ -1,5 +1,5 @@
 (* The Zelus compiler, version 2.2-dev
-  (2025-11-14-1:57) *)
+  (2026-02-12-20:23) *)
 open Ztypes
 type ('a) _hold_first_then =
   { mutable m_41 : 'a }
@@ -10,8 +10,8 @@ let hold_first_then  =
   let hold_first_then_reset self  =
     (self.m_41 <- 0:unit) in 
   let hold_first_then_step self ((a_40:int): int) =
-    ((let (x_42:int) = self.m_41 in
-      self.m_41 <- a_40 ; x_42):int) in
+    ((let (next_42:int) = self.m_41 in
+      self.m_41 <- a_40 ; next_42):int) in
   Node { alloc = hold_first_then_alloc; reset = hold_first_then_reset ;
                                         step = hold_first_then_step }
 type ('a) _hold_second_then =
@@ -23,8 +23,8 @@ let hold_second_then  =
   let hold_second_then_reset self  =
     (self.m_44 <- 0:unit) in 
   let hold_second_then_step self ((a_43:int): int) =
-    ((let (x_45:int) = self.m_44 in
-      self.m_44 <- a_43 ; x_45):int) in
+    ((let (next_45:int) = self.m_44 in
+      self.m_44 <- a_43 ; next_45):int) in
   Node { alloc = hold_second_then_alloc; reset = hold_second_then_reset ;
                                          step = hold_second_then_step }
 let dt = 0.1
@@ -46,8 +46,8 @@ let exec  =
   let exec_step self () =
     ((let ((y_46:int): int) = i_64_step self.i_64 b in
       let ((a_48:int): int) = c in
-      let (x_50:int) = self.m_49 in
-      self.m_49 <- a_48 ; (let ((z_47:int): int) = x_50 in
+      let (next_50:int) = self.m_49 in
+      self.m_49 <- a_48 ; (let ((z_47:int): int) = next_50 in
                            z_47)):int) in
   Node { alloc = exec_alloc; reset = exec_reset ; step = exec_step }
 type ('f , 'e , 'd , 'c , 'b , 'a) _main =
@@ -78,9 +78,9 @@ let main (cstate_65:Ztypes.cstate) =
              (begin match trigger_53 with
                     | true ->
                         let ((a_61:int): int) = b in
-                        let (x_63:int) = self.m_62 in
+                        let (next_63:int) = self.m_62 in
                         self.m_62 <- a_61 ;
-                        (let (x_60:int) = x_63 in
+                        (let (x_60:int) = next_63 in
                          let _ = print_int x_60 in
                          self.result_54 <- print_newline ())
                     | _ -> self.result_54 <- ()  end) ; self.result_54)) in

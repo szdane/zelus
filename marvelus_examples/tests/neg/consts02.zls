@@ -1,5 +1,5 @@
 (* ==== NEG 5: Later part mismatch after strip (X of wrong equality) ==== *)
-let later_eq_bad : {v:int | v = 5 && x(v = 6)} = 5   (* should FAIL *)
+let later_eq_bad : {v:int | v = 5 && nxt(v = 6)} = 5   (* should FAIL *)
 
 
 

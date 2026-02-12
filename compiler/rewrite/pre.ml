@@ -44,12 +44,12 @@ open Zaux
 
 (* Defines a value [let x = e in e_let] *)
 let let_value e =
-  let x = Zident.fresh "x" in
+  let x = Zident.fresh "next" in
   let l_env = Env.singleton x (Deftypes.entry Sval e.e_typ) in
   Zaux.make_let l_env [Zaux.eq_make x e] (var x e.e_typ)
 
 let let_value e =
-  let x = Zident.fresh "x" in
+  let x = Zident.fresh "next" in
   let l_env = Env.singleton x (Deftypes.entry Sval e.e_typ) in
   Zaux.make_let l_env [Zaux.eq_make x e] (var x e.e_typ)
 
@@ -57,7 +57,7 @@ let let_value e =
 (* [let init m = e0 and m = e and x = last m in x] *)
 let let_last_value e0_opt e =
   let m = Zident.fresh "m" in
-  let x = Zident.fresh "x" in
+  let x = Zident.fresh "next" in
   let mem = Deftypes.previous Deftypes.empty_mem in
   let eq_list = [eq_make m e; eq_make x (last m e.e_typ)] in
   let mem, eq_list =
@@ -71,7 +71,7 @@ let let_last_value e0_opt e =
 
 (* Define a zero-crossing *)
 let let_zero_value e =
-  let x = Zident.fresh "x" in
+  let x = Zident.fresh "next" in
   let mem = Deftypes.zero Deftypes.empty_mem in
   let l_env = Env.singleton x (Deftypes.entry mem e.e_typ) in
   Zaux.make_let l_env [Zaux.eq_make x e] (var x e.e_typ)

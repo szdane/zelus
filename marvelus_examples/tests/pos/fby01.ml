@@ -1,5 +1,5 @@
 (* The Zelus compiler, version 2.2-dev
-  (2025-11-14-1:57) *)
+  (2026-02-12-20:23) *)
 open Ztypes
 type ('a) _hold_first_then =
   { mutable m_27 : 'a }
@@ -10,8 +10,8 @@ let hold_first_then  =
   let hold_first_then_reset self  =
     (self.m_27 <- 0:unit) in 
   let hold_first_then_step self ((a_26:int): int) =
-    ((let (x_28:int) = self.m_27 in
-      self.m_27 <- a_26 ; x_28):int) in
+    ((let (next_28:int) = self.m_27 in
+      self.m_27 <- a_26 ; next_28):int) in
   Node { alloc = hold_first_then_alloc; reset = hold_first_then_reset ;
                                         step = hold_first_then_step }
 let dt = 0.1
@@ -46,9 +46,9 @@ let main (cstate_42:Ztypes.cstate) =
              (begin match trigger_31 with
                     | true ->
                         let ((a_39:int): int) = a in
-                        let (x_41:int) = self.m_40 in
+                        let (next_41:int) = self.m_40 in
                         self.m_40 <- a_39 ;
-                        (let (x_38:int) = x_41 in
+                        (let (x_38:int) = next_41 in
                          let _ = print_int x_38 in
                          self.result_32 <- print_newline ())
                     | _ -> self.result_32 <- ()  end) ; self.result_32)) in

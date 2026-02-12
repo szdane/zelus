@@ -6,5 +6,3 @@ let hybrid main () =
     let rec trigger = (period (dt)) in
         present (trigger) -> (let (x) = exec () in
         (print_int x; print_newline ())) else ()
-
-

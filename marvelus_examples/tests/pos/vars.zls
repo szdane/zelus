@@ -1,6 +1,6 @@
 (* ==== POS 6: “tmp” style rewrite tolerance in env ==== *)
-let ok_tmp : {v:int | v >= 0 && x(g(v >= 0))} = 7
-let pin   : {v:int | x(g(v = ok_tmp))}       = ok_tmp
+let ok_tmp : {v:int | v >= 0 && nxt(globally(v >= 0))} = 7
+let pin   : {v:int | nxt(globally(v = ok_tmp))}       = ok_tmp
 
 let dt = 0.1 
 

@@ -46,10 +46,10 @@ let mk_paren (e : Zparsetree.exp) : Zparsetree.exp =
 let mk_eq a b         = mk_app (mk_var "=")  [a; b]
 let mk_true : Zparsetree.exp =
   { desc = Zparsetree.Econst (Ebool true); loc = dummy_loc }
-let mk_X  e = mk_app (mk_var "x") [e]
+let mk_X  e = mk_app (mk_var "nxt") [e]
 let mk_G e =
   { desc = Zparsetree.Eapp ({app_inline=false; app_statefull=false},
-                            {desc = Zparsetree.Evar (Name "g"); loc = dummy_loc},
+                            {desc = Zparsetree.Evar (Name "globally"); loc = dummy_loc},
                             [e]);
     loc = dummy_loc }
 
@@ -70,8 +70,8 @@ let mk_ge a b = mk_app (mk_var ">") [a;b]
 let rec strip_temporal_chain (base:string) (e:Zparsetree.exp) : Zparsetree.exp =
   match e.desc with
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg]) ->
-      if String.equal f "x"
-          || String.equal f "g"
+      if String.equal f "nxt"
+          || String.equal f "globally"
           || String.equal f "m"
       then strip_temporal_chain base arg
       else e
@@ -109,8 +109,7 @@ let e_true : Zparsetree.exp =
 let is_temporal_head (e:Zparsetree.exp) : bool =
   match e.desc with
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, _args) ->
-      f = "X" || f = "G" || f = "M"
-      || f = "x" || f = "g" || f = "m"
+      f = "nxt" || f = "globally" || f = "m"
   | _ -> false
 
 let rec find_eq_atom_for_binder (binder:string) (e:Zparsetree.exp)
@@ -123,7 +122,7 @@ let rec find_eq_atom_for_binder (binder:string) (e:Zparsetree.exp)
         | _ -> None)
 
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg])
-      when f="G" || f="X" || f="M" || f="g" || f="x" || f="m" ->
+      when f="globally" || f="nxt" || f="m" ->
       find_eq_atom_for_binder binder arg
 
   | _ -> None
@@ -180,8 +179,8 @@ let is_var = function
 
   
 let t_hd base t = mk_app (mk_var "hd") [t]
-let t_G  base t = mk_app (mk_var "g") [t]
-let t_X  base t = mk_app (mk_var "x") [t]
+let t_G  base t = mk_app (mk_var "globally") [t]
+let t_X  base t = mk_app (mk_var "nxt") [t]
 let t_M  base t = mk_app (mk_var "m") [t] 
 
 let add_bool_ghost (gname:string) phi  =
@@ -196,7 +195,7 @@ let add_bool_ghost (gname:string) phi  =
 let is_temporal_head (e:Zparsetree.exp) : bool =
   match e.desc with
   | Zparsetree.Eapp (_, {desc = Zparsetree.Evar (Name f); _}, _)
-      when f = "x" || f = "g" || f = "m" -> true
+      when f = "nxt" || f = "globally" || f = "m" -> true
   | _ -> false
 
 
@@ -228,21 +227,21 @@ let rec is_true (e:Zparsetree.exp) : bool =
     | _ -> None
   
   
-  (* ---------- LTL ops: we now only use plain "x", "g", "m" ---------- *)
+  (* ---------- LTL ops: we now only use plain "nxt", "globally", "m" ---------- *)
   
   type ltl_op = OP_X | OP_G | OP_M
   
   let view_ltl (e:Zparsetree.exp) : (ltl_op * Zparsetree.exp) option =
     match view_unary_app_name e with
-    | Some ("x", arg) -> Some (OP_X, arg)
-    | Some ("g", arg) -> Some (OP_G, arg)
+    | Some ("nxt", arg) -> Some (OP_X, arg)
+    | Some ("globally", arg) -> Some (OP_G, arg)
     | Some ("m", arg) -> Some (OP_M, arg)
     | _               -> None
 
   let view_ltl_zls (e:Zelus.exp) : (ltl_op * Zelus.exp) option =
     match view_unary_app_name_zls e with
-    | Some ("x", arg) -> Some (OP_X, arg)
-    | Some ("g", arg) -> Some (OP_G, arg)
+    | Some ("nxt", arg) -> Some (OP_X, arg)
+    | Some ("globally", arg) -> Some (OP_G, arg)
     | Some ("m", arg) -> Some (OP_M, arg)
     | _               -> None
   
@@ -292,7 +291,7 @@ let rec is_true (e:Zparsetree.exp) : bool =
 
 (* --- HOIST NON-VAR BOOLEANS FROM UNDER TEMPORAL OPS INTO GHOSTS --- *)
 
-let is_temporal_op (s:string) = (s = "x" || s = "g" || s = "m" || s = "hd")
+let is_temporal_op (s:string) = (s = "nxt" || s =  "globally" || s = "m" || s = "hd")
 
 (* Replace any non-variable arg under x/g/m/hd with a fresh bool ghost.
    Accumulates (ghost_name, original_arg_expr) pairs. *)
@@ -642,8 +641,8 @@ let nf_eq_v_rhs_fby_tail_zpt (rhs : Zparsetree.exp) : Zparsetree.exp =
   let eq   = { loc = dummy_loc; desc = Evar (Name "=") } in
   let v_eq = { loc = dummy_loc; desc = Eapp ({app_inline=false; app_statefull=false}, eq, [v; rhs]) } in
   let m    = { loc = dummy_loc; desc = Evar (Name "m") } in
-  let g    = { loc = dummy_loc; desc = Evar (Name "g") } in
-  let x    = { loc = dummy_loc; desc = Evar (Name "x") } in
+  let g    = { loc = dummy_loc; desc = Evar (Name "globally") } in
+  let x    = { loc = dummy_loc; desc = Evar (Name "nxt") } in
   let m_v  = { loc = dummy_loc; desc = Eapp ({app_inline=false; app_statefull=false}, m, [v_eq]) } in
   let g_m  = { loc = dummy_loc; desc = Eapp ({app_inline=false; app_statefull=false}, g, [m_v]) } in
   let x_gm = { loc = dummy_loc; desc = Eapp ({app_inline=false; app_statefull=false}, x, [g_m]) } in

@@ -1,6 +1,14 @@
 (* The Zelus compiler, version 2.2-dev
-  (2025-11-13-4:53) *)
+  (2026-02-12-20:23) *)
 open Ztypes
+let foo = (+) 2  1
+
+let var = foo
+
+let b = true
+
+let ite = if (>=) foo  0 then ( * ) (-1)  foo else foo
+
 type _exec1 = unit
 
 let exec1  = 

@@ -1,0 +1,32 @@
+Are these the same?
+
+der x = f x y init e0 reset zx -> ex
+
+and
+
+der y = g x y init e1 reset zy -> ey
+
+zx and zy can be true at the same instance then both zero crossings fire?
+Do they reset both? (zx <=> zy)
+Yes, unless there is a causality loop 
+
+
+Case where ex and ey depend on each other -> causality issue
+Assume they're independent
+
+-----------------------------------
+
+der (x,y) = f x y, g x y init (e0, e1) reset | zx -> (ex, last y)
+                                             | zy -> (last x, ey)
+
+what happens when zy = zx? 
+
+If zx is true even if also zy is true i will do the first branch
+
+Therefore, they're not equivalent
+
+der (x,y) = f x y, g x y init (e0, e1) reset | zy && zx -> (ex,  ey)
+                                             | zx -> (ex, last y)
+                                             | zy -> (last x, ey)
+                        
+

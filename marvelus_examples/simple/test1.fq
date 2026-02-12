@@ -4,31 +4,14 @@ bind 2 g : {v:func(1, [bool, bool]) | (i => j) => (((g i)=> (g j)) && ((g i)=> (
 bind 3 m  : {v:func(1, [bool, bool]) | (i => j) => ((m i)=> (m j))}
 bind 4 i : {v: bool | true} 
 bind 5 j : {v: bool | true} 
-bind 120 dt : {v:real |  (tmp_1 =  (v > 0.0 && v = 0.1)) && v > 0.0 && v = 0.1 && x (g tmp_1)}
-bind 121 flow : {v:real | v = 0.0 && x true}
-bind 122 last_flow : {v:real | (
-      (v = maxflow &&
-       last_level >= minlevel &&
-       last_level <= maxlevel - dt * (maxflow - outflow))
-      ||
-      (v = 0.0 &&
-       last_level >= minlevel + dt * outflow &&
-       last_level <= maxlevel)
-    )}
-bind 123 last_level : {v:real | v >= minlevel && v <= maxlevel && x true}
-bind 124 level : {v:real | v = last_level + (last_flow - outflow) * dt && x true}
-bind 125 maxflow : {v:real |  (tmp_2 =  (v > 0.0 && v = 0.5)) && v > 0.0 && v = 0.5 && x (g tmp_2)}
-bind 126 maxlevel : {v:real |  (tmp_5 =  (v > minlevel && v > 15.0 && v = 16.5)) && v > minlevel && v > 15.0 && v = 16.5 && x (g tmp_5)}
-bind 127 minlevel : {v:real |  (tmp_4 =  (v > 0 && v < 15 && v = 14.5)) && v > 0 && v < 15 && v = 14.5 && x (g tmp_4)}
-bind 128 outflow : {v:real |  (tmp_3 =  (v > 0.0 && v = 0.1)) && v > 0.0 && v = 0.1 && x (g tmp_3)}
-bind 129 tmp_1 : {v:bool | true}
-bind 130 tmp_2 : {v:bool | true}
-bind 131 tmp_3 : {v:bool | true}
-bind 132 tmp_4 : {v:bool | true}
-bind 133 tmp_5 : {v:bool | true}
+bind 18 ex : {v:Int | ( ((tmp_3 =  ((v < 5)))) && ((v < 5) && x (g tmp_3)))}
+bind 19 last_ex : {v:Int | ( ((tmp_1 =  (((v > 0) && (v < 5))))) && (((v > 0) && (v < 5)) && x (g tmp_1)))}
+bind 20 tmp_1 : {v:bool | true}
+bind 21 tmp_2 : {v:bool | true}
+bind 22 tmp_3 : {v:bool | true}
 
 constraint:
-  env [0;1;2;3;4;5;120;121;122;123;124;125;126;127;128;129;130;131;132;133]
-  lhs {v:real |  ( (not (last_level >= maxlevel - 0.5) && v = maxflow) ||  (not (last_level <= minlevel + 0.5) && v = 0.0))}
-  rhs {v:real | level >= minlevel && level <= maxlevel && ((level <= maxlevel - dt * (maxflow - outflow) && v = maxflow) || (level >= minlevel + dt * outflow && v = 0.0))}
+  env [0;1;2;3;4;5;18;19;20;21;22]
+  lhs {v:Int |  (( ((not ((v >= 4)) && (v > 0))) ||  ((not ((v <= 1)) && (v < 5)))))}
+  rhs {v:Int | ((v > 0) && (v < 5))}
   id 5 tag []
