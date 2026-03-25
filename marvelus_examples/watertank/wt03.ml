@@ -1,8 +1,8 @@
 (* The Zelus compiler, version 2.2-dev
   (2026-03-25-6:0) *)
 open Ztypes
-type state__555 = Watertank_Down_29 | Watertank_Up_28 
-type state__554 = Watertank_Down_21 | Watertank_Up_20 
+type state__555 = Wt03_Down_29 | Wt03_Up_28 
+type state__554 = Wt03_Down_21 | Wt03_Up_20 
 let dt = 0.1
 
 let maxflow = 0.5
@@ -22,36 +22,34 @@ let exec  =
   let exec_alloc _ =
     ();
     { r_47 = (false:bool) ;
-      s_46 = (Watertank_Down_21:state__554) ;
+      s_46 = (Wt03_Down_21:state__554) ;
       level_44 = (42.:float) ; flow_43 = (42.:float) } in
   let exec_reset self  =
     ((self.r_47 <- false ;
-      self.s_46 <- Watertank_Up_20 ;
-      self.level_44 <- 15. ; self.flow_43 <- 0.):unit) in 
+      self.s_46 <- Wt03_Up_20 ; self.level_44 <- 15. ; self.flow_43 <- 0.):
+    unit) in 
   let exec_step self () =
     ((let (l_45:float) = self.level_44 in
       (begin match self.s_46 with
-             | Watertank_Up_20 ->
+             | Wt03_Up_20 ->
                  (if self.r_47 then ()) ;
                  (begin match (>=) l_45  ((-.) maxlevel  0.5) with
                         | true ->
-                            self.r_47 <- true ;
-                            self.s_46 <- Watertank_Down_21
+                            self.r_47 <- true ; self.s_46 <- Wt03_Down_21
                         | _ -> self.r_47 <- false  end)
-             | Watertank_Down_21 ->
+             | Wt03_Down_21 ->
                  (if self.r_47 then ()) ;
                  (begin match (<=) l_45  ((+.) minlevel  0.5) with
-                        | true ->
-                            self.r_47 <- true ; self.s_46 <- Watertank_Up_20
+                        | true -> self.r_47 <- true ; self.s_46 <- Wt03_Up_20
                         | _ -> self.r_47 <- false  end)
               end) ;
       (begin match self.s_46 with
-             | Watertank_Up_20 ->
+             | Wt03_Up_20 ->
                  (if self.r_47 then ()) ;
                  self.flow_43 <- maxflow ;
                  self.level_44 <- (+.) l_45 
                                        (( *. ) ((-.) maxflow  outflow)  dt)
-             | Watertank_Down_21 ->
+             | Wt03_Down_21 ->
                  (if self.r_47 then ()) ;
                  self.flow_43 <- 0. ;
                  self.level_44 <- (+.) l_45  (( *. ) ((-.) 0.  outflow)  dt)
@@ -76,7 +74,7 @@ let main (cstate_64:Ztypes.cstate) =
       h_52 = (42.:float) ;
       result_51 = (():unit) ;
       r_63 = (false:bool) ;
-      s_62 = (Watertank_Down_29:state__555) ;
+      s_62 = (Wt03_Down_29:state__555) ;
       level_60 = (42.:float) ; flow_59 = (42.:float) } in
   let main_step self ((time_48:float) , ()) =
     ((self.major_49 <- cstate_64.major ;
@@ -94,25 +92,25 @@ let main (cstate_64:Ztypes.cstate) =
                         let () = () in
                         let (l_61:float) = self.level_60 in
                         (begin match self.s_62 with
-                               | Watertank_Up_28 ->
+                               | Wt03_Up_28 ->
                                    (if self.r_63 then ()) ;
                                    (begin match (>=) l_61 
                                                      ((-.) maxlevel  0.5) with
                                           | true ->
                                               self.r_63 <- true ;
-                                              self.s_62 <- Watertank_Down_29
+                                              self.s_62 <- Wt03_Down_29
                                           | _ -> self.r_63 <- false  end)
-                               | Watertank_Down_29 ->
+                               | Wt03_Down_29 ->
                                    (if self.r_63 then ()) ;
                                    (begin match (<=) l_61 
                                                      ((+.) minlevel  0.5) with
                                           | true ->
                                               self.r_63 <- true ;
-                                              self.s_62 <- Watertank_Up_28
+                                              self.s_62 <- Wt03_Up_28
                                           | _ -> self.r_63 <- false  end)
                                 end) ;
                         (begin match self.s_62 with
-                               | Watertank_Up_28 ->
+                               | Wt03_Up_28 ->
                                    (if self.r_63 then ()) ;
                                    self.flow_59 <- maxflow ;
                                    self.level_60 <- (+.) l_61 
@@ -120,7 +118,7 @@ let main (cstate_64:Ztypes.cstate) =
                                                                     maxflow 
                                                                     outflow) 
                                                                  dt)
-                               | Watertank_Down_29 ->
+                               | Wt03_Down_29 ->
                                    (if self.r_63 then ()) ;
                                    self.flow_59 <- 0. ;
                                    self.level_60 <- (+.) l_61 
@@ -141,6 +139,6 @@ let main (cstate_64:Ztypes.cstate) =
   let main_reset self  =
     ((self.i_54 <- true ;
       self.r_63 <- false ;
-      self.s_62 <- Watertank_Up_28 ;
-      self.level_60 <- 15. ; self.flow_59 <- 0.):unit) in
+      self.s_62 <- Wt03_Up_28 ; self.level_60 <- 15. ; self.flow_59 <- 0.):
+    unit) in
   Node { alloc = main_alloc; step = main_step ; reset = main_reset }

@@ -2,27 +2,28 @@ bind 0 nxt : {v:func(1, [bool, bool]) | true }
 bind 1 hd  : {v:func(1, [bool, bool]) | true}
 bind 2 globally : {v:func(1, [bool, bool]) | true}
 bind 3 m  : {v:func(1, [bool, bool]) | true}
-bind 92 dt : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && nxt (globally tmp_1)))}
-bind 93 f : {v:real | (f = 0.0)}
-bind 94 flow : {v:real | (((vf = 0.0) && (vl = (last_level + ((last_flow - outflow) * dt)))) && nxt true)}
-bind 95 l : {v:real | (l = 15.0)}
-bind 96 last_flow : {v:real | ((((v = maxflow) || (v = 0.0)) && ((last_level >= minlevel) && (last_level <= maxlevel))) && nxt true)}
-bind 97 last_level : {v:real | ((((last_flow = maxflow) || (last_flow = 0.0)) && ((v >= minlevel) && (v <= maxlevel))) && nxt true)}
-bind 98 level : {v:real | (((vf = 0.0) && (vl = (last_level + ((last_flow - outflow) * dt)))) && nxt true)}
-bind 99 maxflow : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 0.5))))) && (((v > 0.0) && (v = 0.5)) && nxt (globally tmp_2)))}
-bind 100 maxlevel : {v:real | ( ((tmp_5 =  ((((v > minlevel) && (v > 15.0)) && (v = 16.5))))) && ((((v > minlevel) && (v > 15.0)) && (v = 16.5)) && nxt (globally tmp_5)))}
-bind 101 minlevel : {v:real | ( ((tmp_4 =  ((((v > 0) && (v < 15)) && (v = 14.5))))) && ((((v > 0) && (v < 15)) && (v = 14.5)) && nxt (globally tmp_4)))}
-bind 102 outflow : {v:real | ( ((tmp_3 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && nxt (globally tmp_3)))}
-bind 103 tmp_1 : {v:bool | true}
-bind 104 tmp_2 : {v:bool | true}
-bind 105 tmp_3 : {v:bool | true}
-bind 106 tmp_4 : {v:bool | true}
-bind 107 tmp_5 : {v:bool | true}
-bind 108 vf : {v:real | (vf = 0.0) || (vf=maxflow)}
-bind 109 vl : {v:real | (vl = (last_level + ((last_flow - outflow) * dt)))}
+bind 60 Down : {v:bool | true}
+bind 61 Up : {v:bool | true}
+bind 62 dt : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && nxt (globally tmp_1)))}
+bind 63 flow : {v:real | ( ((tmp_6 =  (((v = maxflow) || (v = 0.0))))) && ((v = 0.0) && nxt (globally tmp_6)))}
+bind 64 last_flow : {v:real | ((v = maxflow) || (v = 0.0))}
+bind 65 level : {v:real | ( ((tmp_7 =  (((v >= minlevel) && (v <= maxlevel))))) && ((v = 15.0) && nxt (globally tmp_7)))}
+bind 66 maxflow : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 0.5))))) && (((v > 0.0) && (v = 0.5)) && nxt (globally tmp_2)))}
+bind 67 maxlevel : {v:real | ( ((tmp_5 =  ((((v > minlevel) && (v > 15.0)) && (v = 16.5))))) && ((((v > minlevel) && (v > 15.0)) && (v = 16.5)) && nxt (globally tmp_5)))}
+bind 68 minlevel : {v:real | ( ((tmp_4 =  ((((v > 0) && (v < 15)) && (v = 14.5))))) && ((((v > 0) && (v < 15)) && (v = 14.5)) && nxt (globally tmp_4)))}
+bind 69 mode : {v:bool | ((v = Down) || (v = Up))}
+bind 70 mode_last : {v:bool | ((v = Down) || (v = Up))}
+bind 71 outflow : {v:real | ( ((tmp_3 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && nxt (globally tmp_3)))}
+bind 72 tmp_1 : {v:bool | true}
+bind 73 tmp_2 : {v:bool | true}
+bind 74 tmp_3 : {v:bool | true}
+bind 75 tmp_4 : {v:bool | true}
+bind 76 tmp_5 : {v:bool | true}
+bind 77 tmp_6 : {v:bool | true}
+bind 78 tmp_7 : {v:bool | true}
 
 constraint:
-  env [0;1;2;3;92;93;94;95;96;97;98;99;100;101;102;103;104;105;106;107;108;109]
-  lhs {l:real |  (( ((not ((l >= (maxlevel - 0.5))) && ((vf = maxflow) && (l = (last_level + ((vf - outflow) * dt)))))) ||  ((not ((l <= (minlevel + 0.5))) && ((vf = 0.0) && (l = (last_level + ((vf - outflow) * dt))))))))}
-  rhs {l:real | ((l >= minlevel) && (l <= maxlevel))}
+  env [0;1;2;3;60;61;62;63;64;65;66;67;68;69;70;71;72;73;74;75;76;77;78]
+  lhs {v:real | (((((((mode_last = Up) && not ((mode_last = Down))) &&  (not ((last_level >= (maxlevel - 0.5))))) && (v = maxflow)) && ((mode = Up) && not ((mode = Down)))) || (((((mode_last = Up) && not ((mode_last = Down))) && (true && (last_level >= (maxlevel - 0.5)))) && (v = 0.0)) && ((mode = Down) && not ((mode = Up))))) || ((((((mode_last = Down) && not ((mode_last = Up))) &&  (not ((last_level <= (minlevel + 0.5))))) && (v = 0.0)) && ((mode = Down) && not ((mode = Up)))) || (((((mode_last = Down) && not ((mode_last = Up))) && (true && (last_level <= (minlevel + 0.5)))) && (v = maxflow)) && ((mode = Up) && not ((mode = Down))))))}
+  rhs {v:real | ((v = maxflow) || (v = 0.0))}
   id 5 tag []
