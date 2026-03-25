@@ -1,7 +1,7 @@
 let node exec1 () : {(v:int) | globally(v>0 && v <5)} =
   let rec init ex = 1
     and automaton_ref : {last_ex : {v:int | globally(v>0 && v<5)}}
-    | Up : {ex:{v:int | globally(v = (last ex) + 1)}} -> do ex = (last ex) + 1 unless ((last ex) >= 5) then Down
+    | Up : {ex:{v:int | globally(v = (last ex) + 1)}} -> do ex = (last ex) + 1 unless ((last ex) >= 10) then Down
     | Down : {ex:{v:int | globally(v = (last ex) - 1)}} -> do ex = (last ex) - 1 unless ((last ex) <= 1) then Up
     end : {ex:{v:int | globally(v>0 && v <5)}} in ex
 

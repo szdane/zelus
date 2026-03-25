@@ -1,6 +1,6 @@
 (* ==== POS 5: Boolean ops with fby; ==== *)
 let b:{v:bool | globally(v = true)} = true
-let node edge b:{(v:bool) | v=false && nxt(globally(m(v=true)))} = (false fby b)
+let node edge b:{(v:bool) | v=false && nxt(globally((v=true)))} = (false fby b)
 
 let dt = 0.1 
 let hybrid main () = let rec trigger = (period (dt)) in

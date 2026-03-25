@@ -2,41 +2,13 @@ bind 0 nxt : {v:func(1, [bool, bool]) | true }
 bind 1 hd  : {v:func(1, [bool, bool]) | true}
 bind 2 globally : {v:func(1, [bool, bool]) | true}
 bind 3 m  : {v:func(1, [bool, bool]) | true}
-bind 394 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && nxt (globally tmp_6)))}
-bind 395 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && nxt (globally tmp_8)))}
-bind 396 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && nxt (globally tmp_7)))}
-bind 397 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && nxt (globally tmp_9)))}
-bind 398 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && nxt (globally tmp_5)))}
-bind 399 last_fl : {v:bool | (true && nxt true)}
-bind 400 last_h : {v:real | ( ((tmp_11 =  (((v >= 0.0) && (v < hceiling))))) && (((v >= 0.0) && (v < hceiling)) && nxt (globally tmp_11)))}
-bind 401 last_lg : {v:bool | (true && nxt true)}
-bind 402 last_thr : {v:bool | (true && nxt true)}
-bind 403 last_vel : {v:real | ( ((tmp_12 =  ((v >= 0.0)))) && ((v = 10.0) && nxt (globally tmp_12)))}
-bind 404 last_ww : {v:bool | (true && nxt true)}
-bind 405 last_x : {v:real | ( ((tmp_13 =  (((v >= 0.0) && ((last_vel <= (1.1 * vstallflaps)) ==> (((v + (last_vel * dt)) + (((0.5 * a) * dt) * dt)) < lrunway)))))) && ((v >= 0.0) && nxt (globally tmp_13)))}
-bind 406 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && nxt (globally tmp_10)))}
-bind 407 tmp_1 : {v:bool | true}
-bind 408 tmp_10 : {v:bool | true}
-bind 409 tmp_11 : {v:bool | true}
-bind 410 tmp_12 : {v:bool | true}
-bind 411 tmp_13 : {v:bool | true}
-bind 412 tmp_14 : {v:bool | true}
-bind 413 tmp_2 : {v:bool | true}
-bind 414 tmp_3 : {v:bool | true}
-bind 415 tmp_4 : {v:bool | true}
-bind 416 tmp_5 : {v:bool | true}
-bind 417 tmp_6 : {v:bool | true}
-bind 418 tmp_7 : {v:bool | true}
-bind 419 tmp_8 : {v:bool | true}
-bind 420 tmp_9 : {v:bool | true}
-bind 421 vel : {v:real | ( ((tmp_14 =  ((v = (last_vel + (a * dt)))))) && ((v = (last_vel + (a * dt))) && nxt (globally tmp_14)))}
-bind 422 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && nxt (globally tmp_4)))}
-bind 423 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && nxt (globally tmp_2)))}
-bind 424 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && nxt (globally tmp_1)))}
-bind 425 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && nxt (globally tmp_3)))}
+bind 8 last_temp : {v:Int | ( ((tmp_1 =  ((v <= 0)))) && tmp_1)}
+bind 9 temp : {v:Int | ( ((tmp_2 =  ((v <= 0)))) && ((v <= 0) && nxt (globally (m tmp_2))))}
+bind 10 tmp_1 : {v:bool | true}
+bind 11 tmp_2 : {v:bool | true}
 
 constraint:
-  env [0;1;2;3;394;395;396;397;398;399;400;401;402;403;404;405;406;407;408;409;410;411;412;413;414;415;416;417;418;419;420;421;422;423;424;425]
-  lhs {v:real | (v = (last_x + (((last_vel + vel) * 0.5) * dt)))}
-  rhs {v:real | ((v = (last_x + (((last_vel + vel) * 0.5) * dt))) && ((vel <= (1.1 * vstallflaps)) ==> (((v + (last_vel * dt)) + (((0.5 * a) * dt) * dt)) < lrunway)))}
+  env [0;1;2;3;8;9;10;11]
+  lhs {v:Int | (v = (last_temp - 1))}
+  rhs {v:Int | (v <= 0)}
   id 5 tag []

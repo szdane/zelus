@@ -1,6 +1,5 @@
 (* ==== NEG 4: FBY tail mismatch (off-by-one) ==== *)
-let node fby_tail_mismatch (a:{(v:int)| true}) : {(v:int) | nxt(globally(m(v = a + 1)))} =
+let node fby_tail_mismatch (a:{(v:int)| true}) : {(v:int) | nxt(globally(v = a + 1))} =
   0 fby a
-(* Synth tail is X(G(M(v=a))); spec demands X(G(M(v=a+1))) ⇒ FAIL *)
 
 let hybrid main () = ()

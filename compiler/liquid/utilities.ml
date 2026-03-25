@@ -67,6 +67,174 @@ let mk_le a b =  mk_app (mk_var "<") [a;b]
 let mk_ge a b = mk_app (mk_var ">") [a;b]
 
 
+let mk_false : Zparsetree.exp =
+  { desc = Zparsetree.Econst (Ebool false); loc = dummy_loc }
+
+let mk_or a b =
+  mk_app (mk_var "||") [a; b]
+
+let mk_big_and (es:Zparsetree.exp list) : Zparsetree.exp =
+  match es with
+  | [] -> mk_true
+  | e::tl -> List.fold_left mk_and e tl
+
+let mk_big_or (es:Zparsetree.exp list) : Zparsetree.exp =
+  match es with
+  | [] -> mk_false
+  | e::tl -> List.fold_left mk_or e tl
+
+let vars_of_refenv = function
+  | None -> []
+  | Some re ->
+      match re.desc with
+      | Erefenv xs -> xs
+
+let plain_state_handlers (handlers_ann : state_handler_ann list)=
+  List.map (fun sha -> sha.sha_handler) handlers_ann
+
+(* Extract (binder_name, base_name) for one argument pattern+type.
+   We only rely on an *explicit* annotation on the arg (like (x : {v:Int|...}) or (x:Int)).
+   If there is no explicit base in the arg annotation, we fail (keeps behavior simple/back-compatible). *)
+let zident_pretty (z : Zident.t) : string =
+    let s = Zident.name z in
+    (* Strip a trailing _<digits> if present, e.g., "e_2" -> "e" *)
+    let len = String.length s in
+    let rec all_digits s i j =
+      if i > j then true else
+      let c = s.[i] in
+      ('0' <= c && c <= '9') && all_digits s (i+1) j
+    in
+    try
+      let i = String.rindex s '_' in
+      if i + 1 < len && all_digits s (i+1) (len-1)
+      then String.sub s 0 i
+      else s
+    with Not_found -> s
+
+let literal_and_base = function
+  | Deftypes.Eint  n  -> Zparsetree.Eint n  , "Int"
+  | Deftypes.Efloat f -> Zparsetree.Efloat f, "Real"
+  | Ebool b  -> Zparsetree.Ebool b, "Bool"
+  | Estring s -> Zparsetree.Estring s , "String"
+  | _         -> failwith "Unsupported literal in Liquid prototype"
+
+let as_desugared_reset_block e_desc : (Zelus.exp * Zelus.exp) option =
+    match e_desc with
+    | Zelus.Eblock (blk, result_exp) ->
+        begin match blk.b_body, result_exp.e_desc with
+        | [eq_reset], Zelus.Elocal { source = result_name; _ } ->
+            begin match eq_reset.eq_desc with
+            | Zelus.EQreset ([eq_inner], cond) ->
+                begin match eq_inner.eq_desc with
+                | Zelus.EQeq (pat, inner_e) ->
+                    begin match pat.p_desc with
+                    | Zelus.Evarpat pat_name
+                      when String.equal (zident_pretty pat_name) (result_name) ->
+                        Some (inner_e, cond)
+                    | _ -> None
+                    end
+                | _ -> None
+                end
+            | _ -> None
+            end
+        | _ -> None
+        end
+    | _ -> None
+
+
+let add_last_prefix (n:int) (base:string) : string =
+  let rec loop acc k =
+    if k <= 0 then acc else loop ("last_" ^ acc) (k - 1)
+  in
+  loop base n
+
+let shifted_var_name ~(extra:int) (base:string) : string =
+  add_last_prefix extra base
+
+
+
+  let var_name_with_last_depth (base:string) (depth:int) : string =
+    let rec aux acc d =
+      if d <= 0 then acc else aux ("last_" ^ acc) (d - 1)
+    in
+    aux base depth
+  
+
+
+let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
+  match desc with
+  | Zelus.Econst(i) -> Zparsetree.Econst(fst (literal_and_base i))
+  | Zelus.Eglobal{lname = Name n} -> Zparsetree.Evar(Name n)
+  | Zelus.Eglobal{lname = Modname qualid} -> Zparsetree.Evar(Name qualid.id)
+  | Zelus.Elocal{num = i; source = n} -> Zparsetree.Evar(Name n)
+  (* | Zelus.Etuple(exp_list) -> Zparsetree.Etuple(List.map (fun exp -> {desc = vc_gen_expression exp; loc = dummy_loc}) exp_list) *)
+  | Zelus.Etuple exp_list ->
+    Zparsetree.Etuple
+      (List.map (fun exp -> { desc = vc_gen_expression exp; loc = dummy_loc }) exp_list)
+
+  (* | Zelus.Eapp({ app_inline = i; app_statefull = r }, e, e_list) -> Zparsetree.Eapp({ app_inline = i; app_statefull = r }, {desc = (vc_gen_expression e); loc = dummy_loc}, vc_gen_exp_list e_list) *)
+  | Zelus.Eapp ({ app_inline = i; app_statefull = r }, e, e_list) ->
+    Zparsetree.Eapp
+      ( { app_inline = i; app_statefull = r }, { desc = vc_gen_expression e; loc = dummy_loc }, List.map (fun exp -> { desc = vc_gen_expression exp; loc = dummy_loc }) e_list )
+  | Zelus.Eop(op, exp_list) -> (match op with 
+      | Zelus.Eifthenelse -> failwith (Printf.sprintf "Not handling ifthenelse for now")
+      | Zelus.Efby -> failwith (Printf.sprintf "Not handling fby for now")
+      | _ -> failwith (Printf.sprintf "Not handling this Eop for now")
+    )
+  | Zelus.Eblock(_) -> begin match as_desugared_reset_block desc with
+    | Some (_inner_e, cond) ->
+      failwith "vc_gen_expression: encountered desugared reset block; handle through reset NF synthesis"
+    | None ->
+      failwith "vc_gen_expression: unsupported Eblock"
+  end
+  (* | Zelus.Elet(_,exp) -> match exp.e_desc with
+      | Econst(_) -> implementation {desc = vc_gen_expression exp; loc = dummy_loc}
+      | _ -> failwith (Printf.sprintf "Not handling non constant let for now") *)
+  | Zelus.Elast(id) -> Zparsetree.Evar(Name ("last_"^(zident_pretty id)))
+  | _ -> failwith(Printf.sprintf "Not handling this expression")
+
+let rec vc_gen_expression_shifted ~(shift:int) ({ e_desc = desc; e_loc = loc } : Zelus.exp) =
+    match desc with
+    | Zelus.Econst i ->
+        Zparsetree.Econst (fst (literal_and_base i))
+  
+    | Zelus.Eglobal { lname = Name n } ->
+        Zparsetree.Evar (Name (var_name_with_last_depth n shift))
+  
+    | Zelus.Eglobal { lname = Modname qualid } ->
+        Zparsetree.Evar (Name (var_name_with_last_depth qualid.id shift))
+  
+    | Zelus.Elocal { source = n; _ } ->
+        Zparsetree.Evar (Name (var_name_with_last_depth n shift))
+  
+    | Zelus.Elast id ->
+        Zparsetree.Evar (Name (var_name_with_last_depth (zident_pretty id) (shift + 1)))
+  
+    | Zelus.Etuple es ->
+        Zparsetree.Etuple
+          (List.map (fun e -> { desc = vc_gen_expression_shifted ~shift e; loc = dummy_loc }) es)
+  
+    | Zelus.Eapp ({ app_inline = i; app_statefull = r }, f, args) ->
+        Zparsetree.Eapp
+          ( { app_inline = i; app_statefull = r }
+          , { desc = vc_gen_expression f; loc = dummy_loc }
+          , List.map (fun e -> { desc = vc_gen_expression_shifted ~shift e; loc = dummy_loc }) args )
+  
+    | Zelus.Eop (op, exp_list) ->
+        begin match op with
+        | Zelus.Eifthenelse ->
+            failwith "vc_gen_expression_shifted: not handling ifthenelse for now"
+        | Zelus.Efby ->
+            failwith "vc_gen_expression_shifted: nested fby not handled for now"
+        | _ ->
+            failwith "vc_gen_expression_shifted: not handling this Eop for now"
+        end
+  
+    | _ ->
+        failwith "vc_gen_expression_shifted: not handling this expression"
+  
+
+
 let rec strip_temporal_chain (base:string) (e:Zparsetree.exp) : Zparsetree.exp =
   match e.desc with
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name f); _ }, [arg]) ->
@@ -77,7 +245,8 @@ let rec strip_temporal_chain (base:string) (e:Zparsetree.exp) : Zparsetree.exp =
       else e
   | _ -> e
 
-  
+let zpt_eq_v_rhs_shifted ~(shift:int) (rhs_zls:Zelus.exp) : Zparsetree.exp =
+  mk_eq (mk_v ()) { desc = vc_gen_expression_shifted ~shift rhs_zls; loc = dummy_loc }
 
 
 let decompose_fby_goal (base:string) (pred:Zparsetree.exp)
@@ -141,12 +310,6 @@ let to_zpt_kind kind =
 let zident_opt_to_string_opt (o : Zident.t option) : string option =
   Option.map Zident.name o
 
-let literal_and_base = function
-  | Deftypes.Eint  n  -> Zparsetree.Eint n  , "Int"
-  | Deftypes.Efloat f -> Zparsetree.Efloat f, "Real"
-  | Ebool b  -> Zparsetree.Ebool b, "Bool"
-  | Estring s -> Zparsetree.Estring s , "String"
-  | _         -> failwith "Unsupported literal in Liquid prototype"
 
 let singleton_type_of_const e base_name=
   let base_ty  = mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), [])) in
@@ -229,64 +392,80 @@ let rec is_true (e:Zparsetree.exp) : bool =
   
   (* ---------- LTL ops: we now only use plain "nxt", "globally", "m" ---------- *)
   
-  type ltl_op = OP_X | OP_G | OP_M
-  
-  let view_ltl (e:Zparsetree.exp) : (ltl_op * Zparsetree.exp) option =
-    match view_unary_app_name e with
-    | Some ("nxt", arg) -> Some (OP_X, arg)
-    | Some ("globally", arg) -> Some (OP_G, arg)
-    | Some ("m", arg) -> Some (OP_M, arg)
-    | _               -> None
+type ltl_op = OP_X | OP_G | OP_M
 
-  let view_ltl_zls (e:Zelus.exp) : (ltl_op * Zelus.exp) option =
-    match view_unary_app_name_zls e with
-    | Some ("nxt", arg) -> Some (OP_X, arg)
-    | Some ("globally", arg) -> Some (OP_G, arg)
-    | Some ("m", arg) -> Some (OP_M, arg)
-    | _               -> None
-  
-  
-  let split_nf (p:Zparsetree.exp) : Zparsetree.exp * Zparsetree.exp =
-    match view_and p with
-    | Some (phi, xpsi) -> (
-        match view_ltl xpsi with
-        | Some (OP_X, psi) -> (phi, psi)
-        | _ -> (p, mk_true)
-      )
-    | None -> (p, mk_true)
+let view_ltl (e:Zparsetree.exp) : (ltl_op * Zparsetree.exp) option =
+  match view_unary_app_name e with
+  | Some ("nxt", arg) -> Some (OP_X, arg)
+  | Some ("globally", arg) -> Some (OP_G, arg)
+  | Some ("m", arg) -> Some (OP_M, arg)
+  | _               -> None
+
+let view_ltl_zls (e:Zelus.exp) : (ltl_op * Zelus.exp) option =
+  match view_unary_app_name_zls e with
+  | Some ("nxt", arg) -> Some (OP_X, arg)
+  | Some ("globally", arg) -> Some (OP_G, arg)
+  | Some ("m", arg) -> Some (OP_M, arg)
+  | _               -> None
+
+
+let split_nf (p:Zparsetree.exp) : Zparsetree.exp * Zparsetree.exp =
+  match view_and p with
+  | Some (phi, xpsi) -> (
+      match view_ltl xpsi with
+      | Some (OP_X, psi) -> (phi, psi)
+      | _ -> (p, mk_true)
+    )
+  | None -> (p, mk_true)
+
+let step_pred_of_ann_nf (ann_nf : Zparsetree.exp) : Zparsetree.exp =
+  let (_phi, later) = split_nf ann_nf in
+  match later.desc with
+  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name "globally"); _ }, [psi]) ->
+      psi
+  | _ ->
+      failwith "Expected annotation NF of shape phi && nxt(globally(psi))"
+
+let base_ind_of_nf (nf : Zparsetree.exp) : Zparsetree.exp * Zparsetree.exp =
+  let (phi, later) = split_nf nf in
+  match later.desc with
+  | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name "globally"); _ }, [psi]) ->
+      (phi, psi)
+  | _ ->
+      failwith "base_ind_of_nf: expected phi && nxt(globally(psi))"
   
   (* ---------- strip common LTL operator chains from the later part ---------- *)
   
-  let rec strip_matching_ltl (a:Zparsetree.exp) (b:Zparsetree.exp)
-    : Zparsetree.exp * Zparsetree.exp =
-    match view_ltl a, view_ltl b with
-    | Some (op1, a1), Some (op2, b1) -> if (op1 = op2 || op1 == OP_G) then
-        strip_matching_ltl a1 b1 else failwith "no matching between LTL"
-    | _ -> (a, b)
+let rec strip_matching_ltl (a:Zparsetree.exp) (b:Zparsetree.exp)
+  : Zparsetree.exp * Zparsetree.exp =
+  match view_ltl a, view_ltl b with
+  | Some (op1, a1), Some (op2, b1) -> if (op1 = op2 || op1 == OP_G) then
+      strip_matching_ltl a1 b1 else failwith "no matching between LTL"
+  | _ -> (a, b)
 
-  let strip_once a = 
-    match view_ltl_zls a with 
-    | Some(op1, a1) -> a1
-    | None -> a
-  
-  (* ---------- “LTL-free” = no head x/g/m, and any && parts are LTL-free ---------- *)
-  
-  let rec is_ltl_free (e:Zparsetree.exp) : bool =
-    match view_ltl e with
-    | Some _ -> false
-    | None ->
-        (match view_and e with
-         | Some (a,b) -> is_ltl_free a && is_ltl_free b
-         | None -> true)
-  
-  (* ---------- build {v:Base | pred} and run subtyping on predicates ---------- *)
-  
-  let mk_refine (binder:string) (base:string) (pred:Zparsetree.exp)
-    : Zparsetree.type_expression =
-    let base_ty =
-      mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base), []))
-    in
-    mk_type (Zparsetree.Erefinement ((binder, base_ty), pred))
+let strip_once a = 
+  match view_ltl_zls a with 
+  | Some(op1, a1) -> a1
+  | None -> a
+
+(* ---------- “LTL-free” = no head x/g/m, and any && parts are LTL-free ---------- *)
+
+let rec is_ltl_free (e:Zparsetree.exp) : bool =
+  match view_ltl e with
+  | Some _ -> false
+  | None ->
+      (match view_and e with
+        | Some (a,b) -> is_ltl_free a && is_ltl_free b
+        | None -> true)
+
+(* ---------- build {v:Base | pred} and run subtyping on predicates ---------- *)
+
+let mk_refine (binder:string) (base:string) (pred:Zparsetree.exp)
+  : Zparsetree.type_expression =
+  let base_ty =
+    mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base), []))
+  in
+  mk_type (Zparsetree.Erefinement ((binder, base_ty), pred))
 
 
 (* --- HOIST NON-VAR BOOLEANS FROM UNDER TEMPORAL OPS INTO GHOSTS --- *)
@@ -399,24 +578,7 @@ let pp_nf_as_type ~(binder:string) ~(base:string) (nf:Zparsetree.exp) : string =
 let zpt_base (b : string) : Zparsetree.type_expression =
   mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii b), []))
 
-(* Extract (binder_name, base_name) for one argument pattern+type.
-   We only rely on an *explicit* annotation on the arg (like (x : {v:Int|...}) or (x:Int)).
-   If there is no explicit base in the arg annotation, we fail (keeps behavior simple/back-compatible). *)
-let zident_pretty (z : Zident.t) : string =
-  let s = Zident.name z in
-  (* Strip a trailing _<digits> if present, e.g., "e_2" -> "e" *)
-  let len = String.length s in
-  let rec all_digits s i j =
-    if i > j then true else
-    let c = s.[i] in
-    ('0' <= c && c <= '9') && all_digits s (i+1) j
-  in
-  try
-    let i = String.rindex s '_' in
-    if i + 1 < len && all_digits s (i+1) (len-1)
-    then String.sub s 0 i
-    else s
-  with Not_found -> s
+
 let rec zelus_var_name_of_pat (p : Zelus.pattern) : string =
     match p.p_desc with
     | Zelus.Evarpat id -> zident_pretty id
@@ -814,3 +976,200 @@ let rename_state_last_binder_to_return
   else zpt_rename_var ~from:bs ~to_:br phi_state
 
 
+
+let ensure_last_from_annotation
+  ~(source_name:string)
+  ~(base_name:string)
+  ~(binder:string)
+  ~(ann_nf:Zparsetree.exp)
+: unit =
+let ghost_name = "last_" ^ source_name in
+match find_binding ghost_name with
+| Some _ -> ()
+| None ->
+    let psi = step_pred_of_ann_nf ann_nf in
+    let psi = rename_var_in_exp binder "v" psi in
+    let base_ty =
+      mk_type
+        (Zparsetree.Etypeconstr
+            (Name (String.lowercase_ascii base_name), []))
+    in
+    let ghost_ty =
+      { desc = Zparsetree.Erefinement (("v", base_ty), psi)
+      ; loc  = dummy_loc
+      }
+    in
+    add_binding ghost_name ghost_ty
+
+
+let rec collect_plain_vars (e:Zelus.exp) : string list =
+  let union a b = List.sort_uniq String.compare (a @ b) in
+  match e.e_desc with
+  | Zelus.Elocal { source = n; _ } -> [n]
+  | Zelus.Eglobal { lname = Name n } -> [n]
+  | Zelus.Etuple es
+  | Zelus.Eop (_, es) ->
+      List.fold_left (fun acc e -> union acc (collect_plain_vars e)) [] es
+  | Zelus.Eapp (_, _f, args) ->
+      List.fold_left (fun acc e -> union acc (collect_plain_vars e)) [] args
+  | _ -> []
+
+let state_name_of_pat (sp : Zelus.statepat) : string =
+  match sp.desc with
+  | Estate0pat id ->  zident_pretty id
+  | Estate1pat (id, _args) -> zident_pretty id
+
+let state_name_of_stateexp (se : Zelus.state_exp) : string =
+  match se.desc with
+  | Estate0 id -> zident_pretty id
+  | Estate1 (id, _args) -> zident_pretty id
+
+
+let first_state_name
+    (handlers : Zelus.state_handler list)
+    (init_state_opt : Zelus.state_exp option)
+  : string =
+  match init_state_opt with
+  | Some s -> state_name_of_stateexp s
+  | None ->
+      match handlers with
+      | h :: _ -> state_name_of_pat h.s_state
+      | [] -> failwith "Empty automaton"
+
+
+let rec rhs_for_var_in_eq (x:string) (eq:Zelus.eq) : Zelus.exp option =
+  match eq.eq_desc with
+  | Zelus.EQeq (pat, rhs) ->
+      begin match pat.p_desc with
+      | Zelus.Evarpat id when zident_pretty id = x -> Some rhs
+      | Zelus.Etypeconstraintpat (p0, _ty) ->
+          begin match p0.p_desc with
+          | Zelus.Evarpat id when zident_pretty id = x -> Some rhs
+          | _ -> None
+          end
+      | _ -> None
+      end
+
+  | Zelus.EQand eqs
+  | Zelus.EQbefore eqs ->
+      let rec first = function
+        | [] -> None
+        | q::tl ->
+            begin match rhs_for_var_in_eq x q with
+            | Some _ as hit -> hit
+            | None -> first tl
+            end
+      in
+      first eqs
+
+  | Zelus.EQblock blk ->
+      rhs_for_var_in_block x blk
+
+  | Zelus.EQreset (eqs, _r) ->
+      let rec first = function
+        | [] -> None
+        | q::tl ->
+            begin match rhs_for_var_in_eq x q with
+            | Some _ as hit -> hit
+            | None -> first tl
+            end
+      in
+      first eqs
+
+  | _ -> None
+
+and rhs_for_var_in_block (x:string) (blk:Zelus.eq list Zelus.block) : Zelus.exp option =
+  let rec first = function
+    | [] -> None
+    | q::tl ->
+        begin match rhs_for_var_in_eq x q with
+        | Some _ as hit -> hit
+        | None -> first tl
+        end
+  in
+  first blk.b_body
+
+type base_ind = {
+  binder    : string;
+  base_name : string;
+  base_phi  : Zparsetree.exp;
+  ind_psi   : Zparsetree.exp;
+}
+
+
+let vars_of_refenv_aut (re_opt : Zelus.refenv option)
+  : (string * Zelus.type_expression) list =
+  match re_opt with
+  | None -> []
+  | Some re ->
+      match re.desc with
+      | Zelus.Erefenv xs -> xs
+
+let first_state_name_aut
+    (states : Zelus.state_handler_ann list)
+    (init_state_opt : Zelus.state_exp option)
+  : string =
+  match init_state_opt with
+  | Some s -> state_name_of_stateexp s
+  | None ->
+      match states with
+      | sha :: _ -> state_name_of_pat sha.sha_handler.s_state
+      | [] -> failwith "Empty automaton"
+
+let find_state_by_name_aut
+    (states : Zelus.state_handler_ann list)
+    (st_name : string)
+  : Zelus.state_handler_ann =
+  List.find
+    (fun (sha : Zelus.state_handler_ann )->
+      String.equal (state_name_of_pat sha.sha_handler.s_state) st_name)
+    states
+
+let cond_of_escape (esc : Zelus.escape) : Zelus.exp option =
+  match esc.e_cond.desc with
+  | Zelus.Econdexp guard ->
+      Some guard
+  | _ ->
+      None
+
+let all_mode_names_aut (states : Zelus.state_handler_ann list) : string list =
+  List.sort_uniq String.compare
+    (List.map (fun ( sha : Zelus.state_handler_ann) -> state_name_of_pat sha.sha_handler.s_state) states)
+
+let eq_const_name (varname:string) (st_name:string) : Zparsetree.exp =
+  mk_eq (mk_var varname) (mk_var st_name)
+
+let domain_of_mode_var (varname:string) (modes:string list) : Zparsetree.exp =
+  mk_big_or (List.map (fun m -> eq_const_name varname m) modes)
+
+let ensure_mode_symbol (nm:string) : unit =
+  if Option.is_none (find_binding nm) then
+    add_binding nm
+      { desc = Zparsetree.Erefinement
+          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "bool", [])))
+          , mk_true )
+      ; loc = dummy_loc
+      }
+
+let ensure_mode_var
+    ~(varname:string)
+    ~(modes:string list)
+  : unit =
+  if Option.is_none (find_binding varname) then
+    let pred = domain_of_mode_var varname modes |> rename_var_in_exp varname "v" in
+    add_binding varname
+      { desc = Zparsetree.Erefinement
+          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "bool", [])))
+          , pred )
+      ; loc = dummy_loc
+      }
+
+let exclusive_mode_fact (varname:string) (chosen:string) (all_modes:string list)
+  : Zparsetree.exp =
+  let others =
+    List.filter (fun m -> not (String.equal m chosen)) all_modes
+  in
+  mk_big_and (
+    eq_const_name varname chosen
+    :: List.map (fun m -> mk_not (eq_const_name varname m)) others
+  )

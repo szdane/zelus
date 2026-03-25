@@ -1,0 +1,15 @@
+(**zeluc -s main unless.zls     **)
+(** ocamlfind ocamlc -linkpkg -package zelus unless.ml main.ml -o unless**)
+let node exec () = 
+    let rec init x = 0
+    and automaton 
+        (**| A1 -> do x = (last x) fby (x + 1) unless ((last x) >= 5) then A2
+        | A2 -> do x = (last x) fby (x - 1) unless ((last x) <= 0) then A1**)
+        | A1 -> do x = (last x) + 1 unless ((last x) > 3) then A1
+    end in x
+
+let dt = 0.1
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let x = exec () in
+        (print_int x; print_newline ())) else ()

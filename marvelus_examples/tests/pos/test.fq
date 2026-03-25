@@ -1,0 +1,17 @@
+ bind 0 nxt : {v:func(1, [bool, bool]) | true }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 globally : {v:func(1, [bool, bool]) | true}
+bind 3 m  : {v:func(1, [bool, bool]) | true}
+bind 6 ex : {v:Int | ( ((tmp_1 =  (((v > 0) && (v < 5))))) && ((v = 1) && nxt (globally tmp_1)))}
+bind 7 last_ex : {v:Int | ((v > 0) && (v < 5))}
+bind 8 tmp_1 : {v:bool | true}
+bind 9 mode : {v:bool | v = Down || v = Up}
+bind 10 mode_last : {v:bool | v = Down || v = Up}
+bind 11 Up : {v:bool | true}
+bind 12 Down : {v:bool | true}
+
+constraint:
+  env [0;1;2;3;6;7;8;9;10;11;12]
+  lhs {v:Int | ((((((mode_last = Up) && (not (mode_last = Down)) && (not(last_ex >= 4))) && (v = (last_ex + 1))) && (mode = Up) && (not (mode = Down))) || ((((mode_last = Up) && (not (mode_last = Down)) && (true && (last_ex >= 4))) && (v = (last_ex - 1))) && (mode = Down) && (not (mode = Up)))) || (((((mode_last = Down) && (not (mode_last = Up)) && (not(last_ex <= 1))) && (v = (last_ex - 1))) && (mode = Down) && (not (mode = Up))) || ((((mode_last = Down) && (not (mode_last = Up))&& (true && (last_ex <= 1))) && (v = (last_ex + 1))) && (mode = Up) && (not (mode = Down)))))}
+  rhs {v:Int | ((v > 0) && (v < 5))}
+  id 5 tag []

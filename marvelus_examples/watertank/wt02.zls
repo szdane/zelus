@@ -1,0 +1,21 @@
+let dt:{v:float | globally(v > 0. && v = 0.1)} = 0.1
+let maxflow:{v:float | globally(v > 0. && v=0.5)} = 0.5
+let outflow:{v:float | globally(v > 0. && v=0.1)} = 0.1
+let minlevel:{v:float | globally(v > 0 && v <15 && v=14.5)} = 14.5
+let maxlevel:{v:float | globally(v > minlevel && v > 15. && v= 16.5)} = 16.5
+let node exec () :  {(vf:float)*(vl:float) | true} =
+  let rec init flow = 0.
+  and init level = 15.
+  and automaton_ref : {(last_flow,last_level): {(f:float)*(l:float) | (f = maxflow || f = 0.) && ( l>= minlevel && l <= maxlevel)}} 
+  | Up : {(flow,level) : {(vf:float)*(vl:float) | vf = maxflow && vl = last level + (vf - outflow) * dt}} 
+                              -> do (flow, level) = (maxflow, ((last level) +. (maxflow -. outflow) *. dt)) unless ((last level) >= maxlevel -. 0.5) then Down 
+  | Down : {(flow,level) : {(vf:float)*(vl:float) | vf = 0. && vl = last level + (vf - outflow) * dt }}
+                              -> do (flow, level) = (0., ((last level) +. (0. -. outflow) *. dt)) unless ((last level) <= minlevel +. 0.5) then Up 
+  end : {(flow,level) : {(f:float)*(l:float) | (l >= minlevel && l <= maxlevel)}}
+in (flow, level)
+
+
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let (flow,level) = exec () in
+        (print_float level; print_string ", "; print_float flow; print_newline ())) else ()

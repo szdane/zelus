@@ -1,58 +1,58 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-02-12-20:23) *)
+  (2026-03-24-21:16) *)
 open Ztypes
-let foo = (+) 2  1
-
-let var = foo
-
-let b = true
-
-let ite = if (>=) foo  0 then ( * ) (-1)  foo else foo
-
-type _exec1 = unit
+type ('a) _exec1 =
+  { mutable m_27 : 'a }
 
 let exec1  = 
-   let exec1_alloc _ = () in
+   let exec1_alloc _ =
+     ();{ m_27 = (42:int) } in
   let exec1_reset self  =
-    ((()):unit) in 
+    (self.m_27 <- 0:unit) in 
   let exec1_step self () =
-    ((let ((e_22:int): int) = 5 in
-      e_22):int) in
+    ((let (next_28:int) = self.m_27 in
+      let ((temp_26:int): int) = next_28 in
+      self.m_27 <- (-) temp_26  1 ; temp_26):int) in
   Node { alloc = exec1_alloc; reset = exec1_reset ; step = exec1_step }
 let dt = 0.1
 
-type ('e , 'd , 'c , 'b , 'a) _main =
-  { mutable major_24 : 'e ;
-    mutable h_31 : 'd ;
-    mutable i_29 : 'c ; mutable h_27 : 'b ; mutable result_26 : 'a }
+type ('f , 'e , 'd , 'c , 'b , 'a) _main =
+  { mutable major_30 : 'f ;
+    mutable h_37 : 'e ;
+    mutable i_35 : 'd ;
+    mutable h_33 : 'c ; mutable result_32 : 'b ; mutable m_40 : 'a }
 
-let main (cstate_34:Ztypes.cstate) = 
+let main (cstate_42:Ztypes.cstate) = 
   
   let main_alloc _ =
     ();
-    { major_24 = false ;
-      h_31 = 42. ;
-      i_29 = (false:bool) ; h_27 = (42.:float) ; result_26 = (():unit) } in
-  let main_step self ((time_23:float) , ()) =
-    ((self.major_24 <- cstate_34.major ;
-      (let (result_39:unit) =
-           let h_30 = ref (infinity:float) in
-           (if self.i_29 then self.h_27 <- (+.) time_23  0.) ;
-           (let (z_28:bool) = (&&) self.major_24  ((>=) time_23  self.h_27) in
-            self.h_27 <- (if z_28 then (+.) self.h_27  dt else self.h_27) ;
-            h_30 := min !h_30  self.h_27 ;
-            self.h_31 <- !h_30 ;
-            self.i_29 <- false ;
-            (let (trigger_25:zero) = z_28 in
-             (begin match trigger_25 with
+    { major_30 = false ;
+      h_37 = 42. ;
+      i_35 = (false:bool) ;
+      h_33 = (42.:float) ; result_32 = (():unit) ; m_40 = (42:int) } in
+  let main_step self ((time_29:float) , ()) =
+    ((self.major_30 <- cstate_42.major ;
+      (let (result_47:unit) =
+           let h_36 = ref (infinity:float) in
+           (if self.i_35 then self.h_33 <- (+.) time_29  0.) ;
+           (let (z_34:bool) = (&&) self.major_30  ((>=) time_29  self.h_33) in
+            self.h_33 <- (if z_34 then (+.) self.h_33  dt else self.h_33) ;
+            h_36 := min !h_36  self.h_33 ;
+            self.h_37 <- !h_36 ;
+            self.i_35 <- false ;
+            (let (trigger_31:zero) = z_34 in
+             (begin match trigger_31 with
                     | true ->
                         let () = () in
-                        let ((e_33:int): int) = 5 in
-                        let (x_32:int) = e_33 in
-                        let _ = print_int x_32 in
-                        self.result_26 <- print_newline ()
-                    | _ -> self.result_26 <- ()  end) ; self.result_26)) in
-       cstate_34.horizon <- min cstate_34.horizon  self.h_31 ; result_39)):
-    unit) in  let main_reset self  =
-                (self.i_29 <- true:unit) in
+                        let (next_41:int) = self.m_40 in
+                        let ((temp_39:int): int) = next_41 in
+                        self.m_40 <- (-) temp_39  1 ;
+                        (let (x_38:int) = temp_39 in
+                         let _ = print_int x_38 in
+                         self.result_32 <- print_newline ())
+                    | _ -> self.result_32 <- ()  end) ; self.result_32)) in
+       cstate_42.horizon <- min cstate_42.horizon  self.h_37 ; result_47)):
+    unit) in 
+  let main_reset self  =
+    ((self.i_35 <- true ; self.m_40 <- 0):unit) in
   Node { alloc = main_alloc; step = main_step ; reset = main_reset }

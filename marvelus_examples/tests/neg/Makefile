@@ -8,11 +8,11 @@ MLFLAGS=-linkpkg -package zelus
 sim: zelus-compile 
 
 
-main.ml: letrec.zls
-	$(ZELUC) $(ZFLAGS) letrec.zls
+main.ml: automaton.zls
+	$(ZELUC) $(ZFLAGS) automaton.zls
 
 zelus-compile: main.ml
-	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o letrec.opt letrec.ml main.ml
+	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o automaton.opt automaton.ml main.ml
 
 clean: 
-	rm letrec.opt *.cmi *.cmx *.o *.zci main.ml letrec.ml 
+	rm automaton.opt *.cmi *.cmx *.o *.zci main.ml automaton.ml 
