@@ -599,7 +599,7 @@ refenv_bindings:
 
 refenv_opt:
   | /* empty */ { None }
-  | r = refenv  { Some r }
+  | COLON r = refenv  { Some r }
 ;
 
 equation_desc:
@@ -608,9 +608,9 @@ equation_desc:
   | AUTOMATON opt_bar a = automaton_handlers(equation_empty_list)
     INIT s = state
     { EQautomaton(List.rev a, Some(s)) }
-  | AUTOMATON_REF COLON aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list) END COLON ret = refenv_opt opt_bar
+  | AUTOMATON_REF aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list) END ret = refenv_opt opt_bar
     { EQautomatonRef ( aut, List.rev a, None, ret) }  
-  | AUTOMATON_REF COLON aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list)
+  | AUTOMATON_REF aut = refenv_opt opt_bar a = automaton_handlers_ref(equation_empty_list)
       INIT s = state ret = refenv_opt opt_bar
     { EQautomatonRef ( aut, List.rev a, Some s, ret) }
   | MATCH e = seq_expression WITH opt_bar
@@ -800,12 +800,12 @@ automaton_handlers_ref(X):
 
 /* Same shapes as automaton_handler, but with `refenv_opt` right after state pattern. */
 automaton_handler_ref(X):
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) DONE
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X) DONE
      {
        let sh = make { s_state = sp; s_block = b; s_until = []; s_unless = [] } $startpos $endpos in
        { sha_handler = sh; sha_refenv = re }  (* ⚠ adjust field names if needed *)
      }
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) THEN st = state
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X) THEN st = state
     {
       let sh =
         make { s_state = sp; s_block = b;
@@ -814,7 +814,7 @@ automaton_handler_ref(X):
                s_unless = [] } $startpos $endpos in
       { sha_handler = sh; sha_refenv = re }
     }
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) CONTINUE st = state
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X) CONTINUE st = state
     {
       let sh =
         make { s_state = sp; s_block = b;
@@ -823,7 +823,7 @@ automaton_handler_ref(X):
                s_unless = [] } $startpos $endpos in
       { sha_handler = sh; sha_refenv = re }
     }
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) THEN emit = emission st = state
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X) THEN emit = emission st = state
     {
       let sh =
         make { s_state = sp; s_block = b;
@@ -832,7 +832,7 @@ automaton_handler_ref(X):
                s_unless = [] } $startpos $endpos in
       { sha_handler = sh; sha_refenv = re }
     }
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) CONTINUE emit = emission st = state
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X) CONTINUE emit = emission st = state
     {
       let sh =
         make { s_state = sp; s_block = b;
@@ -841,19 +841,19 @@ automaton_handler_ref(X):
                s_unless = [] } $startpos $endpos in
       { sha_handler = sh; sha_refenv = re }
     }
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) UNTIL e_until = escape_list
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X) UNTIL e_until = escape_list
     {
       let sh = make { s_state = sp; s_block = b; s_until = List.rev e_until; s_unless = [] }
                      $startpos $endpos in
       { sha_handler = sh; sha_refenv = re }
     }
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X) UNLESS e_unless = escape_list
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X) UNLESS e_unless = escape_list
     {
       let sh = make { s_state = sp; s_block = b; s_until = []; s_unless = List.rev e_unless }
                      $startpos $endpos in
       { sha_handler = sh; sha_refenv = re }
     }
-  | sp = state_pat COLON re = refenv_opt MINUSGREATER b = block(X)
+  | sp = state_pat re = refenv_opt MINUSGREATER b = block(X)
       UNTIL e_until = escape_list UNLESS e_unless = escape_list
     {
       let sh =

@@ -35,7 +35,7 @@ let node exec () : {(v:int) | true} =
             ww : {v:bool | true && nxt(globally(true))}
         }
         
-        | Takeoff : {} ->
+        | Takeoff ->
             do h = last h
             and vel = last vel +. (a *. dt)
             and x = last x +. ((last vel +. vel) *. 0.5) *. dt
@@ -44,7 +44,7 @@ let node exec () : {(v:int) | true} =
             and lg = true
             and ww = true
             unless (last vel > (1.1 *. vstallflaps) -. (a*.dt)) then Climb
-        | Climb : {} ->
+        | Climb ->
             do h = last h +. (c *. dt)
             and vel = last vel +. (a *. dt)
             and x = last x +. ((last vel +. vel) *. 0.5) *. dt
@@ -53,7 +53,7 @@ let node exec () : {(v:int) | true} =
             and lg = false
             and ww = false
             unless (last h >= hceiling -. (c *. dt)) then Cruise
-        | Cruise : {} ->
+        | Cruise ->
             do h = last h
             and vel = last vel
             and x = last x +. ((last vel +. vel) *. 0.5) *. dt
@@ -62,7 +62,7 @@ let node exec () : {(v:int) | true} =
             and lg = false
             and ww = false
             unless (false) then Cruise
-        end : {} in (x, vel, h, thr, fl, lg, ww)
+        end in (x, vel, h, thr, fl, lg, ww)
 
 
 let hybrid main () = 

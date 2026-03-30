@@ -1,9 +1,9 @@
 let node exec1 () : {(v:int) | globally(v>0 && v <5)} =
   let rec init ex = 1
     and automaton_ref : {ex : {v:int | v = 1 && nxt(globally(v>0 && v<5))}}
-    | Up : {} -> do ex = (last ex) + 1 unless ((last ex) >= 4) then Down
-    | Down : {} -> do ex = (last ex) - 1 unless ((last ex) <= 1) then Up
-    end : {} in ex
+    | Up -> do ex = (last ex) + 1 unless ((last ex) >= 4) then Down
+    | Down -> do ex = (last ex) - 1 unless ((last ex) <= 1) then Up
+    end in ex
 
 
 

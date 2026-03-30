@@ -7,9 +7,9 @@ let node exec () :  {(vf:float)*(vl:float) | true} =
   let rec init flow = 0.
   and init level = 15.
   and automaton_ref : {level: {v:float |v=15. && nxt(globally( v>= minlevel && v <= maxlevel))}; flow: {v:float | v = 0. && nxt(globally(v= maxflow || v = 0.))}} 
-  | Up : {} -> do level = ((last level) +. (maxflow -. outflow) *. dt) and flow = maxflow unless ((last level) >= maxlevel -. 0.5) then Down 
-  | Down : {} -> do level = ((last level) +. (0. -. outflow) *. dt) and flow = 0. unless ((last level) <= minlevel +. 0.5) then Up 
-  end : {}
+  | Up -> do level = ((last level) +. (maxflow -. outflow) *. dt) and flow = maxflow unless ((last level) >= maxlevel -. 0.5) then Down 
+  | Down -> do level = ((last level) +. (0. -. outflow) *. dt) and flow = 0. unless ((last level) <= minlevel +. 0.5) then Up 
+  end
 in (flow, level)
 
 
