@@ -423,6 +423,8 @@ let step_pred_of_ann_nf (ann_nf : Zparsetree.exp) : Zparsetree.exp =
   match later.desc with
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name "globally"); _ }, [psi]) ->
       psi
+  | Zparsetree.Econst (Ebool true) ->
+      mk_true
   | _ ->
       failwith "Expected annotation NF of shape phi && nxt(globally(psi))"
 
@@ -431,6 +433,7 @@ let base_ind_of_nf (nf : Zparsetree.exp) : Zparsetree.exp * Zparsetree.exp =
   match later.desc with
   | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name "globally"); _ }, [psi]) ->
       (phi, psi)
+  | Zparsetree.Econst (Ebool true) -> (phi, mk_true)
   | _ ->
       failwith "base_ind_of_nf: expected phi && nxt(globally(psi))"
   
@@ -648,6 +651,43 @@ let rec rename_var_in_exp (oldv:string) (newv:string) (e:Zparsetree.exp) : Zpars
   in
   go e
 
+let is_operator_like_name (s:string) : bool =
+  let is_op_char = function
+    | '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' -> true
+    | _ -> false
+  in
+  String.length s > 0 && String.for_all is_op_char s
+
+let is_builtin_zpt_name (s:string) : bool =
+  is_operator_like_name s ||
+  List.mem s ["not"; "nxt"; "globally"; "m"; "hd"; ""]
+
+let shift_current_vars_to_last_in_exp
+    ?(shiftable_vars:string list option=None)
+    ~(binder:string)
+    (e:Zparsetree.exp)
+  : Zparsetree.exp =
+  let is_already_last s = String.length s >= 5 && String.sub s 0 5 = "last_" in
+  let should_shift s =
+    if s = binder || is_builtin_zpt_name s || is_already_last s then false
+    else
+      match shiftable_vars with
+      | Some xs -> List.mem s xs
+      | None -> true
+  in
+  let rec go e =
+    match e.desc with
+    | Zparsetree.Evar (Name s) ->
+        if should_shift s
+        then { e with desc = Zparsetree.Evar (Name ("last_" ^ s)) }
+        else e
+    | Zparsetree.Eapp (ai, f, args) ->
+        { e with desc = Zparsetree.Eapp (ai, go f, List.map go args) }
+    | Zparsetree.Etuple es ->
+        { e with desc = Zparsetree.Etuple (List.map go es) }
+    | _ -> e
+  in
+  go e
 
 
 (* ---------- canon_from_env: turn stored (Fixpoint-friendly) types into Marvelus NF ---------- *)
@@ -978,6 +1018,7 @@ let rename_state_last_binder_to_return
 
 
 let ensure_last_from_annotation
+  ?(shiftable_vars:string list option=None)
   ~(source_name:string)
   ~(base_name:string)
   ~(binder:string)
@@ -988,6 +1029,7 @@ match find_binding ghost_name with
 | Some _ -> ()
 | None ->
     let psi = step_pred_of_ann_nf ann_nf in
+    let psi = shift_current_vars_to_last_in_exp ~shiftable_vars ~binder psi in
     let psi = rename_var_in_exp binder "v" psi in
     let base_ty =
       mk_type
@@ -1036,6 +1078,34 @@ let first_state_name
       | h :: _ -> state_name_of_pat h.s_state
       | [] -> failwith "Empty automaton"
 
+
+
+let rec assigned_vars_in_eq (eq:Zelus.eq) : string list =
+  let union a b = List.sort_uniq String.compare (a @ b) in
+  match eq.eq_desc with
+  | Zelus.EQeq (pat, _rhs) ->
+      begin match pat.p_desc with
+      | Zelus.Evarpat id -> [zident_pretty id]
+      | Zelus.Etypeconstraintpat (p0, _ty) ->
+          begin match p0.p_desc with
+          | Zelus.Evarpat id -> [zident_pretty id]
+          | Zelus.Etuplepat ps -> List.map zelus_var_name_of_pat ps
+          | _ -> []
+          end
+      | Zelus.Etuplepat ps -> List.map zelus_var_name_of_pat ps
+      | _ -> []
+      end
+  | Zelus.EQand eqs
+  | Zelus.EQbefore eqs
+  | Zelus.EQreset (eqs, _) ->
+      List.fold_left (fun acc q -> union acc (assigned_vars_in_eq q)) [] eqs
+  | Zelus.EQblock blk ->
+      assigned_vars_in_block blk
+  | _ -> []
+
+and assigned_vars_in_block (blk:Zelus.eq list Zelus.block) : string list =
+  let union a b = List.sort_uniq String.compare (a @ b) in
+  List.fold_left (fun acc q -> union acc (assigned_vars_in_eq q)) [] blk.b_body
 
 let rec rhs_for_var_in_eq (x:string) (eq:Zelus.eq) : Zelus.exp option =
   match eq.eq_desc with
@@ -1171,5 +1241,5 @@ let exclusive_mode_fact (varname:string) (chosen:string) (all_modes:string list)
   in
   mk_big_and (
     eq_const_name varname chosen
-    :: List.map (fun m -> mk_not (eq_const_name varname m)) others
+    :: List.map (fun m -> mk_paren (mk_not (eq_const_name varname m))) others
   )

@@ -20,39 +20,49 @@ let node exec () : {(v:int) | true} =
     and init lg = true
     and init ww = true
         and automaton_ref : 
-        {last_vel : {v:float | v=10. && nxt(globally(v >= 0.))}; 
-        last_x : {v:float | v >= 0. && nxt(globally(v>=0. && (last vel <= 1.1 *. vstallflaps) ==> (v +. (last vel *. dt) +. (0.5 *. a *. dt *. dt) < lrunway)))};  
-        last_h : {v:float | globally(v >= 0. && v < hceiling)}; 
-        last_thr : {v:bool | true}; last_fl : {v:bool | true}; last_lg : {v:bool | true}; last_ww : {v:bool | true}}
-        | Takeoff : {vel:{v:float | globally(v = (last vel) +. (a *. dt))}; x:{v:float | globally((v = (last x) +. ((last vel +. vel) *. 0.5 *. dt)))}; h:{v:float | globally(v = (last h) && v < hceiling)}; thr:{v:bool | globally(v = true)}; fl:{v:bool | globally(v = true)}; lg:{v:bool | globally(v = true)}; ww:{v:bool | globally(v = true)}} ->
-            do vel = last vel +. (a *. dt)
+        {
+            h : {v:float | v = 0. && nxt(globally(v >= 0. && v < hceiling))}; 
+            vel : {v:float | v=10. && nxt(globally(v >= 0.))}; 
+            x : {v:float | v >= 0. &&
+                    nxt(globally(
+                        v >= 0. &&
+                        ((last_vel<=((1.1 *. vstallflaps) -. (a*.dt))) ==>
+                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. (2. *. a)) < lrunway))
+                    ))};
+            thr : {v:bool | true && nxt(globally(true))}; 
+            fl : {v:bool | true }; 
+            lg : {v:bool | v = true && nxt(globally(( (last_vel<=((1.1 *. vstallflaps) -. (a*.dt))) ==> v=true) && ((last_vel > ((1.1 *. vstallflaps) -. (a*.dt))) ==> v=false)))}; 
+            ww : {v:bool | true && nxt(globally(true))}
+        }
+        
+        | Takeoff : {} ->
+            do h = last h
+            and vel = last vel +. (a *. dt)
             and x = last x +. ((last vel +. vel) *. 0.5) *. dt
-            and h = last h
             and thr = true
             and fl = true
             and lg = true
             and ww = true
-            unless (last vel > (1.1 *. vstallflaps)) then Climb
-        | Climb : {x:{v:float | globally(v = (last x) +. (((last vel) +. vel) *. 0.5 *. dt))}; vel:{v:float | globally(v = (last vel) +. (a *. dt))}; h:{v:float | globally(v = (last h) +. (c *. dt))}; thr:{v:bool | globally(v = true)}; fl:{v:bool | globally(v = true)}; lg:{v:bool | globally(v = false)}; ww:{v:bool | globally(v = false)}} ->
-            do vel = last vel +. (a *. dt)
+            unless (last vel > (1.1 *. vstallflaps) -. (a*.dt)) then Climb
+        | Climb : {} ->
+            do h = last h +. (c *. dt)
+            and vel = last vel +. (a *. dt)
             and x = last x +. ((last vel +. vel) *. 0.5) *. dt
-            and h = last h +. (c *. dt)
             and thr = true
             and fl = true
             and lg = false
             and ww = false
             unless (last h >= hceiling -. (c *. dt *. 2.)) then Cruise
-        | Cruise : {x:{v:float | globally(v = (last x) +. (vel *. dt))}; vel:{v:float | globally(v = (last vel) )}; h:{v:float | globally(v = (last h) && v < hceiling)}; thr:{v:bool | globally(v = false)}; fl:{v:bool | globally(v = false)}; lg:{v:bool | globally(v = false)}; ww:{v:bool | globally(v = false)}} ->
-            do vel = last vel
-            and x = last x +. (vel *. dt)
-            and h = last h
+        | Cruise : {} ->
+            do h = last h
+            and vel = last vel
+            and x = last x +. ((last vel +. vel) *. 0.5) *. dt
             and thr = false
             and fl = false
             and lg = false
             and ww = false
             unless (false) then Cruise
-        end : {x : {v:float | globally(v >= 0.)}; vel : {v:float | globally(v >= 0.)}; h : {v:float | globally(v >= 0. && v < hceiling)}; 
-        thr : {v:bool | true}; fl : {v:bool | true}; lg : {v:bool | true}; ww : {v:bool | true}} in (x, vel, h, thr, fl, lg, ww)
+        end : {} in (x, vel, h, thr, fl, lg, ww)
 
 
 let hybrid main () = 

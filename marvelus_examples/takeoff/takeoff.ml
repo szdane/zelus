@@ -1,8 +1,8 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-02-12-21:30) *)
+  (2026-03-30-0:4) *)
 open Ztypes
-type state__1394 = Takeoff_Cruise_68 | Takeoff_Climb_67 | Takeoff_Takeoff_66 
-type state__1393 = Takeoff_Cruise_49 | Takeoff_Climb_48 | Takeoff_Takeoff_47 
+type state__1527 = Takeoff_Cruise_68 | Takeoff_Climb_67 | Takeoff_Takeoff_66 
+type state__1526 = Takeoff_Cruise_49 | Takeoff_Climb_48 | Takeoff_Takeoff_47 
 let vstallflaps = 20.
 
 let vstallclean = 25.
@@ -39,7 +39,7 @@ let exec  =
     ();
     { i_100 = (false:bool) ;
       r_99 = (false:bool) ;
-      s_98 = (Takeoff_Cruise_49:state__1393) ;
+      s_98 = (Takeoff_Cruise_49:state__1526) ;
       x_94 = (42.:float) ;
       ww_93 = (false:bool) ;
       vel_92 = (42.:float) ;
@@ -62,7 +62,9 @@ let exec  =
        (begin match self.s_98 with
               | Takeoff_Takeoff_47 ->
                   (if self.r_99 then ()) ;
-                  (begin match (>) l_96  (( *. ) 1.1  vstallflaps) with
+                  (begin match (>) l_96 
+                                   ((-.) (( *. ) 1.1  vstallflaps) 
+                                         (( *. ) a  dt)) with
                          | true ->
                              self.r_99 <- true ;
                              self.s_98 <- Takeoff_Climb_48
@@ -92,31 +94,33 @@ let exec  =
                    self.lg_90 <- true ;
                    self.fl_88 <- true ;
                    self.thr_91 <- true ;
-                   self.h_89 <- l_95 ;
                    self.vel_92 <- (+.) l_96  (( *. ) a  dt) ;
                    self.x_94 <- (+.) l_97 
                                      (( *. ) (( *. ) ((+.) l_96  self.vel_92)
-                                                      0.5)  dt)
+                                                      0.5)  dt) ;
+                   self.h_89 <- l_95
                | Takeoff_Climb_48 ->
                    (if self.r_99 then ()) ;
                    self.ww_93 <- false ;
                    self.lg_90 <- false ;
                    self.fl_88 <- true ;
                    self.thr_91 <- true ;
-                   self.h_89 <- (+.) l_95  (( *. ) c  dt) ;
                    self.vel_92 <- (+.) l_96  (( *. ) a  dt) ;
                    self.x_94 <- (+.) l_97 
                                      (( *. ) (( *. ) ((+.) l_96  self.vel_92)
-                                                      0.5)  dt)
+                                                      0.5)  dt) ;
+                   self.h_89 <- (+.) l_95  (( *. ) c  dt)
                | Takeoff_Cruise_49 ->
                    (if self.r_99 then ()) ;
                    self.ww_93 <- false ;
                    self.lg_90 <- false ;
                    self.fl_88 <- false ;
                    self.thr_91 <- false ;
-                   self.h_89 <- l_95 ;
                    self.vel_92 <- l_96 ;
-                   self.x_94 <- (+.) l_97  (( *. ) self.vel_92  dt)
+                   self.x_94 <- (+.) l_97 
+                                     (( *. ) (( *. ) ((+.) l_96  self.vel_92)
+                                                      0.5)  dt) ;
+                   self.h_89 <- l_95
                 end) ;
         (self.x_94 ,
          self.vel_92 ,
@@ -150,7 +154,7 @@ let main (cstate_130:Ztypes.cstate) =
       result_104 = (():unit) ;
       i_129 = (false:bool) ;
       r_128 = (false:bool) ;
-      s_127 = (Takeoff_Cruise_68:state__1394) ;
+      s_127 = (Takeoff_Cruise_68:state__1527) ;
       x_123 = (42.:float) ;
       ww_122 = (false:bool) ;
       vel_121 = (42.:float) ;
@@ -182,7 +186,9 @@ let main (cstate_130:Ztypes.cstate) =
                                 | Takeoff_Takeoff_66 ->
                                     (if self.r_128 then ()) ;
                                     (begin match (>) l_125 
-                                                     (( *. ) 1.1  vstallflaps) with
+                                                     ((-.) (( *. ) 1.1 
+                                                                   vstallflaps)
+                                                            (( *. ) a  dt)) with
                                            | true ->
                                                self.r_128 <- true ;
                                                self.s_127 <- Takeoff_Climb_67
@@ -215,7 +221,6 @@ let main (cstate_130:Ztypes.cstate) =
                                      self.lg_119 <- true ;
                                      self.fl_117 <- true ;
                                      self.thr_120 <- true ;
-                                     self.h_118 <- l_124 ;
                                      self.vel_121 <- (+.) l_125 
                                                           (( *. ) a  dt) ;
                                      self.x_123 <- (+.) l_126 
@@ -224,15 +229,14 @@ let main (cstate_130:Ztypes.cstate) =
                                                                     l_125 
                                                                     self.vel_121)
                                                                     0.5)  
-                                                                dt)
+                                                                dt) ;
+                                     self.h_118 <- l_124
                                  | Takeoff_Climb_67 ->
                                      (if self.r_128 then ()) ;
                                      self.ww_122 <- false ;
                                      self.lg_119 <- false ;
                                      self.fl_117 <- true ;
                                      self.thr_120 <- true ;
-                                     self.h_118 <- (+.) l_124  (( *. ) c  dt)
-                                     ;
                                      self.vel_121 <- (+.) l_125 
                                                           (( *. ) a  dt) ;
                                      self.x_123 <- (+.) l_126 
@@ -241,18 +245,23 @@ let main (cstate_130:Ztypes.cstate) =
                                                                     l_125 
                                                                     self.vel_121)
                                                                     0.5)  
-                                                                dt)
+                                                                dt) ;
+                                     self.h_118 <- (+.) l_124  (( *. ) c  dt)
                                  | Takeoff_Cruise_68 ->
                                      (if self.r_128 then ()) ;
                                      self.ww_122 <- false ;
                                      self.lg_119 <- false ;
                                      self.fl_117 <- false ;
                                      self.thr_120 <- false ;
-                                     self.h_118 <- l_124 ;
                                      self.vel_121 <- l_125 ;
                                      self.x_123 <- (+.) l_126 
-                                                        (( *. ) self.vel_121 
-                                                                dt)
+                                                        (( *. ) (( *. ) 
+                                                                   ((+.) 
+                                                                    l_125 
+                                                                    self.vel_121)
+                                                                    0.5)  
+                                                                dt) ;
+                                     self.h_118 <- l_124
                                   end) ;
                           (let (wwp_115:bool) = self.ww_122 in
                            let (lgp_112:bool) = self.lg_119 in

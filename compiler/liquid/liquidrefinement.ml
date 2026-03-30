@@ -168,7 +168,7 @@ let refine_parts_of_gamma_ty (ty : Zparsetree.type_expression)
       (vb, base_name, pred)
   | _ -> failwith "Gamma binding is not a refinement"
 
-let ensure_last_of_bound_var (y:string) : unit =
+let ensure_last_of_bound_var ?(shiftable_vars:string list option=None) (y:string) : unit =
   let ghost_name = "last_" ^ y in
   match find_binding ghost_name with
   | Some _ -> ()
@@ -178,6 +178,7 @@ let ensure_last_of_bound_var (y:string) : unit =
       | Some ty ->
           let (vb, base_name, pred) = refine_parts_of_gamma_ty ty in
           let psi = step_pred_of_ann_nf pred in
+          let psi = shift_current_vars_to_last_in_exp ~shiftable_vars ~binder:vb psi in
           let psi = rename_var_in_exp vb "v" psi in
           let base_ty =
             mk_type
@@ -998,11 +999,7 @@ let process_let_rec_fby
 =
   (* Normalize annotated predicate once *)
   let ann_nf  = zls_pred_to_nf ~binder:ret_binder ann_pred_zls in
-  ensure_last_from_annotation
-  ~source_name:x
-  ~base_name
-  ~binder:ret_binder
-  ~ann_nf;
+  ensure_last_from_annotation ~source_name:x ~base_name ~binder:ret_binder ~ann_nf ~shiftable_vars:None;
   let (phi_now, _psi_later) = split_nf ann_nf in
  
  (* --- Provisional install of x with full annotation NF --- *)
@@ -1410,10 +1407,28 @@ let synth_var_in_block
         | None ->
             failwith ("Could not synthesize RHS of " ^ x ^ " in automaton mode")
       in
-      let (base_phi, ind_psi) = base_ind_of_nf full_nf in
+      let ann_nf = zpt_pred_to_nf ~binder full_nf in
+      let (base_phi, ind_psi) = base_ind_of_nf ann_nf in
       { binder; base_name; base_phi; ind_psi }
 
-      let synth_var_in_state_aut
+let relational_nf_of_block
+    ~(x:string)
+    ~(binder:string)
+    (blk : Zelus.eq list Zelus.block)
+  : Zparsetree.exp =
+  let assigned = assigned_vars_in_block blk in
+  let eq_for_var y =
+    match rhs_for_var_in_block y blk with
+    | None ->
+        failwith ("Automaton mode does not define variable " ^ y)
+    | Some rhs ->
+        let lhs_name = if String.equal y x then binder else y in
+        mk_eq (mk_var lhs_name) { desc = vc_gen_expression rhs; loc = dummy_loc }
+  in
+  let conj = mk_big_and (List.map eq_for_var assigned) in
+  mk_and conj (mk_X (mk_G conj))
+
+let synth_var_in_state_aut
     ~(x:string)
     ~(binder:string)
     ~(base_name:string)
@@ -1422,14 +1437,10 @@ let synth_var_in_block
   match rhs_for_var_in_block x sha.sha_handler.s_body with
   | None ->
       failwith ("Automaton mode does not define variable " ^ x)
-  | Some rhs ->
-      let full_nf =
-        match synth_nf_of_rhs ~binder base_name rhs with
-        | Some nf -> nf
-        | None ->
-            failwith ("Could not synthesize RHS of " ^ x ^ " in automaton mode")
-      in
-      let (base_phi, ind_psi) = base_ind_of_nf full_nf in
+  | Some _rhs ->
+      let full_nf = relational_nf_of_block ~x ~binder sha.sha_handler.s_body in
+      let ann_nf_full = zpt_pred_to_nf ~binder full_nf in
+      let (base_phi, ind_psi) = base_ind_of_nf ann_nf_full in
       { binder; base_name; base_phi; ind_psi }
 
 let ordered_escape_guards_aut (escs : Zelus.escape list)
@@ -1687,7 +1698,8 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                   ~source_name:x
                   ~base_name
                   ~binder:ret_binder
-                  ~ann_nf;
+                  ~ann_nf
+                  ~shiftable_vars:None;
           
                 List.iter ensure_last_of_bound_var (collect_plain_vars e2);
                 let lhs_nf = nf_fby_eq ~binder:ret_binder ~e1 ~e2 in
@@ -2219,6 +2231,37 @@ let same_ltuple_type (t1:Zelus.type_expression) (t2:Zelus.type_expression) : boo
       Pprint.string_of_type z1 = Pprint.string_of_type z2
   | _ -> false
 
+let preload_last_vars_aut (vars : (string * Zelus.type_expression) list) : unit =
+  let shiftable_vars =
+    vars
+    |> List.map fst
+    |> List.filter (fun x -> not (String.length x >= 5 && String.sub x 0 5 = "last_"))
+  in
+  List.iter
+    (fun (x, ty_ann_zelus) ->
+      (* skip explicit last_* entries if the user wrote any *)
+      if not (String.length x >= 5 && String.sub x 0 5 = "last_") then
+        let ty_ann_zpt = to_zpt_type ty_ann_zelus in
+        match ty_ann_zpt.desc with
+        | Zparsetree.Erefinement ((ret_binder, base_ty), _pred) ->
+            let base_name =
+              match base_ty.desc with
+              | Zparsetree.Etypeconstr (Name b, []) -> b
+              | _ -> failwith "Automaton preload_last_vars_aut: base must be Etypeconstr(Name,[])"
+            in
+            let (_vb, _base, ann_nf) = refine_parts_of_gamma_ty ty_ann_zpt in
+            let ann_nf = zpt_pred_to_nf ~binder:ret_binder ann_nf in
+            ensure_last_from_annotation
+              ~source_name:x
+              ~base_name
+              ~binder:ret_binder
+              ~ann_nf
+              ~shiftable_vars:(Some shiftable_vars)
+        | _ ->
+            (* ignore tuple-labeled refinements for now; scalar automata path only *)
+            ())
+    vars
+
 let process_automaton_ref_eq_aut
   (_is_weak       : bool)
   (aut_refenv_opt : Zelus.refenv option)
@@ -2233,12 +2276,14 @@ let process_automaton_ref_eq_aut
 
     (* Use only the first user-provided refenv as the spec environment. *)
     preload_refenv_vars_aut vars;
+    preload_last_vars_aut vars;
 
     (* Now verify each ordinary variable x in the refenv individually. *)
     List.iter
       (fun (x, ty_ann_zelus) -> begin
           let ty_ann_zpt = to_zpt_type ty_ann_zelus in
           let (ret_binder, base_name, ann_nf) = refine_parts_of_gamma_ty ty_ann_zpt in
+          let ann_nf = zpt_pred_to_nf ~binder:ret_binder ann_nf in
           let (phi_ann, psi_ann) = base_ind_of_nf ann_nf in
 
           (* HEAD CHECK:
@@ -2268,13 +2313,13 @@ let process_automaton_ref_eq_aut
               (Printf.sprintf
                   "Liquid type error: automaton variable %s violates its initial refinement" x);
 
-          (* INDUCTION HYPOTHESIS:
+          (* (* INDUCTION HYPOTHESIS:
               last_x gets the tail part of the REQUIRED annotation. *)
           ensure_last_from_annotation
             ~source_name:x
             ~base_name
             ~binder:ret_binder
-            ~ann_nf;
+            ~ann_nf; *)
           (* TAIL CHECK:
               synthesize the automaton NF, discard its head, and compare only the tail. *)
           let lhs_nf =
@@ -2285,7 +2330,8 @@ let process_automaton_ref_eq_aut
               ~first_state
               states
           in
-          let (_phi_aut, psi_aut) = base_ind_of_nf lhs_nf in
+          let ann_nf_lhs = zpt_pred_to_nf ~binder:ret_binder lhs_nf in
+          let (_phi_aut, psi_aut) = base_ind_of_nf ann_nf_lhs in
 
           let ok_tail =
             run_subtyping_pred

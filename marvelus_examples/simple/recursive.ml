@@ -1,22 +1,20 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-03-30-0:1) *)
+  (2026-03-25-16:39) *)
 open Ztypes
-type ('a) _hold_first_then =
+type ('a) _exec1 =
   { mutable m_27 : 'a }
 
-let hold_first_then  = 
-   let hold_first_then_alloc _ =
+let exec1  = 
+   let exec1_alloc _ =
      ();{ m_27 = (42:int) } in
-  let hold_first_then_reset self  =
-    (self.m_27 <- 0:unit) in 
-  let hold_first_then_step self ((a_26:int): int) =
+  let exec1_reset self  =
+    (self.m_27 <- 1:unit) in 
+  let exec1_step self () =
     ((let (next_28:int) = self.m_27 in
-      self.m_27 <- a_26 ; next_28):int) in
-  Node { alloc = hold_first_then_alloc; reset = hold_first_then_reset ;
-                                        step = hold_first_then_step }
+      let ((ex_26:int): int) = next_28 in
+      self.m_27 <- (+) ex_26  1 ; ex_26):int) in
+  Node { alloc = exec1_alloc; reset = exec1_reset ; step = exec1_step }
 let dt = 0.1
-
-let a = 5
 
 type ('f , 'e , 'd , 'c , 'b , 'a) _main =
   { mutable major_30 : 'f ;
@@ -45,15 +43,16 @@ let main (cstate_42:Ztypes.cstate) =
             (let (trigger_31:zero) = z_34 in
              (begin match trigger_31 with
                     | true ->
-                        let ((a_39:int): int) = a in
+                        let () = () in
                         let (next_41:int) = self.m_40 in
-                        self.m_40 <- a_39 ;
-                        (let (x_38:int) = next_41 in
+                        let ((ex_39:int): int) = next_41 in
+                        self.m_40 <- (+) ex_39  1 ;
+                        (let (x_38:int) = ex_39 in
                          let _ = print_int x_38 in
                          self.result_32 <- print_newline ())
                     | _ -> self.result_32 <- ()  end) ; self.result_32)) in
        cstate_42.horizon <- min cstate_42.horizon  self.h_37 ; result_47)):
     unit) in 
   let main_reset self  =
-    ((self.i_35 <- true ; self.m_40 <- 0):unit) in
+    ((self.i_35 <- true ; self.m_40 <- 1):unit) in
   Node { alloc = main_alloc; step = main_step ; reset = main_reset }
