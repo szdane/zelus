@@ -31,7 +31,7 @@ let rec string_of_basic_type (t : type_expression) =
   | _ -> "<complex-type>"
 
 let is_infix op =
-  List.mem op ["<"; "<="; ">"; ">="; "="; "!="; "&&"; "||"; "+"; "-"; "*"; "/"; "=>"; "-."; "+."; "*."; "/."; "==>"]
+  List.mem op ["<"; "<="; ">"; ">="; "="; "!="; "&&"; "||"; "+"; "-"; "*"; "/"; "=>"; "-."; "+."; "*."; "/."; "==>"; "<=>"]
 
 let rec string_of_expr (e : exp) =
   match e.desc with

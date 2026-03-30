@@ -31,8 +31,8 @@ let node exec () : {(v:int) | true} =
                     ))};
             thr : {v:bool | true && nxt(globally(true))}; 
             fl : {v:bool | true }; 
-            lg : {v:bool | v = true && nxt(globally(( (last_vel<=((1.1 *. vstallflaps) -. (a*.dt))) ==> v=true) && ((last_vel > ((1.1 *. vstallflaps) -. (a*.dt))) ==> v=false)))}; 
-            ww : {v:bool | true && nxt(globally(true))}
+            lg : {v:bool | globally(ww <=> v)}; 
+            ww : {v:bool | v = true && nxt(globally(( (last_vel<=((1.1 *. vstallflaps) -. (a*.dt))) ==> v=true) && ((last_vel > ((1.1 *. vstallflaps) -. (a*.dt))) ==> v=false)))}
         }
         
         | Takeoff ->

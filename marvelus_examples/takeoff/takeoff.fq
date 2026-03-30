@@ -1,55 +1,49 @@
- bind 0 nxt : {v:func(1, [bool, bool]) | true }
+bind 0 nxt : {v:func(1, [bool, bool]) | true }
 bind 1 hd  : {v:func(1, [bool, bool]) | true}
 bind 2 globally : {v:func(1, [bool, bool]) | true}
 bind 3 m  : {v:func(1, [bool, bool]) | true}
-bind 400 Climb : {v:bool | true}
-bind 401 Cruise : {v:bool | true}
-bind 402 Takeoff : {v:bool | true}
-bind 403 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && nxt (globally tmp_6)))}
-bind 404 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && nxt (globally tmp_8)))}
-bind 405 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && nxt (globally tmp_7)))}
-bind 406 fl : {v:bool | (true && nxt (globally true))}
-bind 407 h : {v:real | ( ((tmp_15 =  (((v >= 0.0) && (v < hceiling))))) && ((v = 0.0) && nxt (globally tmp_15)))}
-bind 408 hceiling : {v:real | ( ((tmp_9 =  (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit))))))) && (((v > hinit) && (v > (((c * (((1.1 * vstallclean) - vinit) / a)) + (2.0 * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && nxt (globally tmp_9)))}
-bind 409 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && nxt (globally tmp_5)))}
-bind 410 last_fl : {v:bool | true}
-bind 411 last_h : {v:real | ((v >= 0.0) && (v < hceiling))}
-bind 412 last_lg : {v:bool | (((v = true) ==> (last_vel <= ((1.1 * vstallflaps) - (a * dt)))) && ((v = false) ==> (last_vel > ((1.1 * vstallflaps) - (a * dt)))))}
-bind 413 last_thr : {v:bool | true}
-bind 414 last_vel : {v:real | (v >= 0.0)}
-bind 415 last_ww : {v:bool | true}
-bind 416 last_x : {v:real | ((v >= 0.0) && ((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (last_vel * last_vel)) / (2.0 * a))) < lrunway)))}
-bind 417 lg : {v:bool |((((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> (v = true)) && ((last_vel > ((1.1 * vstallflaps) - (a * dt)))==>(v = false))))}
-bind 418 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43))))) && ((((v > xinit) && (v > ((((((((1.1 * 1.1) * vstallflaps) * vstallflaps) - (vinit * vinit)) / 2) / a) + xinit) + ((((2 * 1.1) * vstallflaps) + (a * dt)) * dt)))) && (v = 100.43)) && nxt (globally tmp_10)))}
-bind 419 mode : {v:bool | (((v = Climb) || (v = Cruise)) || (v = Takeoff))}
-bind 420 mode_last : {v:bool | (((v = Climb) || (v = Cruise)) || (v = Takeoff))}
-bind 421 thr : {v:bool | (true && nxt (globally true))}
-bind 422 tmp_1 : {v:bool | true}
-bind 423 tmp_10 : {v:bool | true}
-bind 424 tmp_11 : {v:bool | true}
-bind 425 tmp_12 : {v:bool | true}
-bind 426 tmp_13 : {v:bool | true}
-bind 427 tmp_14 : {v:bool | true}
-bind 428 tmp_15 : {v:bool | true}
-bind 429 tmp_16 : {v:bool | true}
-bind 430 tmp_2 : {v:bool | true}
-bind 431 tmp_3 : {v:bool | true}
-bind 432 tmp_4 : {v:bool | true}
-bind 433 tmp_5 : {v:bool | true}
-bind 434 tmp_6 : {v:bool | true}
-bind 435 tmp_7 : {v:bool | true}
-bind 436 tmp_8 : {v:bool | true}
-bind 437 tmp_9 : {v:bool | true}
-bind 438 vel : {v:real | ( ((tmp_16 =  ((v >= 0.0)))) && ((v = 10.0) && nxt (globally tmp_16)))}
-bind 439 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && nxt (globally tmp_4)))}
-bind 440 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && nxt (globally tmp_2)))}
-bind 441 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && nxt (globally tmp_1)))}
-bind 442 ww : {v:bool | (true && nxt (globally true))}
-bind 443 x : {v:real | ( ((tmp_13 =  (((v >= 0.0) && ((last_vel <= ((1.1 * vstallflaps) - (a*dt))) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (vel * vel)) / (2.0 * a))) < lrunway)))))) && ((v >= 0.0) && nxt (globally tmp_13)))}
-bind 444 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && nxt (globally tmp_3)))}
+bind 186 a : {v:real | ( ((tmp_6 =  (((v > 0.0) && (v = 2.0))))) && (((v > 0.0) && (v = 2.0)) && nxt (globally tmp_6)))}
+bind 187 c : {v:real | ( ((tmp_8 =  (((v > 0.0) && (v = 4.0))))) && (((v > 0.0) && (v = 4.0)) && nxt (globally tmp_8)))}
+bind 188 dt : {v:real | ( ((tmp_7 =  (((v > 0.0) && (v = 0.1))))) && (((v > 0.0) && (v = 0.1)) && nxt (globally tmp_7)))}
+bind 189 fl : {v:bool | true}
+bind 190 h : {v:real | ( ((tmp_11 =  (((v >= 0.0) && (v < hceiling))))) && ((v = 0.0) && nxt (globally tmp_11)))}
+bind 191 hceiling : {v:real | ( ((tmp_9 =  ((((v > hinit) && (v > (((c * ((vstallclean - vinit) / a)) + (c * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && (v = 6.5))))) && ((((v > hinit) && (v > (((c * ((vstallclean - vinit) / a)) + (c * dt)) - ((c * (((1.1 * vstallflaps) - vinit) / a)) + hinit)))) && (v = 6.5)) && nxt (globally tmp_9)))}
+bind 192 hinit : {v:real | ( ((tmp_5 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && nxt (globally tmp_5)))}
+bind 193 last_fl : {v:bool | true}
+bind 194 last_h : {v:real | ((v >= 0.0) && (v < hceiling))}
+bind 195 last_lg : {v:bool | (last_ww <==> v)}
+bind 196 last_thr : {v:bool | true}
+bind 197 last_vel : {v:real | (v >= 0.0)}
+bind 198 last_ww : {v:bool | ((((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> v) = true) && (((last_vel > ((1.1 * vstallflaps) - (a * dt))) ==> v) = false))}
+bind 199 last_x : {v:real | ((v >= 0.0) && ((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (last_vel * last_vel)) / (2.0 * a))) < lrunway)))}
+bind 200 lg : {v:bool | ( ((tmp_14 =  ((ww <==> v)))) && globally tmp_14)}
+bind 201 lrunway : {v:real | ( ((tmp_10 =  ((((v > xinit) && (v >= (((vinit * (((1.1 * vstallflaps) - vinit) / a)) + (((((1.1 * vstallflaps) - vinit) * ((1.1 * vstallflaps) - vinit)) / 2) / a)) + xinit))) && (v = 96.0))))) && ((((v > xinit) && (v >= (((vinit * (((1.1 * vstallflaps) - vinit) / a)) + (((((1.1 * vstallflaps) - vinit) * ((1.1 * vstallflaps) - vinit)) / 2) / a)) + xinit))) && (v = 96.0)) && nxt (globally tmp_10)))}
+bind 202 thr : {v:bool | (true && nxt (globally true))}
+bind 203 tmp_1 : {v:bool | true}
+bind 204 tmp_10 : {v:bool | true}
+bind 205 tmp_11 : {v:bool | true}
+bind 206 tmp_12 : {v:bool | true}
+bind 207 tmp_13 : {v:bool | true}
+bind 208 tmp_14 : {v:bool | true}
+bind 209 tmp_15 : {v:bool | true}
+bind 210 tmp_2 : {v:bool | true}
+bind 211 tmp_3 : {v:bool | true}
+bind 212 tmp_4 : {v:bool | true}
+bind 213 tmp_5 : {v:bool | true}
+bind 214 tmp_6 : {v:bool | true}
+bind 215 tmp_7 : {v:bool | true}
+bind 216 tmp_8 : {v:bool | true}
+bind 217 tmp_9 : {v:bool | true}
+bind 218 vel : {v:real | ( ((tmp_12 =  ((v >= 0.0)))) && ((v = 10.0) && nxt (globally tmp_12)))}
+bind 219 vinit : {v:real | ( ((tmp_4 =  (((v >= 0.0) && (v = 10.0))))) && (((v >= 0.0) && (v = 10.0)) && nxt (globally tmp_4)))}
+bind 220 vstallclean : {v:real | ( ((tmp_2 =  (((v > 0.0) && (v = 25.0))))) && (((v > 0.0) && (v = 25.0)) && nxt (globally tmp_2)))}
+bind 221 vstallflaps : {v:real | ( ((tmp_1 =  (((v > 0.0) && (v = 20.0))))) && (((v > 0.0) && (v = 20.0)) && nxt (globally tmp_1)))}
+bind 222 ww : {v:bool | ( ((tmp_15 =  (((((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> v) = true) && (((last_vel > ((1.1 * vstallflaps) - (a * dt))) ==> v) = false))))) && ((v = true) && nxt (globally tmp_15)))}
+bind 223 x : {v:real | ( ((tmp_13 =  (((v >= 0.0) && ((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (vel * vel)) / (2.0 * a))) < lrunway)))))) && ((v >= 0.0) && nxt (globally tmp_13)))}
+bind 224 xinit : {v:real | ( ((tmp_3 =  (((v >= 0.0) && (v = 0.0))))) && (((v >= 0.0) && (v = 0.0)) && nxt (globally tmp_3)))}
 
 constraint:
-  env [0;1;2;3;400;401;402;403;404;405;406;407;408;409;410;411;412;413;414;415;416;417;418;419;420;421;422;423;424;425;426;427;428;429;430;431;432;433;434;435;436;437;438;439;440;441;442;443;444]
-  lhs {v:real | (((((((((mode_last = Takeoff) &&  (not ((mode_last = Climb)))) &&  (not ((mode_last = Cruise)))) &&  (not ((last_vel > ((1.1 * vstallflaps) - (a * dt)))))) && (((((((fl = true) && (h = last_h)) && (lg = true)) && (thr = true)) && (vel = (last_vel + (a * dt)))) && (ww = true)) && (v = (last_x + (((last_vel + vel) * 0.5) * dt))))) && (((mode = Takeoff) &&  (not ((mode = Climb)))) &&  (not ((mode = Cruise))))) || ((((((mode_last = Takeoff) &&  (not ((mode_last = Climb)))) &&  (not ((mode_last = Cruise)))) && (true && (last_vel > ((1.1 * vstallflaps) - (a * dt))))) && (((((((fl = true) && (h = (last_h + (c * dt)))) && (lg = false)) && (thr = true)) && (vel = (last_vel + (a * dt)))) && (ww = false)) && (v = (last_x + (((last_vel + vel) * 0.5) * dt))))) && (((mode = Climb) &&  (not ((mode = Cruise)))) &&  (not ((mode = Takeoff)))))) || (((((((mode_last = Climb) &&  (not ((mode_last = Cruise)))) &&  (not ((mode_last = Takeoff)))) &&  (not ((last_h >= (hceiling - ((c * dt) * 2.0)))))) && (((((((fl = true) && (h = (last_h + (c * dt)))) && (lg = false)) && (thr = true)) && (vel = (last_vel + (a * dt)))) && (ww = false)) && (v = (last_x + (((last_vel + vel) * 0.5) * dt))))) && (((mode = Climb) &&  (not ((mode = Cruise)))) &&  (not ((mode = Takeoff))))) || ((((((mode_last = Climb) &&  (not ((mode_last = Cruise)))) &&  (not ((mode_last = Takeoff)))) && (true && (last_h >= (hceiling - ((c * dt) * 2.0))))) && (((((((fl = false) && (h = last_h)) && (lg = false)) && (thr = false)) && (vel = last_vel)) && (ww = false)) && (v = (last_x + (((last_vel + vel) * 0.5) * dt))))) && (((mode = Cruise) &&  (not ((mode = Climb)))) &&  (not ((mode = Takeoff))))))) || (((((((mode_last = Cruise) &&  (not ((mode_last = Climb)))) &&  (not ((mode_last = Takeoff)))) &&  (not (false))) && (((((((fl = false) && (h = last_h)) && (lg = false)) && (thr = false)) && (vel = last_vel)) && (ww = false)) && (v = (last_x + (((last_vel + vel) * 0.5) * dt))))) && (((mode = Cruise) &&  (not ((mode = Climb)))) &&  (not ((mode = Takeoff))))) || ((((((mode_last = Cruise) &&  (not ((mode_last = Climb)))) &&  (not ((mode_last = Takeoff)))) && (true && false)) && (((((((fl = false) && (h = last_h)) && (lg = false)) && (thr = false)) && (vel = last_vel)) && (ww = false)) && (v = (last_x + (((last_vel + vel) * 0.5) * dt))))) && (((mode = Cruise) &&  (not ((mode = Climb)))) &&  (not ((mode = Takeoff)))))))}
-  rhs {v:real | ((v >= 0.0) && ((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (vel * vel)) / (2.0 * a))) < lrunway)))}
+  env [0;1;2;3;186;187;188;189;190;191;192;193;194;195;196;197;198;199;200;201;202;203;204;205;206;207;208;209;210;211;212;213;214;215;216;217;218;219;220;221;222;223;224]
+  lhs {v:real | (v = hinit)}
+  rhs {v:real | (v = 0.0)}
   id 5 tag []

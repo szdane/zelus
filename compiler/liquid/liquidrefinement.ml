@@ -280,6 +280,7 @@ let rec to_zpt_type (t : Zelus.type_expression) : Zparsetree.type_expression =
 
 let run_fq name lhs rhs = 
   let fq_query = Gen.to_fq "v" ~cid:5 ~lhs:lhs ~rhs:rhs ~env:(current_env ()) () in
+  (*search for fixpoint query io*)
   (* debug (Printf.sprintf "%s" fq_query); *)
   fixpoint_is_safe fq_query
 
