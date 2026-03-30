@@ -1,8 +1,8 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-03-30-0:4) *)
+  (2026-03-30-2:36) *)
 open Ztypes
-type state__1527 = Takeoff_Cruise_68 | Takeoff_Climb_67 | Takeoff_Takeoff_66 
-type state__1526 = Takeoff_Cruise_49 | Takeoff_Climb_48 | Takeoff_Takeoff_47 
+type state__1494 = Takeoff_Cruise_68 | Takeoff_Climb_67 | Takeoff_Takeoff_66 
+type state__1493 = Takeoff_Cruise_49 | Takeoff_Climb_48 | Takeoff_Takeoff_47 
 let vstallflaps = 20.
 
 let vstallclean = 25.
@@ -19,9 +19,9 @@ let dt = 0.1
 
 let c = 4.
 
-let hceiling = 11.3
+let hceiling = 6.5
 
-let lrunway = 100.43
+let lrunway = 96.
 
 type ('j , 'i , 'h , 'g , 'f , 'e , 'd , 'c , 'b , 'a) _exec =
   { mutable i_100 : 'j ;
@@ -39,7 +39,7 @@ let exec  =
     ();
     { i_100 = (false:bool) ;
       r_99 = (false:bool) ;
-      s_98 = (Takeoff_Cruise_49:state__1526) ;
+      s_98 = (Takeoff_Cruise_49:state__1493) ;
       x_94 = (42.:float) ;
       ww_93 = (false:bool) ;
       vel_92 = (42.:float) ;
@@ -71,9 +71,7 @@ let exec  =
                          | _ -> self.r_99 <- false  end)
               | Takeoff_Climb_48 ->
                   (if self.r_99 then ()) ;
-                  (begin match (>=) l_95 
-                                    ((-.) hceiling 
-                                          (( *. ) (( *. ) c  dt)  2.)) with
+                  (begin match (>=) l_95  ((-.) hceiling  (( *. ) c  dt)) with
                          | true ->
                              self.r_99 <- true ;
                              self.s_98 <- Takeoff_Cruise_49
@@ -154,7 +152,7 @@ let main (cstate_130:Ztypes.cstate) =
       result_104 = (():unit) ;
       i_129 = (false:bool) ;
       r_128 = (false:bool) ;
-      s_127 = (Takeoff_Cruise_68:state__1527) ;
+      s_127 = (Takeoff_Cruise_68:state__1494) ;
       x_123 = (42.:float) ;
       ww_122 = (false:bool) ;
       vel_121 = (42.:float) ;
@@ -197,10 +195,7 @@ let main (cstate_130:Ztypes.cstate) =
                                     (if self.r_128 then ()) ;
                                     (begin match (>=) l_124 
                                                       ((-.) hceiling 
-                                                            (( *. ) (
-                                                                    ( *. ) 
-                                                                    c  dt) 
-                                                                    2.)) with
+                                                            (( *. ) c  dt)) with
                                            | true ->
                                                self.r_128 <- true ;
                                                self.s_127 <- Takeoff_Cruise_68

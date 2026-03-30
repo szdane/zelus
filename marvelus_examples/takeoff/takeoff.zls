@@ -6,8 +6,8 @@ let hinit:{v: float | globally(v >= 0. && v = 0.)} = 0.
 let a:{v: float | globally(v > 0. && v = 2.)} = 2.
 let dt:{v: float | globally(v > 0. && v = 0.1)} = 0.1
 let c:{v: float | globally(v > 0. && v = 4.)} = 4.
-let hceiling:{v: float | globally(v > hinit && v > (c *. ( ( (1.1 *. vstallclean) -. vinit) /. a ) ) +. (2. *. dt ) -. (c *. ( ( (1.1 *. vstallflaps) -. vinit) /. a ) +. hinit))}  = 11.3
-let lrunway:{v: float | globally(v > xinit && v > ( ( (1.1 *. 1.1 *. vstallflaps *. vstallflaps) -. (vinit *. vinit) ) /. 2 /. a ) +. xinit +. (((2 *. 1.1 *. vstallflaps) +. (a *. dt)) *. dt) &&v=100.43)} = 100.43
+let hceiling:{v: float | globally(v > hinit && v > (c *. ( (vstallclean -. vinit) /. a ) ) +. (c *. dt ) -. (c *. ( ( (1.1 *. vstallflaps) -. vinit) /. a ) +. hinit) && v=6.5)}  = 6.5
+let lrunway:{v: float | globally(v > xinit && v >= vinit *. (((1.1 *. vstallflaps) -. vinit) /. a ) +. ((((1.1 *. vstallflaps) -. vinit) *. ((1.1 *. vstallflaps) -. vinit)) /. 2 /. a ) +. xinit && v=96.)} = 96.
 
 
 
@@ -52,7 +52,7 @@ let node exec () : {(v:int) | true} =
             and fl = true
             and lg = false
             and ww = false
-            unless (last h >= hceiling -. (c *. dt *. 2.)) then Cruise
+            unless (last h >= hceiling -. (c *. dt)) then Cruise
         | Cruise : {} ->
             do h = last h
             and vel = last vel
@@ -69,5 +69,3 @@ let hybrid main () =
     let rec trigger = (period (dt)) in
     present (trigger) -> (let (xp, vp, hp, thrp, flp, lgp, wwp) = exec () in
     (print_float xp; print_string " "; print_float vp; print_string " "; print_float hp; print_string " "; print_string (if thrp then "true" else "false"); print_string " "; print_string (if flp then "true" else "false"); print_string " "; print_string (if lgp then "true" else "false"); print_string " "; print_string (if wwp then "true" else "false"); print_string " "; print_string " "; print_float (Timestamp.gettimeofday ()); print_newline ())) else ()
-
-

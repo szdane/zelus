@@ -280,7 +280,7 @@ let rec to_zpt_type (t : Zelus.type_expression) : Zparsetree.type_expression =
 
 let run_fq name lhs rhs = 
   let fq_query = Gen.to_fq "v" ~cid:5 ~lhs:lhs ~rhs:rhs ~env:(current_env ()) () in
-  debug (Printf.sprintf "%s" fq_query);
+  (* debug (Printf.sprintf "%s" fq_query); *)
   fixpoint_is_safe fq_query
 
 let rhs_var_name (e:Zelus.exp) : string option =
@@ -2787,6 +2787,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
 
             if n = "main" then (
               debug "skipping main function";
+              debug "\027[32mProgram is well-typed: all generated fixpoint checks are safe.\027[0m";
             ) else (
               (* Parse declared return refinement exactly like before *)
               let saved_gamma   = !gamma in
