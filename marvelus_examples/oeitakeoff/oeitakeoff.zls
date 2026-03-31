@@ -1,0 +1,117 @@
+let xinit :{v: int| globally(v=0.) }= 0.
+let vinit :{v: int| globally(v=0.) }= 0.
+let hinit :{v: int| globally(v=0.) }= 0.
+let a :{v: int| globally(v=2.) }= 2.
+let dt :{v: int| globally(v=0.1) } = 0.1
+let coei :{v: int| globally(v=2.) }= 2.
+let c :{v: int| globally(v=4.) } = 4.
+let vstallflaps :{v: int| globally(v=20.) } = 20.
+let vstallclean :{v: int| globally(v=25.) } = 25.
+let b :{v: int| globally(v=5.) }= 5.
+let oeicruise :{v: int| globally(v=1500.) }= 1500.
+let hceiling :{v: int| globally(v=23000.) } = 23000.
+
+let vdecision :{v: int| globally(v=20.17) } = 20.17
+let xoei:{v: int| globally(v=1000.) } = 1000. 
+let xc:{v: int| globally(v=300.) }= 300. 
+let lrunway:{v: float | globally(v=118.292775)} = 118.292775
+
+let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei, obsclear) where
+    rec init x = xinit
+    and init h = hinit
+    and init vel = vinit
+    and init thr = true
+    and init fl = true
+    and init lg = true
+    and init ww = true
+    and init oei = false
+    and init obsclear = false
+    and automaton_ref : {x : {v:float | v >= 0. && nxt(globally(v >= 0. && ((oei && (not thr) && lg) ==>
+                        (v +. ((vel *. vel) /. (2. *. b)) < lrunway)) &&
+                        ((oei && thr && lg && (not obsclear)) ==>
+                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. a) < lrunway))))};
+                        h : {v:float | v = 0. && nxt(globally(v >= 0. && v < hceiling))}; 
+                        vel : {v:float | v=10. && nxt(globally(v >= 0.))};
+                        thr : {v:bool | true && nxt(globally(true))}; 
+                        fl : {v:bool | true }; 
+                        lg : {v:bool | globally(ww <=> v)}; 
+                        obsclear : {v:bool | true };
+                        oei: {v:bool | true };
+                        ww : {v:bool | true }
+                    }
+        | TakeoffBeforeDecisionSpeed ->
+            do vel = last vel +. (a *. dt)
+            and x = last x +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
+            and h = last h
+            and thr = true
+            and fl = true
+            and lg = true
+            and ww = true
+            and oei = false
+            and obsclear = false
+            unless (last vel > vdecision -. (a *. dt)) then TakeoffAfterDecisionSpeed 
+            else (last x >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then Stop
+        | Stop ->
+            do vel = last vel -. (b *. dt)
+            and x = last x +. ((last vel) *. dt) -. (0.5 *. b *. dt *. dt )
+            and h = last h
+            and thr = false
+            and fl = true
+            and lg = true
+            and ww = true
+            and oei = true
+            and obsclear = false
+            unless (last vel <= 0. +. (b *. dt)) then StopFully
+        | StopFully ->
+            do vel = 0.
+            and x = last x
+            and h = last h
+            and thr = false
+            and fl = true
+            and lg = true
+            and ww = true
+            and oei = true
+            and obsclear = false
+            unless (false) then StopFully
+        | TakeoffAfterDecisionSpeed ->
+            do vel = last vel +. (a *. dt)
+            and x = last x +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
+            and h = last h
+            and thr = true
+            and fl = true
+            and lg = true
+            and ww = true
+            and oei = false
+            and obsclear = false
+            unless (last x >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then OEIOnGround
+        | OEIOnGround ->
+            do vel = last vel +. (0.5 *. a *. dt)
+            and x = last x +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
+            and h = last h
+            and thr = true
+            and fl = true
+            and lg = true
+            and ww = true
+            and oei = true
+            and obsclear = false
+            unless (last vel >= (1.1 *. vstallflaps) -. (0.5 *. a *. dt)) then ClimbOEI
+        | ClimbOEI ->
+            do vel = last vel +. (0.5 *. a *. dt)
+            and x = last x +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
+            and h = last h +. (coei *. dt)
+            and thr = true
+            and fl = true
+            and lg = false
+            and ww = false
+            and oei = true
+            and obsclear = true 
+            unless (false) then ClimbOEI
+        end
+
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+    present (trigger) -> (let (xp, vp, hp, thrp, flp, lgp, wwp, oeip, obsclearp) = takeoff () in
+    (print_float xp; print_string " "; print_float vp; print_string " "; print_float hp; print_string " "; print_string (if thrp then "true" else "false"); print_string " "; print_string (if flp then "true" else "false"); print_string " "; print_string (if lgp then "true" else "false"); print_string " "; print_string (if wwp then "true" else "false"); print_string " "; print_string (if oeip then "true" else "false"); print_string " "; print_string (if obsclearp then "true" else "false"); print_string " "; print_float (Timestamp.gettimeofday ()); print_newline ())) else ()
+
+
+

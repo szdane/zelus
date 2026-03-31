@@ -1493,20 +1493,22 @@ let automaton_var_nf_aut
           let dst_name = state_name_of_stateexp esc.e_next_state in
           let dst = synth_of_state_name dst_name in
           mk_big_and
-            [ exclusive_mode_fact mode_last st_name mode_names
-            ; active_g
+          [
+            (* exclusive_mode_fact mode_last st_name mode_names; *)
+            active_g
             ; rename_var_in_exp dst.binder binder dst.base_phi
-            ; exclusive_mode_fact mode_last dst_name mode_names
+            (* ; exclusive_mode_fact mode_last dst_name mode_names *)
             ])
         leave_cases
     in
 
     let stay_pred =
       mk_big_and
-        [ exclusive_mode_fact mode_last st_name mode_names
-        ; stay_guard
+        [ 
+          (* exclusive_mode_fact mode_last st_name mode_names; *)
+         stay_guard
         ; rename_var_in_exp cur.binder binder cur.base_phi
-        ; exclusive_mode_fact mode_now st_name mode_names
+        (* ; exclusive_mode_fact mode_now st_name mode_names *)
         ]
     in
     mk_big_or (stay_pred :: leave_preds)
@@ -1524,20 +1526,22 @@ let automaton_var_nf_aut
           let dst_name = state_name_of_stateexp esc.e_next_state in
           let dst = synth_of_state_name dst_name in
           mk_big_and
-            [ exclusive_mode_fact mode_last st_name mode_names
-            ; active_g
+            [ 
+              (* exclusive_mode_fact mode_last st_name mode_names; *)
+            active_g
             ; rename_var_in_exp dst.binder binder dst.base_phi
-            ; exclusive_mode_fact mode_now dst_name mode_names
+            (* ; exclusive_mode_fact mode_now dst_name mode_names *)
             ])
         leave_cases
     in
 
     let stay_pred =
       mk_big_and
-        [ exclusive_mode_fact mode_last st_name mode_names
-        ; stay_guard
+        [ 
+          (* exclusive_mode_fact mode_last st_name mode_names; *)
+         stay_guard
         ; rename_var_in_exp cur.binder binder cur.ind_psi
-        ; exclusive_mode_fact mode_now st_name mode_names
+        (* ; exclusive_mode_fact mode_now st_name mode_names *)
         ]
     in
     mk_big_or (stay_pred :: leave_preds)

@@ -1,0 +1,73 @@
+bind 0 nxt : {v:func(1, [bool, bool]) | true }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 globally : {v:func(1, [bool, bool]) | true}
+bind 3 m  : {v:func(1, [bool, bool]) | true}
+bind 541 ClimbOEI : {v:bool | true}
+bind 542 OEIOnGround : {v:bool | true}
+bind 543 Stop : {v:bool | true}
+bind 544 StopFully : {v:bool | true}
+bind 545 TakeoffAfterDecisionSpeed : {v:bool | true}
+bind 546 TakeoffBeforeDecisionSpeed : {v:bool | true}
+bind 547 a : {v:Int | ( ((tmp_4 =  ((v = 2.0)))) && ((v = 2.0) && nxt (globally tmp_4)))}
+bind 548 b : {v:Int | ( ((tmp_10 =  ((v = 5.0)))) && ((v = 5.0) && nxt (globally tmp_10)))}
+bind 549 c : {v:Int | ( ((tmp_7 =  ((v = 4.0)))) && ((v = 4.0) && nxt (globally tmp_7)))}
+bind 550 coei : {v:Int | ( ((tmp_6 =  ((v = 2.0)))) && ((v = 2.0) && nxt (globally tmp_6)))}
+bind 551 dt : {v:Int | ( ((tmp_5 =  ((v = 0.1)))) && ((v = 0.1) && nxt (globally tmp_5)))}
+bind 552 fl : {v:bool | true}
+bind 553 h : {v:real | ( ((tmp_18 =  (((v >= 0.0) && (v < hceiling))))) && ((v = 0.0) && nxt (globally tmp_18)))}
+bind 554 hceiling : {v:Int | ( ((tmp_12 =  ((v = 23000.0)))) && ((v = 23000.0) && nxt (globally tmp_12)))}
+bind 555 hinit : {v:Int | ( ((tmp_3 =  ((v = 0.0)))) && ((v = 0.0) && nxt (globally tmp_3)))}
+bind 556 last_fl : {v:bool | true}
+bind 557 last_h : {v:real | ((v >= 0.0) && (v < hceiling))}
+bind 558 last_lg : {v:bool | (last_ww <=> v)}
+bind 559 last_obsclear : {v:bool | true}
+bind 560 last_oei : {v:bool | true}
+bind 561 last_thr : {v:bool | true}
+bind 562 last_vel : {v:real | (v >= 0.0)}
+bind 563 last_ww : {v:bool | ((((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> v) = true) && (((last_vel > ((1.1 * vstallflaps) - (a * dt))) ==> v) = false))}
+bind 564 last_x : {v:real | (((v >= 0.0) && (((last_oei && not (last_thr)) && last_lg) ==> ((v + ((last_vel * last_vel) / (2.0 * b))) < lrunway))) && ((((last_oei && last_thr) && last_lg) && not (last_obsclear)) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (last_vel * last_vel)) / a)) < lrunway)))}
+bind 565 lg : {v:bool | ( ((tmp_20 =  ((ww <=> v)))) && globally tmp_20)}
+bind 566 lrunway : {v:real | ( ((tmp_16 =  ((v = 118.292775)))) && ((v = 118.292775) && nxt (globally tmp_16)))}
+bind 567 mode : {v:bool | ((((((v = ClimbOEI) || (v = OEIOnGround)) || (v = Stop)) || (v = StopFully)) || (v = TakeoffAfterDecisionSpeed)) || (v = TakeoffBeforeDecisionSpeed))}
+bind 568 mode_last : {v:bool | ((((((v = ClimbOEI) || (v = OEIOnGround)) || (v = Stop)) || (v = StopFully)) || (v = TakeoffAfterDecisionSpeed)) || (v = TakeoffBeforeDecisionSpeed))}
+bind 569 obsclear : {v:bool | true}
+bind 570 oei : {v:bool | true}
+bind 571 oeicruise : {v:Int | ( ((tmp_11 =  ((v = 1500.0)))) && ((v = 1500.0) && nxt (globally tmp_11)))}
+bind 572 thr : {v:bool | (true && nxt (globally true))}
+bind 573 tmp_1 : {v:bool | true}
+bind 574 tmp_10 : {v:bool | true}
+bind 575 tmp_11 : {v:bool | true}
+bind 576 tmp_12 : {v:bool | true}
+bind 577 tmp_13 : {v:bool | true}
+bind 578 tmp_14 : {v:bool | true}
+bind 579 tmp_15 : {v:bool | true}
+bind 580 tmp_16 : {v:bool | true}
+bind 581 tmp_17 : {v:bool | true}
+bind 582 tmp_18 : {v:bool | true}
+bind 583 tmp_19 : {v:bool | true}
+bind 584 tmp_2 : {v:bool | true}
+bind 585 tmp_20 : {v:bool | true}
+bind 586 tmp_21 : {v:bool | true}
+bind 587 tmp_3 : {v:bool | true}
+bind 588 tmp_4 : {v:bool | true}
+bind 589 tmp_5 : {v:bool | true}
+bind 590 tmp_6 : {v:bool | true}
+bind 591 tmp_7 : {v:bool | true}
+bind 592 tmp_8 : {v:bool | true}
+bind 593 tmp_9 : {v:bool | true}
+bind 594 vdecision : {v:Int | ( ((tmp_13 =  ((v = 20.17)))) && ((v = 20.17) && nxt (globally tmp_13)))}
+bind 595 vel : {v:real | ( ((tmp_19 =  ((v >= 0.0)))) && ((v = 10.0) && nxt (globally tmp_19)))}
+bind 596 vinit : {v:Int | ( ((tmp_2 =  ((v = 0.0)))) && ((v = 0.0) && nxt (globally tmp_2)))}
+bind 597 vstallclean : {v:Int | ( ((tmp_9 =  ((v = 25.0)))) && ((v = 25.0) && nxt (globally tmp_9)))}
+bind 598 vstallflaps : {v:Int | ( ((tmp_8 =  ((v = 20.0)))) && ((v = 20.0) && nxt (globally tmp_8)))}
+bind 599 ww : {v:bool | ( ((tmp_21 =  (((((last_vel <= ((1.1 * vstallflaps) - (a * dt))) ==> v) = true) && (((last_vel > ((1.1 * vstallflaps) - (a * dt))) ==> v) = false))))) && ((v = true) && nxt (globally tmp_21)))}
+bind 600 x : {v:real | ( ((tmp_17 =  ((((v >= 0.0) && (((oei && not (thr)) && lg) ==> ((v + ((vel * vel) / (2.0 * b))) < lrunway))) && ((((oei && thr) && lg) && not (obsclear)) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (vel * vel)) / a)) < lrunway)))))) && ((v >= 0.0) && nxt (globally tmp_17)))}
+bind 601 xc : {v:Int | ( ((tmp_15 =  ((v = 300.0)))) && ((v = 300.0) && nxt (globally tmp_15)))}
+bind 602 xinit : {v:Int | ( ((tmp_1 =  ((v = 0.0)))) && ((v = 0.0) && nxt (globally tmp_1)))}
+bind 603 xoei : {v:Int | ( ((tmp_14 =  ((v = 1000.0)))) && ((v = 1000.0) && nxt (globally tmp_14)))}
+
+constraint:
+  env [0;1;2;3;541;542;543;544;545;546;547;548;549;550;551;552;553;554;555;556;557;558;559;560;561;562;563;564;565;566;567;568;569;570;571;572;573;574;575;576;577;578;579;580;581;582;583;584;585;586;587;588;589;590;591;592;593;594;595;596;597;598;599;600;601;602;603]
+  lhs {v:real | ((((((((( (not ((last_vel > (vdecision - (a * dt))))) &&  (not ((last_x >= (xoei - ((last_vel * dt) + (((0.5 * a) * dt) * dt))))))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = false)) && (thr = true)) && (vel = (last_vel + (a * dt)))) && (ww = true)) && (v = ((last_x + (last_vel * dt)) + (((0.5 * a) * dt) * dt))))) || ((true && (last_vel > (vdecision - (a * dt)))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = false)) && (thr = true)) && (vel = (last_vel + (a * dt)))) && (ww = true)) && (v = ((last_x + (last_vel * dt)) + (((0.5 * a) * dt) * dt)))))) || (( (not ((last_vel > (vdecision - (a * dt))))) && (last_x >= (xoei - ((last_vel * dt) + (((0.5 * a) * dt) * dt))))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = true)) && (thr = false)) && (vel = (last_vel - (b * dt)))) && (ww = true)) && (v = ((last_x + (last_vel * dt)) - (((0.5 * b) * dt) * dt)))))) || (( (not ((last_vel <= (0.0 + (b * dt))))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = true)) && (thr = false)) && (vel = (last_vel - (b * dt)))) && (ww = true)) && (v = ((last_x + (last_vel * dt)) - (((0.5 * b) * dt) * dt))))) || ((true && (last_vel <= (0.0 + (b * dt)))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = true)) && (thr = false)) && (vel = 0.0)) && (ww = true)) && (v = last_x))))) || (( (not (false)) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = true)) && (thr = false)) && (vel = 0.0)) && (ww = true)) && (v = last_x))) || ((true && false) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = true)) && (thr = false)) && (vel = 0.0)) && (ww = true)) && (v = last_x))))) || (( (not ((last_x >= (xoei - ((last_vel * dt) + (((0.5 * a) * dt) * dt)))))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = false)) && (thr = true)) && (vel = (last_vel + (a * dt)))) && (ww = true)) && (v = ((last_x + (last_vel * dt)) + (((0.5 * a) * dt) * dt))))) || ((true && (last_x >= (xoei - ((last_vel * dt) + (((0.5 * a) * dt) * dt))))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = true)) && (thr = true)) && (vel = (last_vel + ((0.5 * a) * dt)))) && (ww = true)) && (v = ((last_x + (last_vel * dt)) + ((((0.5 * 0.5) * a) * dt) * dt))))))) || (( (not ((last_vel >= ((1.1 * vstallflaps) - ((0.5 * a) * dt))))) && (((((((((fl = true) && (h = last_h)) && (lg = true)) && (obsclear = false)) && (oei = true)) && (thr = true)) && (vel = (last_vel + ((0.5 * a) * dt)))) && (ww = true)) && (v = ((last_x + (last_vel * dt)) + ((((0.5 * 0.5) * a) * dt) * dt))))) || ((true && (last_vel >= ((1.1 * vstallflaps) - ((0.5 * a) * dt)))) && (((((((((fl = true) && (h = (last_h + (coei * dt)))) && (lg = false)) && (obsclear = true)) && (oei = true)) && (thr = true)) && (vel = (last_vel + ((0.5 * a) * dt)))) && (ww = false)) && (v = ((last_x + (last_vel * dt)) + ((((0.5 * 0.5) * a) * dt) * dt))))))) || (( (not (false)) && (((((((((fl = true) && (h = (last_h + (coei * dt)))) && (lg = false)) && (obsclear = true)) && (oei = true)) && (thr = true)) && (vel = (last_vel + ((0.5 * a) * dt)))) && (ww = false)) && (v = ((last_x + (last_vel * dt)) + ((((0.5 * 0.5) * a) * dt) * dt))))) || ((true && false) && (((((((((fl = true) && (h = (last_h + (coei * dt)))) && (lg = false)) && (obsclear = true)) && (oei = true)) && (thr = true)) && (vel = (last_vel + ((0.5 * a) * dt)))) && (ww = false)) && (v = ((last_x + (last_vel * dt)) + ((((0.5 * 0.5) * a) * dt) * dt)))))))}
+  rhs {v:real | (((v >= 0.0) && (((oei && not (thr)) && lg) ==> ((v + ((vel * vel) / (2.0 * b))) < lrunway))) && ((((oei && thr) && lg) && not (obsclear)) ==> ((v + ((((1.1 * vstallflaps) * (1.1 * vstallflaps)) - (vel * vel)) / a)) < lrunway)))}
+  id 5 tag []
