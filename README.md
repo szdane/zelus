@@ -107,6 +107,24 @@ cd examples && make
 
 The executables can be found in each example directory (e.g., `horloge/horloge_main.exe`).
 
+## Verification Examples
+
+This repository includes runnable examples demonstrating the verification aspects of the language. 
+The source code for several of the examples can be found in the `verification_examples` directory.
+To build most of the examples:
+
+```
+cd takeoff && make sim
+```
+or 
+```
+cd watertank && make sim
+```
+or
+cd oeitakeoff && make sim
+```
+```
+
 ## Development
 
 ### Compiler
@@ -117,6 +135,11 @@ To build the project:
 ```
 ./configure
 dune build
+```
+or you can simply use 
+
+```
+./run.sh
 ```
 
 This produces two executables (and some tools in `./tools`):
@@ -131,18 +154,14 @@ The build automatically detects if sundialsml is installed and updates the libra
 
 ### Test
 
-To run all the tests:
+To run all the verification tests:
 ```
-cd test
-make
+cd verification_examples
+cd tests
+make sim
 ```
 
-Tests are split into 3 categories: `good`, `bad`, and `run`.
-To launch a single subset (e.g., `good`):
-```
-cd good
-make
-```
+Tests are split into 2 categories: `pos`, and `neg`.
 
 To clean generated files:
 ```
