@@ -56,6 +56,7 @@ let build_fby_pred_with_ghosts ~(binder:string)
 
 
 let fixpoint_is_safe (fq_txt : string) : bool =
+  debug (Printf.sprintf "%s" fq_txt);
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in
   let oc = open_out tmp in

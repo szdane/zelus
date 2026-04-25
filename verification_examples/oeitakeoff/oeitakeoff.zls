@@ -1,20 +1,20 @@
-let xinit :{v: int| globally(v=0.) }= 0.
-let vinit :{v: int| globally(v=0.) }= 0.
-let hinit :{v: int| globally(v=0.) }= 0.
-let a :{v: int| globally(v=2.) }= 2.
-let dt :{v: int| globally(v=0.1) } = 0.1
-let coei :{v: int| globally(v=2.) }= 2.
-let c :{v: int| globally(v=4.) } = 4.
-let vstallflaps :{v: int| globally(v=20.) } = 20.
-let vstallclean :{v: int| globally(v=25.) } = 25.
-let b :{v: int| globally(v=5.) }= 5.
-let oeicruise :{v: int| globally(v=1500.) }= 1500.
-let hceiling :{v: int| globally(v=23000.) } = 23000.
+let xinit :{v: float| globally(v=0.) }= 0.
+let vinit :{v: float| globally(v=0.) }= 0.
+let hinit :{v: float| globally(v=0.) }= 0.
+let a :{v: float| globally(v=2.) }= 2.
+let dt :{v: float| globally(v=0.1) } = 0.1
+let coei :{v: float| globally(v=2.) }= 2.
+let c :{v: float| globally(v=4.) } = 4.
+let vstallflaps :{v: float| globally(v=20.) } = 20.
+let vstallclean :{v: float| globally(v=25.) } = 25.
+let b :{v: float| globally(v=5.) }= 5.
+let oeicruise :{v: float| globally(v=1500.) }= 1500.
+let hceiling :{v: float| globally(v=23000.) } = 23000.
 
-let vdecision :{v: int| globally(v=20.17) } = 20.17
-let xoei:{v: int| globally(v=1000.) } = 1000. 
-let xc:{v: int| globally(v=300.) }= 300. 
-let lrunway:{v: float | globally(v=118.292775)} = 118.292775
+let vdecision :{v: float| globally(v=20.17) } = 20.17
+let xoei:{v: float| globally(v=105.) } = 105.
+let xc:{v: float| globally(v=300.) }= 300. 
+let lrunway:{v: float | globally(v=140.292775)} = 140.292775
 
 let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
     rec init x = xinit
@@ -26,9 +26,9 @@ let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
     and init ww = true
     and init oei = false
     and automaton_ref : {x : {v:float | v >= 0. && nxt(globally(v >= 0. && ((oei && (not thr) && lg) ==>
-                        (v +. ((vel *. vel) /. (2. *. b)) < lrunway)) &&
+                        (v +. ((vdecision *. vdecision) /. (2. *. b)) < lrunway)) &&
                         ((oei && thr && lg ) ==>
-                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. a) < lrunway))))};
+                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vdecision *. vdecision)) /. a) < lrunway))))};
                         h : {v:float | v = 0. && nxt(globally(v >= 0. && v < hceiling))}; 
                         vel : {v:float | v=10. && nxt(globally(v >= 0.))};
                         thr : {v:bool | true && nxt(globally(true))}; 
@@ -38,26 +38,26 @@ let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
                         ww : {v:bool | true }
                     }
         | TakeoffBeforeDecisionSpeed ->
-            do vel = last vel +. (a *. dt)
-            and x = last x +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
+            do vel = (last vel) +. (a *. dt)
+            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
             and h = last h
             and thr = true
             and fl = true
             and lg = true
             and ww = true
             and oei = false
-            unless (last vel > vdecision -. (a *. dt)) then TakeoffAfterDecisionSpeed 
-            else (last x >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then Stop
+            unless ((last vel) > vdecision -. (a *. dt)) then TakeoffAfterDecisionSpeed 
+            else ((last x) >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then Stop
         | Stop ->
-            do vel = last vel -. (b *. dt)
-            and x = last x +. ((last vel) *. dt) -. (0.5 *. b *. dt *. dt )
+            do vel = (last vel) -. (b *. dt)
+            and x = (last x) +. ((last vel) *. dt) -. (0.5 *. b *. dt *. dt )
             and h = last h
             and thr = false
             and fl = true
             and lg = true
             and ww = true
             and oei = true
-            unless (last vel <= 0. +. (b *. dt)) then StopFully
+            unless ((last vel) <= 0. +. (b *. dt)) then StopFully
         | StopFully ->
             do vel = 0.
             and x = last x
@@ -69,29 +69,29 @@ let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
             and oei = true
             unless (false) then StopFully
         | TakeoffAfterDecisionSpeed ->
-            do vel = last vel +. (a *. dt)
-            and x = last x +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
+            do vel = (last vel) +. (a *. dt)
+            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
             and h = last h
             and thr = true
             and fl = true
             and lg = true
             and ww = true
             and oei = false
-            unless (last x >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then OEIOnGround
+            unless ((last x) >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then OEIOnGround
         | OEIOnGround ->
-            do vel = last vel +. (0.5 *. a *. dt)
-            and x = last x +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
+            do vel = (last vel) +. (0.5 *. a *. dt)
+            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
             and h = last h
             and thr = true
             and fl = true
             and lg = true
             and ww = true
             and oei = true
-            unless (last vel >= (1.1 *. vstallflaps) -. (0.5 *. a *. dt)) then ClimbOEI
+            unless ((last vel) >= (1.1 *. vstallflaps) -. (0.5 *. a *. dt)) then ClimbOEI
         | ClimbOEI ->
-            do vel = last vel +. (0.5 *. a *. dt)
-            and x = last x +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
-            and h = last h +. (coei *. dt)
+            do vel = (last vel) +. (0.5 *. a *. dt)
+            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
+            and h = (last h) +. (coei *. dt)
             and thr = true
             and fl = true
             and lg = false
