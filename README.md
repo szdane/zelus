@@ -121,8 +121,8 @@ or
 cd watertank && make sim
 ```
 or
-cd oeitakeoff && make sim
 ```
+cd oeitakeoff && make sim
 ```
 
 ## Development
