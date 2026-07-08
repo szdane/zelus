@@ -1469,13 +1469,13 @@ let automaton_var_nf_aut
     ~(first_state:string)
     (states : Zelus.state_handler_ann list)
   : Zparsetree.exp =
-  let mode_last = "mode_last" in
+  let mode_last = "last_mode" in
   let mode_now  = "mode" in
   let eq_name a b = mk_eq (mk_var a) (mk_var b) in
   let mode_names = all_mode_names_aut states in
-            List.iter ensure_mode_symbol mode_names;
+            List.iteri ensure_mode_symbol mode_names;
             ensure_mode_var ~varname:"mode" ~modes:mode_names;
-            ensure_mode_var ~varname:"mode_last" ~modes:mode_names;
+            ensure_mode_var ~varname:"last_mode" ~modes:mode_names;
 
   let synth_of_state_name st_name =
     let sha = find_state_by_name_aut states st_name in
@@ -1527,22 +1527,22 @@ let automaton_var_nf_aut
           let dst_name = state_name_of_stateexp esc.e_next_state in
           let dst = synth_of_state_name dst_name in
           mk_big_and
-            [ 
-              (* exclusive_mode_fact mode_last st_name mode_names; *)
-            active_g
+            [
+              exclusive_mode_fact mode_last st_name mode_names
+            ; active_g
             ; rename_var_in_exp dst.binder binder dst.base_phi
-            (* ; exclusive_mode_fact mode_now dst_name mode_names *)
+            ; exclusive_mode_fact mode_now dst_name mode_names
             ])
         leave_cases
     in
 
     let stay_pred =
       mk_big_and
-        [ 
-          (* exclusive_mode_fact mode_last st_name mode_names; *)
-         stay_guard
+        [
+          exclusive_mode_fact mode_last st_name mode_names
+        ; stay_guard
         ; rename_var_in_exp cur.binder binder cur.ind_psi
-        (* ; exclusive_mode_fact mode_now st_name mode_names *)
+        ; exclusive_mode_fact mode_now st_name mode_names
         ]
     in
     mk_big_or (stay_pred :: leave_preds)
@@ -2239,9 +2239,13 @@ let same_ltuple_type (t1:Zelus.type_expression) (t2:Zelus.type_expression) : boo
 
 let preload_last_vars_aut (vars : (string * Zelus.type_expression) list) : unit =
   let shiftable_vars =
-    vars
-    |> List.map fst
-    |> List.filter (fun x -> not (String.length x >= 5 && String.sub x 0 5 = "last_"))
+    (* [mode] is included so that in the "last" version of an annotation the
+       mode selector is shifted to its previous value [last_mode], matching the
+       [last_mode] facts emitted for the source state of each transition. *)
+    "mode"
+    :: (vars
+        |> List.map fst
+        |> List.filter (fun x -> not (String.length x >= 5 && String.sub x 0 5 = "last_")))
   in
   List.iter
     (fun (x, ty_ann_zelus) ->
@@ -2279,6 +2283,15 @@ let process_automaton_ref_eq_aut
   if vars = [] then ()
   else begin
     let first_state = first_state_name_aut states init_state_opt in
+
+    (* Register the automaton's mode symbols (state names) and the mode /
+       mode_last selector variables before any constraint is generated, so
+       annotations and the synthesized last_* bindings may refer to them
+       (e.g. [mode = M3]) without producing symbols undeclared to fixpoint. *)
+    let mode_names = all_mode_names_aut states in
+    List.iteri ensure_mode_symbol mode_names;
+    ensure_mode_var ~varname:"mode" ~modes:mode_names;
+    ensure_mode_var ~varname:"last_mode" ~modes:mode_names;
 
     (* Use only the first user-provided refenv as the spec environment. *)
     preload_refenv_vars_aut vars;
@@ -2526,9 +2539,13 @@ let check_return ~(fname:string)
                    (ret_ann_zelus:Zelus.type_expression) : unit =
     
     debug_nf_synth_lhs e;
+  (* An unannotated node return carries the placeholder base [emptytype];
+     there is no refinement obligation on the return in that case. *)
+  if String.lowercase_ascii ret_base = "emptytype" then ()
+  else
   match ret_ann_zelus.desc with
   (* ---- TUPLE RETURN ---- *)
-  | Zelus.Erefinementlabeledtuple (_fields, _phi_zls) -> ( 
+  | Zelus.Erefinementlabeledtuple (_fields, _phi_zls) -> (
     debug "inside the tuple return check";
       match e.e_desc with
       | Zelus.Etuple es ->

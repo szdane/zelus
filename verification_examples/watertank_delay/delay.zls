@@ -1,0 +1,22 @@
+let node exec () =
+  let rec
+    init delay = 0.
+    and automaton_ref: {delay: {v:float | (v = 0.) && nxt(globally((mode = M3 || v = 0.) && ((mode = M1 || mode = M2) || (v = 1. || v = 2. || v = 3.))))}}
+        | M1 -> do delay = 0. unless true then M2
+        | M2 -> do delay = 0. unless true then M3
+        | M3 -> do delay = (last delay) +. 1. unless (last delay >= 3.) then M1
+    end
+  in
+  delay
+
+
+
+let hybrid main () =
+  let rec trigger = period (0.1) in
+  present (trigger) ->
+    let delay = exec () in
+    (
+      print_float delay;
+      print_newline ()
+    )
+  else ()

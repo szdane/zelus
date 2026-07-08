@@ -167,6 +167,11 @@ let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
   | Zelus.Eglobal{lname = Name n} -> Zparsetree.Evar(Name n)
   | Zelus.Eglobal{lname = Modname qualid} -> Zparsetree.Evar(Name qualid.id)
   | Zelus.Elocal{num = i; source = n} -> Zparsetree.Evar(Name n)
+  (* A nullary constructor such as an automaton state name (M1/M2/M3) is
+     modelled as a bool-sorted variable of that name, matching the mode
+     facts emitted by [exclusive_mode_fact]/[eq_const_name]. *)
+  | Zelus.Econstr0(Name n) -> Zparsetree.Evar(Name n)
+  | Zelus.Econstr0(Modname qualid) -> Zparsetree.Evar(Name qualid.id)
   (* | Zelus.Etuple(exp_list) -> Zparsetree.Etuple(List.map (fun exp -> {desc = vc_gen_expression exp; loc = dummy_loc}) exp_list) *)
   | Zelus.Etuple exp_list ->
     Zparsetree.Etuple
@@ -1212,12 +1217,19 @@ let eq_const_name (varname:string) (st_name:string) : Zparsetree.exp =
 let domain_of_mode_var (varname:string) (modes:string list) : Zparsetree.exp =
   mk_big_or (List.map (fun m -> eq_const_name varname m) modes)
 
-let ensure_mode_symbol (nm:string) : unit =
+let mk_int (n:int) : Zparsetree.exp =
+  { desc = Zparsetree.Econst (Eint n); loc = dummy_loc }
+
+(* Each automaton state symbol (M1/M2/M3/...) is bound to a DISTINCT integer
+   constant.  Modelling them as [bool] made three states impossible to keep
+   pairwise-distinct, which silently turned every mode-changing transition
+   into an unsatisfiable (vacuously safe) constraint. *)
+let ensure_mode_symbol (idx:int) (nm:string) : unit =
   if Option.is_none (find_binding nm) then
     add_binding nm
       { desc = Zparsetree.Erefinement
-          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "bool", [])))
-          , mk_true )
+          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "int", [])))
+          , mk_eq (mk_var "v") (mk_int idx) )
       ; loc = dummy_loc
       }
 
@@ -1229,7 +1241,7 @@ let ensure_mode_var
     let pred = domain_of_mode_var varname modes |> rename_var_in_exp varname "v" in
     add_binding varname
       { desc = Zparsetree.Erefinement
-          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "bool", [])))
+          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "int", [])))
           , pred )
       ; loc = dummy_loc
       }

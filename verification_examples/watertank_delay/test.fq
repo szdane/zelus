@@ -1,0 +1,36 @@
+bind 0 nxt : {v:func(1, [bool, bool]) | true }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 globally : {v:func(1, [bool, bool]) | true}
+bind 3 m  : {v:func(1, [bool, bool]) | true}
+bind 142 Delaystart : {v:Int | (v = 0)}
+bind 143 Off : {v:Int | (v = 1)}
+bind 144 On : {v:Int | (v = 2)}
+bind 145 delay : {v:real | ( ((tmp_9 =  (((v >= 0.0) && (v <= maxdelay))))) && (((v = 0.0) && (v <= maxdelay)) && nxt (globally tmp_9)))}
+bind 146 inflow : {v:real | ( ((tmp_6 =  ((((((v > 0.0) && ((v + outflow) > 0.0)) && ((v + outflow) <= margin)) && ((v + outflow) >= ((-1.0 * outflow) * maxdelay))) && (v <= 1.0))))) && ((((((v > 0.0) && ((v + outflow) > 0.0)) && ((v + outflow) <= margin)) && ((v + outflow) >= ((-1.0 * outflow) * maxdelay))) && (v <= 1.0)) && nxt (globally tmp_6)))}
+bind 147 last_delay : {v:real | ((v >= 0.0) && (v <= maxdelay))}
+bind 148 last_level : {v:real | (((v >= minlevel) && (v <= maxlevel)) && (v >= (minlevel - (outflow * (maxdelay - last_delay)))))}
+bind 149 last_mode : {v:Int | (((v = Delaystart) || (v = Off)) || (v = On))}
+bind 150 last_netflow : {v:real | true}
+bind 151 level : {v:real | ( ((tmp_8 =  ((((v >= minlevel) && (v <= maxlevel)) && (v >= (minlevel - (outflow * (maxdelay - delay)))))))) && ((v = 15.0) && nxt (globally tmp_8)))}
+bind 152 margin : {v:real | ( ((tmp_4 =  (((((v >= (-1.0 * outflow)) && (v >= 0.0)) && ((maxlevel - v) >= (minlevel + v))) && (v = 1.0))))) && (((((v >= (-1.0 * outflow)) && (v >= 0.0)) && ((maxlevel - v) >= (minlevel + v))) && (v = 1.0)) && nxt (globally tmp_4)))}
+bind 153 maxdelay : {v:real | ( ((tmp_5 =  ((((maxlevel + (v * outflow)) > minlevel) && (v = 3.0))))) && ((((maxlevel + (v * outflow)) > minlevel) && (v = 3.0)) && nxt (globally tmp_5)))}
+bind 154 maxlevel : {v:real | ( ((tmp_2 =  (((v >= (minlevel + 2.0)) && (v < 30.0))))) && (((v >= (minlevel + 2.0)) && (v < 30.0)) && nxt (globally tmp_2)))}
+bind 155 minlevel : {v:real | ( ((tmp_1 =  (((v >= 0.0) && (v <= 15.0))))) && (((v >= 0.0) && (v <= 15.0)) && nxt (globally tmp_1)))}
+bind 156 mode : {v:Int | (((v = Delaystart) || (v = Off)) || (v = On))}
+bind 157 netflow : {v:real | true}
+bind 158 outflow : {v:real | ( ((tmp_3 =  ((((v < -0.1) && (v > -0.3)) && (v = -0.25))))) && ((((v < -0.1) && (v > -0.3)) && (v = -0.25)) && nxt (globally tmp_3)))}
+bind 159 tmp_1 : {v:bool | true}
+bind 160 tmp_2 : {v:bool | true}
+bind 161 tmp_3 : {v:bool | true}
+bind 162 tmp_4 : {v:bool | true}
+bind 163 tmp_5 : {v:bool | true}
+bind 164 tmp_6 : {v:bool | true}
+bind 165 tmp_7 : {v:bool | true}
+bind 166 tmp_8 : {v:bool | true}
+bind 167 tmp_9 : {v:bool | true}
+
+constraint:
+  env [0;1;2;3;142;143;144;145;146;147;148;149;150;151;152;153;154;155;156;157;158;159;160;161;162;163;164;165;166;167]
+  lhs {v:real | (((((((((last_mode = On) &&  (not ((last_mode = Delaystart)))) &&  (not ((last_mode = Off)))) &&  (not (((last_level >= (maxlevel - margin)) && (last_delay = 0.0))))) && (((delay = 0.0) && (v = (last_level + netflow))) && (netflow = (inflow + outflow)))) && (((mode = On) &&  (not ((mode = Delaystart)))) &&  (not ((mode = Off))))) || ((((((last_mode = On) &&  (not ((last_mode = Delaystart)))) &&  (not ((last_mode = Off)))) && (true && ((last_level >= (maxlevel - margin)) && (last_delay = 0.0)))) && (((delay = 0.0) && (v = (last_level + netflow))) && (netflow = outflow))) && (((mode = Off) &&  (not ((mode = Delaystart)))) &&  (not ((mode = On)))))) || (((((((last_mode = Off) &&  (not ((last_mode = Delaystart)))) &&  (not ((last_mode = On)))) &&  (not ((((last_level <= ((minlevel - (maxdelay * outflow)) + margin)) && (last_delay = 0.0)) && (delay = 0.0))))) && (((delay = 0.0) && (v = (last_level + netflow))) && (netflow = outflow))) && (((mode = Off) &&  (not ((mode = Delaystart)))) &&  (not ((mode = On))))) || ((((((last_mode = Off) &&  (not ((last_mode = Delaystart)))) &&  (not ((last_mode = On)))) && (true && (((last_level <= ((minlevel - (maxdelay * outflow)) + margin)) && (last_delay = 0.0)) && (delay = 0.0)))) && (((delay = (last_delay + 1.0)) && (v = (last_level + netflow))) && (netflow = outflow))) && (((mode = Delaystart) &&  (not ((mode = Off)))) &&  (not ((mode = On))))))) || (((((((last_mode = Delaystart) &&  (not ((last_mode = Off)))) &&  (not ((last_mode = On)))) &&  (not ((last_delay > (maxdelay - 1.0))))) && (((delay = (last_delay + 1.0)) && (v = (last_level + netflow))) && (netflow = outflow))) && (((mode = Delaystart) &&  (not ((mode = Off)))) &&  (not ((mode = On))))) || ((((((last_mode = Delaystart) &&  (not ((last_mode = Off)))) &&  (not ((last_mode = On)))) && (true && (last_delay > (maxdelay - 1.0)))) && (((delay = 0.0) && (v = (last_level + netflow))) && (netflow = (inflow + outflow)))) && (((mode = On) &&  (not ((mode = Delaystart)))) &&  (not ((mode = Off)))))))}
+  rhs {v:real | (((v >= minlevel) && (v <= maxlevel)) && (v >= (minlevel - (outflow * (maxdelay - delay)))))}
+  id 5 tag []
