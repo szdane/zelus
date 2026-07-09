@@ -55,7 +55,21 @@ let build_fby_pred_with_ghosts ~(binder:string)
   mk_and rhs2 (mk_and (mk_paren (mk_eq (mk_var g_f) (mk_paren rhs1))) xgm_f)
 
 
+(* Memoised check that the external `fixpoint` binary is resolvable on PATH.
+   Without this, a missing binary makes `Sys.command` return 127, which
+   `fixpoint_is_safe` would otherwise report as a failed typecheck. *)
+let fixpoint_available =
+  lazy (Sys.command "command -v fixpoint > /dev/null 2>&1" = 0)
+
+let ensure_fixpoint_installed () =
+  if not (Lazy.force fixpoint_available) then
+    failwith
+      "fixpoint executable not found on PATH: the Liquid Fixpoint solver \
+       is not installed. Install it (see https://github.com/ucsd-progsys/liquid-fixpoint) \
+       and ensure `fixpoint` is on your PATH."
+
 let fixpoint_is_safe (fq_txt : string) : bool =
+  ensure_fixpoint_installed ();
   debug (Printf.sprintf "%s" fq_txt);
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in
@@ -2306,26 +2320,61 @@ let process_automaton_ref_eq_aut
           let (phi_ann, psi_ann) = base_ind_of_nf ann_nf in
 
           (* HEAD CHECK:
-              Use the explicit init x = e_init against the annotation head phi_ann. *)
-          let e_init =
-            match Hashtbl.find_opt init_table x with
-            | Some e -> e
-            | None ->
-                failwith
-                  (Printf.sprintf
-                      "Automaton: missing 'init %s = ...' for automaton variable %s" x x)
-          in
+              The annotation head phi_ann constrains the FIRST value of x, not
+              its 'init'. 'init x = e_init' only sets (last x) for the very
+              first instant; it is generally NOT the first value x takes.
+              The first value of x is the RHS of x's equation in the initial
+              state, evaluated with every 'last y' replaced by its 'init y'
+              (since at t=0 we have last y = init y). Check THAT against
+              phi_ann.
 
+              This must be RELATIONAL: x's rhs may reference the *current*
+              value of another automaton variable (e.g. `x = last x + vel`),
+              and that co-referenced current var must be pinned to its own
+              first value rather than left free. So we take the conjunction of
+              the first-value equations of ALL vars assigned in the initial
+              state (x's own equation uses [ret_binder] as its lhs) — the same
+              relational form the tail check uses — and substitute last_y by
+              init y throughout. *)
+          let init_of_last nm : Zparsetree.exp option =
+            if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
+              let y = String.sub nm 5 (String.length nm - 5) in
+              match Hashtbl.find_opt init_table y with
+              | Some e_init_y ->
+                  Some { desc = vc_gen_expression e_init_y; loc = dummy_loc }
+              | None -> None
+            else None
+          in
+          let rec subst_last (e : Zparsetree.exp) : Zparsetree.exp =
+            match e.desc with
+            | Zparsetree.Evar (Name s) ->
+                (match init_of_last s with Some e' -> e' | None -> e)
+            | Zparsetree.Eapp (ai, fn, args) ->
+                { e with desc =
+                    Zparsetree.Eapp (ai, subst_last fn, List.map subst_last args) }
+            | Zparsetree.Etuple es ->
+                { e with desc = Zparsetree.Etuple (List.map subst_last es) }
+            | _ -> e
+          in
           let ok_head =
             match phi_ann.desc with
             | Zparsetree.Econst (Ebool true) -> true
             | _ ->
-                check_against_phi
-                  ~fname:(x ^ ":aut-head")
+                let first_sha = find_state_by_name_aut states first_state in
+                (* conj && nxt(globally conj), where conj is the relational
+                   first-instant predicate over all assigned vars. *)
+                let rel_nf =
+                  relational_nf_of_block
+                    ~x ~binder:ret_binder first_sha.sha_handler.s_body
+                in
+                let (conj_head, _) = base_ind_of_nf rel_nf in
+                let lhs_pred = subst_last conj_head in
+                run_subtyping_pred
+                  ~cid:5
+                  ~name:(x ^ ":aut-head")
                   ~binder:ret_binder
                   ~base:base_name
-                  ~phi:phi_ann
-                  e_init
+                  lhs_pred phi_ann
           in
           if not ok_head then
             failwith
@@ -2622,8 +2671,14 @@ let check_return ~(fname:string)
         | Some y -> (
           match find_binding y with
           | Some rhs_ty ->
-              (* let (_vb_rhs, rhs_base, rhs_nf) = env_refine_nf_of_type rhs_ty in *)
-              let (_vb_rhs, rhs_base, rhs_nf) = refine_parts_of_gamma_ty rhs_ty in
+              (* Normalize the body variable's stored predicate to NF (phi &&
+                 nxt(globally psi)) *before* matching. Automaton variables are
+                 stored raw (e.g. `globally P`), and split_nf cannot decompose a
+                 bare temporal head — it would treat `globally P` as the whole
+                 "now" part and try to prove `globally P => P`, which fails since
+                 `globally` is uninterpreted. pred_nf_of_refine also renames the
+                 stored binder to ret_binder. *)
+              let (rhs_nf, rhs_base) = pred_nf_of_refine ~binder:ret_binder rhs_ty in
                 if String.lowercase_ascii rhs_base
                   <> String.lowercase_ascii ret_base
                 then failwith "Return base mismatch between body variable and annotation";

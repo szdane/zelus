@@ -30,7 +30,8 @@ let node exec () =
   let rec
     init level = 15. and
     init delay = 0. and
-    init netflow = 0.
+    init netflow = 0. and 
+    init state = 1
 
     and automaton_ref: {
       delay: {v:float |
@@ -44,10 +45,11 @@ let node exec () =
           v >= minlevel
           && v <= maxlevel
           && (v >= minlevel - (outflow * (maxdelay - delay)))
-          && (v <= maxlevel - 1. || mode = On || mode = Off)
+          && ((v <= maxlevel - 1.) || mode = On || mode = Off)
         ))
       }; 
-      netflow: {v:float | true}
+      netflow: {v:float | true};
+      state: {v: int | globally(v = 1 || v = 2 || v = 3)}
     }
 
     | On ->
@@ -57,6 +59,8 @@ let node exec () =
           level = last level +. netflow
         and
           delay = 0.
+        and 
+          state = 1
         unless ((last level >= maxlevel -. margin) && ((last delay) = 0.)) then Off
 
     | Off ->
@@ -66,6 +70,8 @@ let node exec () =
           level = last level +. netflow
         and
           delay = 0.
+        and 
+          state = 2
         unless
           ((last level <= minlevel -. (maxdelay *. outflow) +. margin) && (last delay = 0.))
         then Delaystart
@@ -77,7 +83,8 @@ let node exec () =
           level = last level +. netflow
         and
           delay = last delay +. 1.
-        unless (last delay > maxdelay-.1.)
+        and state = 3
+        unless ((last delay > maxdelay-.1.))
         then On
     end
   in

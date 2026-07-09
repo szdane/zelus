@@ -26,11 +26,11 @@ let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
     and init ww = true
     and init oei = false
     and automaton_ref : {x : {v:float | v >= 0. && nxt(globally(v >= 0. && ((oei && (not thr) && lg) ==>
-                        (v +. ((vdecision *. vdecision) /. (2. *. b)) < lrunway)) &&
+                        (v +. ((vel *. vel) /. (2. *. b)) < lrunway)) &&
                         ((oei && thr && lg ) ==>
-                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vdecision *. vdecision)) /. a) < lrunway))))};
-                        h : {v:float | v = 0. && nxt(globally(v >= 0. && v < hceiling))}; 
-                        vel : {v:float | v=10. && nxt(globally(v >= 0.))};
+                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. a) < lrunway))))};
+                        h : {v:float | globally(v >= 0. && v < hceiling)}; 
+                        vel : {v:float | globally(v >= 0.)};
                         thr : {v:bool | true && nxt(globally(true))}; 
                         fl : {v:bool | true }; 
                         lg : {v:bool | globally(ww <=> v)}; 

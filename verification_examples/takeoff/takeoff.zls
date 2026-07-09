@@ -22,7 +22,7 @@ let node exec () : {(v:int) | true} =
         and automaton_ref : 
         {
             h : {v:float | v = 0. && nxt(globally(v >= 0. && v < hceiling))}; 
-            vel : {v:float | v=10. && nxt(globally(v >= 0.))}; 
+            vel : {v:float | globally(v >= 0.)}; 
             x : {v:float | v >= 0. &&
                     nxt(globally(
                         v >= 0. &&
