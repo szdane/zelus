@@ -25,11 +25,15 @@ let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
     and init lg = true
     and init ww = true
     and init oei = false
-    and automaton_ref : {x : {v:float | v >= 0. && nxt(globally(v >= 0. && ((oei && (not thr) && lg) ==>
-                        (v +. ((vel *. vel) /. (2. *. b)) < lrunway)) &&
-                        ((oei && thr && lg ) ==>
-                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. a) < lrunway))))};
-                        h : {v:float | globally(v >= 0. && v < hceiling)}; 
+    and automaton_ref : {x : {v:float | v >= 0. && nxt(globally(v >= 0. &&
+                        ((not oei) ==>
+                          ((2. *. a *. v) = (vel *. vel))) &&
+                        ((oei && thr && lg) ==>
+                          ((v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. a)) < lrunway)) &&
+                        ((not thr) ==>
+                          ((v +. ((vel *. vel) /. (2. *. b))) <= lrunway))))};
+                        h : {v:float | globally(v >= 0. && v < hceiling &&
+                          ((lg = true) ==> (v = 0.)))}; 
                         vel : {v:float | globally(v >= 0.)};
                         thr : {v:bool | true && nxt(globally(true))}; 
                         fl : {v:bool | true }; 
@@ -39,18 +43,48 @@ let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
                     }
         | TakeoffBeforeDecisionSpeed ->
             do vel = (last vel) +. (a *. dt)
-            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
+            and x = (last x) +. (((last vel) +. vel) *. 0.5 *. dt)
             and h = last h
             and thr = true
             and fl = true
             and lg = true
             and ww = true
             and oei = false
-            unless ((last vel) > vdecision -. (a *. dt)) then TakeoffAfterDecisionSpeed 
+            unless ((last vel) > vdecision -. (a *. dt)) then TakeoffAfterDecisionSpeed
             else ((last x) >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then Stop
+        | TakeoffAfterDecisionSpeed ->
+            do vel = (last vel) +. (a *. dt)
+            and x = (last x) +. (((last vel) +. vel) *. 0.5 *. dt)
+            and h = last h
+            and thr = true
+            and fl = true
+            and lg = true
+            and ww = true
+            and oei = false
+            unless ((last x) >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then OEIOnGround
+        | OEIOnGround ->
+            do vel = (last vel) +. (0.5 *. a *. dt)
+            and x = (last x) +. (((last vel) +. vel) *. 0.5 *. dt)
+            and h = last h
+            and thr = true
+            and fl = true
+            and lg = true
+            and ww = true
+            and oei = true
+            unless ((last vel) >= (1.1 *. vstallflaps) -. (0.5 *. a *. dt)) then ClimbOEI
+        | ClimbOEI ->
+            do vel = (last vel) +. (0.5 *. a *. dt)
+            and x = (last x) +. (((last vel) +. vel) *. 0.5 *. dt)
+            and h = (last h) +. (coei *. dt)
+            and thr = true
+            and fl = true
+            and lg = false
+            and ww = false
+            and oei = true
+            unless ((last h) >= hceiling -. (coei *. dt)) then LevelOffOEI
         | Stop ->
             do vel = (last vel) -. (b *. dt)
-            and x = (last x) +. ((last vel) *. dt) -. (0.5 *. b *. dt *. dt )
+            and x = (last x) +. (((last vel) +. vel) *. 0.5 *. dt)
             and h = last h
             and thr = false
             and fl = true
@@ -68,36 +102,16 @@ let node takeoff () = (x, vel, h, thr, fl, lg, ww, oei) where
             and ww = true
             and oei = true
             unless (false) then StopFully
-        | TakeoffAfterDecisionSpeed ->
-            do vel = (last vel) +. (a *. dt)
-            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. a *. dt *. dt )
+        | LevelOffOEI ->
+            do vel = last vel
+            and x = (last x) +. (((last vel) +. vel) *. 0.5 *. dt)
             and h = last h
-            and thr = true
-            and fl = true
-            and lg = true
-            and ww = true
-            and oei = false
-            unless ((last x) >= xoei -. (((last vel) *. dt) +. (0.5 *. a *. dt *. dt ) ) ) then OEIOnGround
-        | OEIOnGround ->
-            do vel = (last vel) +. (0.5 *. a *. dt)
-            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
-            and h = last h
-            and thr = true
-            and fl = true
-            and lg = true
-            and ww = true
-            and oei = true
-            unless ((last vel) >= (1.1 *. vstallflaps) -. (0.5 *. a *. dt)) then ClimbOEI
-        | ClimbOEI ->
-            do vel = (last vel) +. (0.5 *. a *. dt)
-            and x = (last x) +. ((last vel) *. dt) +. (0.5 *. 0.5 *. a *. dt *. dt )
-            and h = (last h) +. (coei *. dt)
             and thr = true
             and fl = true
             and lg = false
             and ww = false
             and oei = true
-            unless (false) then ClimbOEI
+            unless (false) then LevelOffOEI
         end
 
 let hybrid main () = 
