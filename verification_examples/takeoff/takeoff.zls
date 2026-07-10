@@ -21,18 +21,18 @@ let node exec () : {(v:int) | true} =
     and init ww = true
         and automaton_ref : 
         {
-            h : {v:float | v = 0. && nxt(globally(v >= 0. && v < hceiling))}; 
-            vel : {v:float | v=10. && nxt(globally(v >= 0.))}; 
+            h : {v:float | v = 0. && nxt(globally(v >= 0. && v < hceiling && ((lg = true) ==> (v = 0.))))}; 
+            vel : {v:float | globally(v >= 0. && ((lg = false) ==> (v > ((1.1 *. vstallflaps) -. (a *. dt)))))};
             x : {v:float | v >= 0. &&
                     nxt(globally(
                         v >= 0. &&
                         ((last_vel<=((1.1 *. vstallflaps) -. (a*.dt))) ==>
-                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. (2. *. a)) < lrunway))
+                        (v +. ((((1.1 *. vstallflaps) *. (1.1 *. vstallflaps)) -. (vel *. vel)) /. (2. *. a)) <= lrunway))
                     ))};
             thr : {v:bool | true && nxt(globally(true))}; 
             fl : {v:bool | true }; 
             lg : {v:bool | globally(ww <=> v)}; 
-            ww : {v:bool | v = true && nxt(globally(( (last_vel<=((1.1 *. vstallflaps) -. (a*.dt))) ==> v=true) && ((last_vel > ((1.1 *. vstallflaps) -. (a*.dt))) ==> v=false)))}
+            ww : {v:bool | v = true && nxt(globally(( (last_vel<=((1.1 *. vstallflaps) -. (a*.dt))) ==> (v=true)) && ((last_vel > ((1.1 *. vstallflaps) -. (a*.dt))) ==> (v=false))))}
         }
         
         | Takeoff ->

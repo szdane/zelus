@@ -167,6 +167,11 @@ let rec vc_gen_expression ({ e_desc = desc; e_loc = loc }) =
   | Zelus.Eglobal{lname = Name n} -> Zparsetree.Evar(Name n)
   | Zelus.Eglobal{lname = Modname qualid} -> Zparsetree.Evar(Name qualid.id)
   | Zelus.Elocal{num = i; source = n} -> Zparsetree.Evar(Name n)
+  (* A nullary constructor such as an automaton state name (M1/M2/M3) is
+     modelled as a bool-sorted variable of that name, matching the mode
+     facts emitted by [exclusive_mode_fact]/[eq_const_name]. *)
+  | Zelus.Econstr0(Name n) -> Zparsetree.Evar(Name n)
+  | Zelus.Econstr0(Modname qualid) -> Zparsetree.Evar(Name qualid.id)
   (* | Zelus.Etuple(exp_list) -> Zparsetree.Etuple(List.map (fun exp -> {desc = vc_gen_expression exp; loc = dummy_loc}) exp_list) *)
   | Zelus.Etuple exp_list ->
     Zparsetree.Etuple
@@ -668,12 +673,26 @@ let shift_current_vars_to_last_in_exp
     (e:Zparsetree.exp)
   : Zparsetree.exp =
   let is_already_last s = String.length s >= 5 && String.sub s 0 5 = "last_" in
+  (* Strip every leading "last_" to recover the root variable name. *)
+  let rec strip_leading_last s =
+    if String.length s >= 5 && String.sub s 0 5 = "last_"
+    then strip_leading_last (String.sub s 5 (String.length s - 5))
+    else s
+  in
   let should_shift s =
-    if s = binder || is_builtin_zpt_name s || is_already_last s then false
+    if s = binder || is_builtin_zpt_name s then false
     else
       match shiftable_vars with
-      | Some xs -> List.mem s xs
-      | None -> true
+      (* Automaton path: shift by ROOT name so an already-[last_] var is
+         pushed one step DEEPER into the past ([last_vel] -> [last_last_vel]),
+         rather than being frozen. Freezing was unsound: a body that mentions
+         [last_z] would, in the shifted ([last_x]) refinement, alias the SAME
+         [last_z] as the transition's source values, manufacturing spurious
+         constraints (e.g. tying [last_ww] to the current transition guard on
+         [last_vel] instead of to the vel two steps back). *)
+      | Some xs -> List.mem (strip_leading_last s) xs
+      (* Non-automaton path: preserve legacy behavior (do not double-shift). *)
+      | None -> if is_already_last s then false else true
   in
   let rec go e =
     match e.desc with
@@ -1017,6 +1036,65 @@ let rename_state_last_binder_to_return
 
 
 
+(* Collect every [last_*] variable name occurring in a ZPT predicate. *)
+let rec collect_last_vars_zpt (e:Zparsetree.exp) (acc:string list) : string list =
+  match e.desc with
+  | Zparsetree.Evar (Name s) ->
+      if String.length s >= 5 && String.sub s 0 5 = "last_"
+      then (if List.mem s acc then acc else s :: acc)
+      else acc
+  | Zparsetree.Eapp (_, f, args) ->
+      List.fold_left (fun a e -> collect_last_vars_zpt e a)
+        (collect_last_vars_zpt f acc) args
+  | Zparsetree.Etuple es ->
+      List.fold_left (fun a e -> collect_last_vars_zpt e a) acc es
+  | _ -> acc
+
+let base_name_of_binding_ty (ty:Zparsetree.type_expression) : string option =
+  match ty.desc with
+  | Zparsetree.Erefinement ((_v, base_ty), _p) ->
+      (match base_ty.desc with
+       | Zparsetree.Etypeconstr (Name b, []) -> Some b
+       | _ -> None)
+  | _ -> None
+
+(* A shifted refinement may reference deeper-past values ([last_last_vel]) that
+   the ordinary single-step [last_] preload never declares. Bind each such
+   unbound [last_*] name as unconstrained ([{v:base | true}]) — in a one-step
+   inductive check we genuinely have no information about values two-or-more
+   steps back, and an unconstrained (fresh, distinct) symbol is exactly that.
+   The base is taken from the root variable's binding (default [real]). *)
+let ensure_unbound_last_vars_declared (psi:Zparsetree.exp) : unit =
+  let rec strip_leading_last s =
+    if String.length s >= 5 && String.sub s 0 5 = "last_"
+    then strip_leading_last (String.sub s 5 (String.length s - 5))
+    else s
+  in
+  let rec last_depth s n =
+    if String.length s >= 5 && String.sub s 0 5 = "last_"
+    then last_depth (String.sub s 5 (String.length s - 5)) (n + 1)
+    else n
+  in
+  List.iter
+    (fun name ->
+      (* Only declare genuine DEEPER-past names ([last_last_*] and beyond).
+         Single-[last_] names of refenv variables are declared by the preload
+         ([ensure_last_from_annotation] per variable); pre-declaring them here
+         (order-dependently) would clobber their real refinements with [true]. *)
+      if last_depth name 0 < 2 then ()
+      else match find_binding name with
+      | Some _ -> ()
+      | None ->
+          let root = strip_leading_last name in
+          let base =
+            match find_binding root with
+            | Some ty -> (match base_name_of_binding_ty ty with
+                          | Some b -> b | None -> "real")
+            | None -> "real"
+          in
+          add_binding name (mk_refine name base mk_true))
+    (collect_last_vars_zpt psi [])
+
 let ensure_last_from_annotation
   ?(shiftable_vars:string list option=None)
   ~(source_name:string)
@@ -1031,6 +1109,7 @@ match find_binding ghost_name with
     let psi = step_pred_of_ann_nf ann_nf in
     let psi = shift_current_vars_to_last_in_exp ~shiftable_vars ~binder psi in
     let psi = rename_var_in_exp binder "v" psi in
+    ensure_unbound_last_vars_declared psi;
     let base_ty =
       mk_type
         (Zparsetree.Etypeconstr
@@ -1212,12 +1291,19 @@ let eq_const_name (varname:string) (st_name:string) : Zparsetree.exp =
 let domain_of_mode_var (varname:string) (modes:string list) : Zparsetree.exp =
   mk_big_or (List.map (fun m -> eq_const_name varname m) modes)
 
-let ensure_mode_symbol (nm:string) : unit =
+let mk_int (n:int) : Zparsetree.exp =
+  { desc = Zparsetree.Econst (Eint n); loc = dummy_loc }
+
+(* Each automaton state symbol (M1/M2/M3/...) is bound to a DISTINCT integer
+   constant.  Modelling them as [bool] made three states impossible to keep
+   pairwise-distinct, which silently turned every mode-changing transition
+   into an unsatisfiable (vacuously safe) constraint. *)
+let ensure_mode_symbol (idx:int) (nm:string) : unit =
   if Option.is_none (find_binding nm) then
     add_binding nm
       { desc = Zparsetree.Erefinement
-          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "bool", [])))
-          , mk_true )
+          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "int", [])))
+          , mk_eq (mk_var "v") (mk_int idx) )
       ; loc = dummy_loc
       }
 
@@ -1229,7 +1315,7 @@ let ensure_mode_var
     let pred = domain_of_mode_var varname modes |> rename_var_in_exp varname "v" in
     add_binding varname
       { desc = Zparsetree.Erefinement
-          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "bool", [])))
+          ( ("v", mk_type (Zparsetree.Etypeconstr (Name "int", [])))
           , pred )
       ; loc = dummy_loc
       }

@@ -55,7 +55,21 @@ let build_fby_pred_with_ghosts ~(binder:string)
   mk_and rhs2 (mk_and (mk_paren (mk_eq (mk_var g_f) (mk_paren rhs1))) xgm_f)
 
 
+(* Memoised check that the external `fixpoint` binary is resolvable on PATH.
+   Without this, a missing binary makes `Sys.command` return 127, which
+   `fixpoint_is_safe` would otherwise report as a failed typecheck. *)
+let fixpoint_available =
+  lazy (Sys.command "command -v fixpoint > /dev/null 2>&1" = 0)
+
+let ensure_fixpoint_installed () =
+  if not (Lazy.force fixpoint_available) then
+    failwith
+      "fixpoint executable not found on PATH: the Liquid Fixpoint solver \
+       is not installed. Install it (see https://github.com/ucsd-progsys/liquid-fixpoint) \
+       and ensure `fixpoint` is on your PATH."
+
 let fixpoint_is_safe (fq_txt : string) : bool =
+  ensure_fixpoint_installed ();
   debug (Printf.sprintf "%s" fq_txt);
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in
@@ -169,6 +183,58 @@ let refine_parts_of_gamma_ty (ty : Zparsetree.type_expression)
       (vb, base_name, pred)
   | _ -> failwith "Gamma binding is not a refinement"
 
+(* Environment fact for a TEMPORAL (automaton/stream) variable, stripped of its
+   first-value HEAD.
+
+   An automaton var's declared type is [phi_head && nxt(globally psi)] — [phi]
+   is its value at the FIRST instant only, [psi] its inductive invariant (true
+   at every instant t>=1). Placed verbatim in the environment, the head [phi]
+   (e.g. [ww]'s [v = true]) is asserted as a standing hypothesis at ALL
+   instants, so in a non-initial state where the variable holds a different
+   value (e.g. [ww = false] in Climb) the hypothesis contradicts the state,
+   making inductive-step disjuncts spuriously UNSAT — hence vacuously "safe".
+   Keeping only the invariant [psi] as the environment fact is sound at every
+   instant used by the inductive/tail queries; the head is verified separately
+   by the dedicated head check. *)
+let invariant_only_type (ty : Zparsetree.type_expression)
+  : Zparsetree.type_expression =
+  let (b, base, ann) = refine_parts_of_gamma_ty ty in
+  let nf = zpt_pred_to_nf ~binder:b ann in
+  let (_phi, psi) = base_ind_of_nf nf in
+  mk_refine b base psi
+
+(* t=0 ENVIRONMENT for the head / globally-base checks.
+
+   Neutralize (to [true]) the environment facts of every automaton stream
+   variable and every [last_*] variable, keeping only genuine constants (global
+   [let]s), mode symbols, and ghosts. Those stream/last facts are INVARIANTS
+   (true at t>=1) and SHIFTED-past facts — neither is valid at the first
+   instant, and left in the environment they contradict the pinned first-state,
+   making the base/head LHS spuriously UNSAT and thus vacuously "safe" (e.g. a
+   conserved nonlinear [Q <= 1] slips through). The first-state values are
+   already pinned by the relational [conj_head] in the check's LHS (with
+   [last y] substituted to [init y]), so dropping these facts loses nothing
+   sound at t=0. Returns the saved gamma so the caller can restore it before the
+   inductive/tail check (which DOES need those facts). *)
+let neutralize_stream_facts_for_t0
+    (refvar_names : string list)
+  : Zparsetree.type_expression Env.t =
+  let saved = !gamma in
+  let is_last s = String.length s >= 5 && String.sub s 0 5 = "last_" in
+  List.iter
+    (fun (name, ty) ->
+       if List.mem name refvar_names || is_last name then
+         match ty.desc with
+         | Zparsetree.Erefinement ((vb, base_ty), _) ->
+             gamma :=
+               Env.add name
+                 { desc = Zparsetree.Erefinement ((vb, base_ty), mk_true);
+                   loc = dummy_loc }
+                 !gamma
+         | _ -> ())
+    (Env.bindings !gamma);
+  saved
+
 let ensure_last_of_bound_var ?(shiftable_vars:string list option=None) (y:string) : unit =
   let ghost_name = "last_" ^ y in
   match find_binding ghost_name with
@@ -181,6 +247,7 @@ let ensure_last_of_bound_var ?(shiftable_vars:string list option=None) (y:string
           let psi = step_pred_of_ann_nf pred in
           let psi = shift_current_vars_to_last_in_exp ~shiftable_vars ~binder:vb psi in
           let psi = rename_var_in_exp vb "v" psi in
+          ensure_unbound_last_vars_declared psi;
           let base_ty =
             mk_type
               (Zparsetree.Etypeconstr
@@ -1462,20 +1529,58 @@ let ordered_escape_guards_aut (escs : Zelus.escape list)
   in
   go [] [] escs
 
+(* Source-state CONSTANT facts, shifted to [last_].
+
+   For an inductive-step disjunct whose source state is [sha], every variable
+   that [sha] assigns a *literal constant* (e.g. [lg = false], [ww = true]) had
+   that value at the previous instant. So [last_lg = false], [last_ww = true],
+   ... are sound hypotheses — the exact same justification as the [last_mode =
+   sha] pin, generalized to ordinary variables.
+
+   This is what lets a mode-free BOOLEAN annotation stand in for [mode = M]: an
+   annotation like [(not lg) ==> vel > c] shifts to [(not last_lg) ==>
+   last_vel > c] on [last_vel], and this fact supplies the [last_lg = false]
+   needed to fire it in the source state's disjunct. Restricted to constant
+   assignments (non-constant rhs like [vel = last vel + a*dt] would reference
+   [last_last_*], which is neither available nor useful). *)
+let source_state_const_facts
+    ~(refvars : string list)
+    (sha : Zelus.state_handler_ann)
+  : Zparsetree.exp =
+  let blk = sha.sha_handler.s_body in
+  let assigned = assigned_vars_in_block blk in
+  let facts =
+    List.filter_map
+      (fun y ->
+        if not (List.mem y refvars) then None
+        else
+          match rhs_for_var_in_block y blk with
+          | Some rhs ->
+              (match vc_gen_expression rhs with
+               | (Zparsetree.Econst _) as c ->
+                   Some (mk_eq (mk_var ("last_" ^ y))
+                           { desc = c; loc = dummy_loc })
+               | _ -> None)
+          | None -> None)
+      assigned
+  in
+  mk_big_and facts
+
 let automaton_var_nf_aut
     ~(x:string)
     ~(binder:string)
     ~(base_name:string)
     ~(first_state:string)
+    ~(refvars:string list)
     (states : Zelus.state_handler_ann list)
   : Zparsetree.exp =
-  let mode_last = "mode_last" in
+  let mode_last = "last_mode" in
   let mode_now  = "mode" in
   let eq_name a b = mk_eq (mk_var a) (mk_var b) in
   let mode_names = all_mode_names_aut states in
-            List.iter ensure_mode_symbol mode_names;
+            List.iteri ensure_mode_symbol mode_names;
             ensure_mode_var ~varname:"mode" ~modes:mode_names;
-            ensure_mode_var ~varname:"mode_last" ~modes:mode_names;
+            ensure_mode_var ~varname:"last_mode" ~modes:mode_names;
 
   let synth_of_state_name st_name =
     let sha = find_state_by_name_aut states st_name in
@@ -1519,6 +1624,10 @@ let automaton_var_nf_aut
     let st = sha.sha_handler in
     let st_name = state_name_of_pat st.s_state in
     let cur = synth_var_in_state_aut ~x ~binder ~base_name sha in
+    (* Constant assignments of the SOURCE state, valid as [last_] facts (see
+       [source_state_const_facts]). These generalize the [last_mode] pin to
+       ordinary variables, enabling mode-free boolean annotations. *)
+    let src_const_facts = source_state_const_facts ~refvars sha in
     let (leave_cases, stay_guard) = ordered_escape_guards_aut st.s_trans in
 
     let leave_preds =
@@ -1527,22 +1636,24 @@ let automaton_var_nf_aut
           let dst_name = state_name_of_stateexp esc.e_next_state in
           let dst = synth_of_state_name dst_name in
           mk_big_and
-            [ 
-              (* exclusive_mode_fact mode_last st_name mode_names; *)
-            active_g
+            [
+              exclusive_mode_fact mode_last st_name mode_names
+            ; src_const_facts
+            ; active_g
             ; rename_var_in_exp dst.binder binder dst.base_phi
-            (* ; exclusive_mode_fact mode_now dst_name mode_names *)
+            ; exclusive_mode_fact mode_now dst_name mode_names
             ])
         leave_cases
     in
 
     let stay_pred =
       mk_big_and
-        [ 
-          (* exclusive_mode_fact mode_last st_name mode_names; *)
-         stay_guard
+        [
+          exclusive_mode_fact mode_last st_name mode_names
+        ; src_const_facts
+        ; stay_guard
         ; rename_var_in_exp cur.binder binder cur.ind_psi
-        (* ; exclusive_mode_fact mode_now st_name mode_names *)
+        ; exclusive_mode_fact mode_now st_name mode_names
         ]
     in
     mk_big_or (stay_pred :: leave_preds)
@@ -1556,7 +1667,10 @@ let preload_refenv_vars_aut (vars : (string * Zelus.type_expression) list) : uni
   List.iter
     (fun (x, ty_ann_zelus) ->
       let ty_ann_zpt = to_zpt_type ty_ann_zelus in
-      add_binding x ty_ann_zpt)
+      (* Bind by INVARIANT only (strip first-value head) — see
+         [invariant_only_type]: the head is a t=0-only fact and must not stand
+         as an environment hypothesis across inductive-step queries. *)
+      add_binding x (invariant_only_type ty_ann_zpt))
     vars
 
 let process_scalar_eq base_pat ty_ann_zelus rhs =
@@ -2239,9 +2353,13 @@ let same_ltuple_type (t1:Zelus.type_expression) (t2:Zelus.type_expression) : boo
 
 let preload_last_vars_aut (vars : (string * Zelus.type_expression) list) : unit =
   let shiftable_vars =
-    vars
-    |> List.map fst
-    |> List.filter (fun x -> not (String.length x >= 5 && String.sub x 0 5 = "last_"))
+    (* [mode] is included so that in the "last" version of an annotation the
+       mode selector is shifted to its previous value [last_mode], matching the
+       [last_mode] facts emitted for the source state of each transition. *)
+    "mode"
+    :: (vars
+        |> List.map fst
+        |> List.filter (fun x -> not (String.length x >= 5 && String.sub x 0 5 = "last_")))
   in
   List.iter
     (fun (x, ty_ann_zelus) ->
@@ -2280,6 +2398,15 @@ let process_automaton_ref_eq_aut
   else begin
     let first_state = first_state_name_aut states init_state_opt in
 
+    (* Register the automaton's mode symbols (state names) and the mode /
+       mode_last selector variables before any constraint is generated, so
+       annotations and the synthesized last_* bindings may refer to them
+       (e.g. [mode = M3]) without producing symbols undeclared to fixpoint. *)
+    let mode_names = all_mode_names_aut states in
+    List.iteri ensure_mode_symbol mode_names;
+    ensure_mode_var ~varname:"mode" ~modes:mode_names;
+    ensure_mode_var ~varname:"last_mode" ~modes:mode_names;
+
     (* Use only the first user-provided refenv as the spec environment. *)
     preload_refenv_vars_aut vars;
     preload_last_vars_aut vars;
@@ -2293,31 +2420,134 @@ let process_automaton_ref_eq_aut
           let (phi_ann, psi_ann) = base_ind_of_nf ann_nf in
 
           (* HEAD CHECK:
-              Use the explicit init x = e_init against the annotation head phi_ann. *)
-          let e_init =
-            match Hashtbl.find_opt init_table x with
-            | Some e -> e
-            | None ->
-                failwith
-                  (Printf.sprintf
-                      "Automaton: missing 'init %s = ...' for automaton variable %s" x x)
-          in
+              The annotation head phi_ann constrains the FIRST value of x, not
+              its 'init'. 'init x = e_init' only sets (last x) for the very
+              first instant; it is generally NOT the first value x takes.
+              The first value of x is the RHS of x's equation in the initial
+              state, evaluated with every 'last y' replaced by its 'init y'
+              (since at t=0 we have last y = init y). Check THAT against
+              phi_ann.
 
+              This must be RELATIONAL: x's rhs may reference the *current*
+              value of another automaton variable (e.g. `x = last x + vel`),
+              and that co-referenced current var must be pinned to its own
+              first value rather than left free. So we take the conjunction of
+              the first-value equations of ALL vars assigned in the initial
+              state (x's own equation uses [ret_binder] as its lhs) — the same
+              relational form the tail check uses — and substitute last_y by
+              init y throughout. *)
+          let init_of_last nm : Zparsetree.exp option =
+            if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
+              let y = String.sub nm 5 (String.length nm - 5) in
+              match Hashtbl.find_opt init_table y with
+              | Some e_init_y ->
+                  Some { desc = vc_gen_expression e_init_y; loc = dummy_loc }
+              | None -> None
+            else None
+          in
+          let rec subst_last (e : Zparsetree.exp) : Zparsetree.exp =
+            match e.desc with
+            | Zparsetree.Evar (Name s) ->
+                (match init_of_last s with Some e' -> e' | None -> e)
+            | Zparsetree.Eapp (ai, fn, args) ->
+                { e with desc =
+                    Zparsetree.Eapp (ai, subst_last fn, List.map subst_last args) }
+            | Zparsetree.Etuple es ->
+                { e with desc = Zparsetree.Etuple (List.map subst_last es) }
+            | _ -> e
+          in
+          (* Head and globally-base are t=0 checks: run them with stream/last
+             facts neutralized (see [neutralize_stream_facts_for_t0]), restoring
+             the full env before the inductive/tail check below. *)
+          let saved_t0_gamma = neutralize_stream_facts_for_t0 (List.map fst vars) in
           let ok_head =
             match phi_ann.desc with
             | Zparsetree.Econst (Ebool true) -> true
             | _ ->
-                check_against_phi
-                  ~fname:(x ^ ":aut-head")
+                let first_sha = find_state_by_name_aut states first_state in
+                (* conj && nxt(globally conj), where conj is the relational
+                   first-instant predicate over all assigned vars. *)
+                let rel_nf =
+                  relational_nf_of_block
+                    ~x ~binder:ret_binder first_sha.sha_handler.s_body
+                in
+                let (conj_head, _) = base_ind_of_nf rel_nf in
+                (* At the first instant the automaton is in its initial state,
+                   so [mode = first_state] is a sound hypothesis. Pinning it
+                   lets initial refinements that mention [mode] be discharged
+                   (otherwise [mode] is free and the check must hold for every
+                   mode, which is generally impossible at t=0). *)
+                (* mode-variable pin DISABLED: the examples are now mode-free,
+                   so initial refinements no longer mention [mode]. The current
+                   [oei]/[thr]/[lg]/etc. are already pinned at t=0 by the
+                   relational block (conj_head), so this is unnecessary.
+                     let mode_now_fact =
+                       exclusive_mode_fact "mode" first_state mode_names in
+                     let lhs_pred = mk_and mode_now_fact (subst_last conj_head) in *)
+                let lhs_pred = subst_last conj_head in
+                run_subtyping_pred
+                  ~cid:5
+                  ~name:(x ^ ":aut-head")
                   ~binder:ret_binder
                   ~base:base_name
-                  ~phi:phi_ann
-                  e_init
+                  lhs_pred phi_ann
           in
-          if not ok_head then
+          if not ok_head then begin
+            gamma := saved_t0_gamma;
             failwith
               (Printf.sprintf
-                  "Liquid type error: automaton variable %s violates its initial refinement" x);
+                  "Liquid type error: automaton variable %s violates its initial refinement" x)
+          end;
+
+          (* GLOBALLY-BASE CHECK:
+              [nxt(globally(P))] requires P to hold at the FIRST instant, not
+              only to be *preserved* by transitions (which is all the tail
+              check below verifies). Without this base case, a
+              preserved-but-false invariant type-checks vacuously: a conserved
+              quantity [Q < c] passes for ANY bound c, and even a blatantly
+              false [x > 1000000] passes because it is inductively preserved.
+
+              The first instant's values are given by the initial state's
+              relational first-value predicate with every [last y] replaced by
+              [init y] (same construction as the head check). [psi_ann] (the
+              body under [globally]) may itself reference [last y] — e.g. a
+              guard on [last_vel] — so substitute those to their [init] values
+              as well, since at the first instant [last y = init y]. *)
+          let ok_base_ind =
+            match psi_ann.desc with
+            | Zparsetree.Econst (Ebool true) -> true
+            | _ ->
+                let first_sha = find_state_by_name_aut states first_state in
+                let rel_nf =
+                  relational_nf_of_block
+                    ~x ~binder:ret_binder first_sha.sha_handler.s_body
+                in
+                let (conj_head, _) = base_ind_of_nf rel_nf in
+                (* [mode = first_state] holds at the first instant (see head
+                   check above); pin it so a globally body mentioning [mode]
+                   is evaluated in the correct initial state. *)
+                (* mode-variable pin DISABLED: the examples are now mode-free,
+                   so initial refinements no longer mention [mode]. The current
+                   [oei]/[thr]/[lg]/etc. are already pinned at t=0 by the
+                   relational block (conj_head), so this is unnecessary.
+                     let mode_now_fact =
+                       exclusive_mode_fact "mode" first_state mode_names in
+                     let lhs_pred = mk_and mode_now_fact (subst_last conj_head) in *)
+                let lhs_pred = subst_last conj_head in
+                run_subtyping_pred
+                  ~cid:5
+                  ~name:(x ^ ":aut-globally-base")
+                  ~binder:ret_binder
+                  ~base:base_name
+                  lhs_pred (subst_last psi_ann)
+          in
+          (* Restore the full environment (stream invariants + last facts) for
+             the inductive/tail check, which relies on them. *)
+          gamma := saved_t0_gamma;
+          if not ok_base_ind then
+            failwith
+              (Printf.sprintf
+                  "Liquid type error: automaton variable %s violates its initial (globally-base) refinement" x);
 
           (* (* INDUCTION HYPOTHESIS:
               last_x gets the tail part of the REQUIRED annotation. *)
@@ -2334,6 +2564,7 @@ let process_automaton_ref_eq_aut
               ~binder:ret_binder
               ~base_name
               ~first_state
+              ~refvars:(List.map fst vars)
               states
           in
           let ann_nf_lhs = zpt_pred_to_nf ~binder:ret_binder lhs_nf in
@@ -2354,9 +2585,19 @@ let process_automaton_ref_eq_aut
               (Printf.sprintf
                   "Liquid type error: automaton variable %s violates its inductive refinement" x);
 
-          (* Success: keep the user annotation as the binding for x. *)
-          add_binding x ty_ann_zpt
+          (* Success. Re-bind x by its INVARIANT only (not the full annotation):
+             a later refenv variable's inductive check must see x's preserved
+             invariant, never x's first-value head as a standing fact (see
+             [invariant_only_type]). *)
+          add_binding x (invariant_only_type ty_ann_zpt)
         end)
+      vars;
+    (* All intra-automaton inductive checks are done. Restore each variable's
+       FULL declared (temporal) type for downstream use — e.g. the node's
+       return-alias check compares against the full [globally(...)] annotation,
+       not the invariant-only form used as an inductive hypothesis above. *)
+    List.iter
+      (fun (x, ty_ann_zelus) -> add_binding x (to_zpt_type ty_ann_zelus))
       vars
   end
         
@@ -2526,9 +2767,13 @@ let check_return ~(fname:string)
                    (ret_ann_zelus:Zelus.type_expression) : unit =
     
     debug_nf_synth_lhs e;
+  (* An unannotated node return carries the placeholder base [emptytype];
+     there is no refinement obligation on the return in that case. *)
+  if String.lowercase_ascii ret_base = "emptytype" then ()
+  else
   match ret_ann_zelus.desc with
   (* ---- TUPLE RETURN ---- *)
-  | Zelus.Erefinementlabeledtuple (_fields, _phi_zls) -> ( 
+  | Zelus.Erefinementlabeledtuple (_fields, _phi_zls) -> (
     debug "inside the tuple return check";
       match e.e_desc with
       | Zelus.Etuple es ->
@@ -2605,8 +2850,14 @@ let check_return ~(fname:string)
         | Some y -> (
           match find_binding y with
           | Some rhs_ty ->
-              (* let (_vb_rhs, rhs_base, rhs_nf) = env_refine_nf_of_type rhs_ty in *)
-              let (_vb_rhs, rhs_base, rhs_nf) = refine_parts_of_gamma_ty rhs_ty in
+              (* Normalize the body variable's stored predicate to NF (phi &&
+                 nxt(globally psi)) *before* matching. Automaton variables are
+                 stored raw (e.g. `globally P`), and split_nf cannot decompose a
+                 bare temporal head — it would treat `globally P` as the whole
+                 "now" part and try to prove `globally P => P`, which fails since
+                 `globally` is uninterpreted. pred_nf_of_refine also renames the
+                 stored binder to ret_binder. *)
+              let (rhs_nf, rhs_base) = pred_nf_of_refine ~binder:ret_binder rhs_ty in
                 if String.lowercase_ascii rhs_base
                   <> String.lowercase_ascii ret_base
                 then failwith "Return base mismatch between body variable and annotation";
