@@ -1,0 +1,12 @@
+(* ==== NEG: arithmetic RHS whose annotation does NOT follow ====
+   Reported as issue #4's first snippet. The argument is unconstrained, so
+   `flow > 0` is unprovable — this must be a clean liquid type error, not the
+   "No signature recorded for function +" crash it used to be. *)
+let node exec (x : {(v:int) | true}) : {(vflow:int) | true} =
+  let (flow : {(v:int) | v > 0}) = x + 6
+  in flow
+
+let dt = 0.1
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (r) = exec (1) in
+        (print_int r; print_newline ())) else ()

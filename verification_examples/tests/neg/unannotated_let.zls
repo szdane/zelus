@@ -1,0 +1,11 @@
+(* ==== NEG: anti-vacuity for inferred unannotated equations ====
+   `x = 2` gives `a = 3`, so `v = 7` does not follow. The inferred singleton must
+   constrain the variable, not merely declare it. *)
+let node chain (x : {(v:int) | v = 2}) : {(v:int) | v = 7} =
+  let a = x + 1
+  in a
+
+let dt = 0.1
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (r) = chain (2) in
+        (print_int r; print_newline ())) else ()

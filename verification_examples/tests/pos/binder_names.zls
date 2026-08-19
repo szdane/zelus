@@ -1,0 +1,24 @@
+(* ==== POS: refinement binders may be named anything, not just `v` ====
+   The value variable is canonical `v` inside the encoding, so every declared
+   binder is alpha-renamed to it on the way in. Before that, a binder spelled
+   anything else left the constraint with a free variable and could never be
+   discharged — these all failed while their `v`-spelled twins passed. *)
+
+(* top-level constant, binder `t` *)
+let theta : {t:float | t = 1.} = 1.
+
+(* return binder `r`, differing from both the argument binder and the local *)
+let node f (x : {(v:int) | v > 0}) : {(r:int) | r > 0} = x + 6
+
+(* return binder `r`, body is a plain arithmetic expression: syntactic tautology *)
+let node g (x : {(v:int) | v > 0}) : {(r:int) | r = x + 6} = x + 6
+
+(* let-annotation binder `w`, return binder `n` *)
+let node noise () : {(n:float) | 2. >= n} =
+  let (w : {w:float | w = 1.}) = theta
+  in w
+
+let dt = 0.1
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (r) = f (1) in
+        (print_int r; print_newline ())) else ()

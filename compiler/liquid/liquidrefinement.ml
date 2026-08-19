@@ -70,7 +70,7 @@ let ensure_fixpoint_installed () =
 
 let fixpoint_is_safe (fq_txt : string) : bool =
   ensure_fixpoint_installed ();
-  debug (Printf.sprintf "%s" fq_txt);
+  (*debug (Printf.sprintf "%s" fq_txt);*)
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in
   let oc = open_out tmp in
@@ -105,10 +105,66 @@ let nf_eq_v_rhs (rhs_zls:Zelus.exp) name : Zparsetree.exp =
   let v_eq = mk_eq_v_to_zls rhs_zls name in
   mk_and v_eq (mk_X (mk_G v_eq))
 
-  
-  (* Convert a Zelus predicate to ZPT expr for "now" and "next" parts *)
+
+(* THE RESERVED VALUE VARIABLE.
+
+   The .fq encoding pins two conventions that must agree:
+
+   - environment facts: [Gen.bind_line_of_ty] emits [bind N <progvar> : {v:Base |
+     P}], so a fact's predicate MUST be written over [v] (fixpoint substitutes
+     v := progvar).
+   - constraints: [run_subtyping_pred] emits [lhs {B:Base | P}] / [rhs {B:Base |
+     Q}], so P and Q must be written over the same [B].
+
+   A source annotation may name its binder anything ([{(vflow:int) | ...}]),
+   while every synthesized predicate uses [mk_v ()] = [v]. Left unreconciled,
+   the two meet in one query as [lhs {n:real | v = n}] — [v] free, [n] captured —
+   which is unprovable no matter what the program does. So: every SOURCE-declared
+   refinement is alpha-renamed to [v] on the way in, and [v] is the value
+   variable everywhere downstream. The declared name survives only in messages. *)
+let value_var = "v"
+
+(* {(b:base) | P}  ->  P[b := v].  For SOURCE annotations only: predicates
+   already in gamma are over [v] by the invariant above, and renaming those by
+   their gamma binder (which [add_binding] sets to the program variable's own
+   name) would rewrite the program variable instead of the value variable. *)
+let canon_declared_pred ~(declared:string) (p:Zparsetree.exp) : Zparsetree.exp =
+  if declared = value_var then p else rename_var_in_exp declared value_var p
+
+(* Head of an application, when it names something that could be a user function
+   whose refinement signature we are meant to look up.
+
+   Arithmetic and comparison in Zelus are ORDINARY applications of a Stdlib
+   value — [x + 6] is [Eapp (Eglobal (Modname {qual="Stdlib"; id="+"}), [x; 6])],
+   not an [Eop] — and [Typing] (which runs before this pass) is what rewrites the
+   parser's [Name "+"] into that [Modname]. Such heads have no [fun_sigs] entry
+   and never will: fixpoint interprets [+ - * / >= = && ||] natively, so the
+   predicate needs no signature. Returning [None] for them keeps them out of the
+   call-checking rule.
+
+   Non-operator callees still return [Some], so an unannotated/unknown function
+   keeps producing an explicit error rather than being silently synthesized as an
+   uninterpreted symbol that [Gen.to_fq] never declares a sort for.
+
+   Caveat: unary [~-] / [~-.] are operator-like and so land in the default
+   synthesis arm, but they are absent from [Pprint.is_infix] and would print as
+   an uninterpreted application. Unary minus on a literal is folded by the parser,
+   so this only bites on [~-. x]. *)
+let applied_user_fun_name (fexp : Zelus.exp) : string option =
+  match fexp.e_desc with
+  | Zelus.Eglobal { lname = Name n }
+  | Zelus.Eglobal { lname = Modname { id = n; _ } } ->
+      if is_operator_like_name n then None else Some n
+  | _ -> None
+
+  (* Convert a Zelus predicate to ZPT expr for "now" and "next" parts.
+     [binder] is the DECLARED binder of the source annotation; the result is
+     always over [value_var] (see [canon_declared_pred]). *)
 let zls_pred_to_nf ~(binder:string) (pred_zls:Zelus.exp) : Zparsetree.exp =
-    let p = { desc = vc_gen_expression pred_zls; loc = dummy_loc } in
+    let p =
+      canon_declared_pred ~declared:binder
+        { desc = vc_gen_expression pred_zls; loc = dummy_loc }
+    in
     (* Top-only behavior for temporal heads; otherwise, append X true
        unless an X(...) already occurs somewhere inside p. *)
     match p.desc with
@@ -169,6 +225,21 @@ let pred_nf_of_refine ~binder (ty:Zparsetree.type_expression) : Zparsetree.exp *
           | _ -> failwith "pred_nf_of_refine: base must be Etypeconstr(Name,[])"
         end)
     | _ -> failwith "pred_nf_of_refine: expected refinement type"
+
+(* Same, for a type read back out of gamma.  A gamma entry's binder field is the
+   PROGRAM VARIABLE's own name (set by [add_binding]) while its predicate is
+   already over [value_var] — so there is nothing to rename here, and renaming by
+   the binder field (as [pred_nf_of_refine] does for source annotations) would
+   rewrite occurrences of the program variable instead of the value variable. *)
+let pred_nf_of_gamma_ty (ty:Zparsetree.type_expression) : Zparsetree.exp * string =
+  match ty.desc with
+  | Zparsetree.Erefinement ((_progvar, base_ty), pred) ->
+      (zpt_pred_to_nf ~binder:value_var pred, begin
+        match base_ty.desc with
+        | Zparsetree.Etypeconstr (Name b, []) -> b
+        | _ -> failwith "pred_nf_of_gamma_ty: base must be Etypeconstr(Name,[])"
+      end)
+  | _ -> failwith "pred_nf_of_gamma_ty: expected refinement type"
 (* Helper: extract binder, base-name, and predicate from a refinement type in 
    Assumes we always store canonical NF refinements in . *)
 let refine_parts_of_gamma_ty (ty : Zparsetree.type_expression)
@@ -264,15 +335,29 @@ let ensure_last_of_bound_var ?(shiftable_vars:string list option=None) (y:string
 let debug_nf (tag:string) ~(binder:string) (pred_zls:Zelus.exp) : unit =
     let nf = zls_pred_to_nf ~binder pred_zls in
     let s_now =
-      (* Show {binder | <nf>} *)
-      Printf.sprintf "{%s | %s}" binder (Pprint.string_of_expr nf)
+      (* [nf] is canonicalized, so the value variable shown is [value_var]; name
+         the source binder alongside it when it differed. *)
+      if binder = value_var then
+        Printf.sprintf "{%s | %s}" value_var (Pprint.string_of_expr nf)
+      else
+        Printf.sprintf "{%s | %s}  (declared binder %s)"
+          value_var (Pprint.string_of_expr nf) binder
     in
     debug (Printf.sprintf "[NF:%s] %s" tag s_now)
-let debug_nf_synth_lhs (rhs : Zelus.exp) : unit =
+
+(* As [debug_nf], but for predicates that are NOT canonicalized to [value_var]
+   (labeled-tuple returns, which keep their per-component binders). *)
+let debug_nf_raw (tag:string) ~(binder:string) (pred_zls:Zelus.exp) : unit =
+    let nf = zls_pred_to_nf ~binder:value_var pred_zls in
+    debug (Printf.sprintf "[NF:%s] {%s | %s}" tag binder (Pprint.string_of_expr nf))
+
+let debug_nf_synth_lhs ?(base:string = "int") (rhs : Zelus.exp) : unit =
       let pp_ty (p : Zparsetree.exp) : string =
         let ty =
-          { desc = Zparsetree.Erefinement (("v",
-                   { desc = Zparsetree.Etypeconstr (Name "Int", []); loc = dummy_loc }),
+          { desc = Zparsetree.Erefinement ((value_var,
+                   { desc = Zparsetree.Etypeconstr
+                              (Name (String.lowercase_ascii base), []);
+                     loc = dummy_loc }),
                    p);
             loc = dummy_loc }
         in
@@ -344,6 +429,17 @@ let rec to_zpt_type (t : Zelus.type_expression) : Zparsetree.type_expression =
 
   | _ -> failwith "to_zpt_type: constructor not supported here"
 
+(* [to_zpt_type] on a SOURCE refinement, with the declared binder alpha-renamed
+   to [value_var] so the result obeys the one convention used everywhere else.
+   A no-op for the usual [{v:T | ...}] spelling. *)
+let to_zpt_refine_canon (t : Zelus.type_expression) : Zparsetree.type_expression =
+  let z = to_zpt_type t in
+  match z.desc with
+  | Zparsetree.Erefinement ((vb, base_ty), pred) when vb <> value_var ->
+      mk_type (Zparsetree.Erefinement
+                 ((value_var, base_ty), canon_declared_pred ~declared:vb pred))
+  | _ -> z
+
  
 
 let run_fq name lhs rhs = 
@@ -398,8 +494,8 @@ let nf_eq_v_rhs_fby_tail_guarded_zpt ~(rhs:Zelus.exp) ~(guard_zpt:Zparsetree.exp
     let v_eq  = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc } in
     mk_X (mk_G ( (mk_and v_eq guard_zpt)))
 
-let process_lhs_ty e_desc base e = 
-  debug_nf_synth_lhs e; 
+let process_lhs_ty e_desc base e =
+  debug_nf_synth_lhs ~base e;
   match e_desc with 
     | Zelus.Etuple(_) -> failwith (Printf.sprintf "The expression is tuple")
     | Zelus.Eop(Eifthenelse,i::t::el::[]) -> singleton_type_of_const {desc = (vc_gen_expression t); loc = dummy_loc} base
@@ -553,7 +649,7 @@ let process_bool name v base var e =
   in
   let lhs_ty   = process_lhs_ty e.e_desc base e in
   let fq_query = Gen.to_fq "v" ~cid:1 ~lhs:lhs_ty ~rhs:rhs ~env:(current_env ()) () in
-  debug (Printf.sprintf "%s" fq_query);
+  (*debug (Printf.sprintf "%s" fq_query);*)
   match var with 
   | Zelus.Econst(Ebool(true)) -> add_binding name rhs
   | _ ->
@@ -575,7 +671,7 @@ let process_bool_fun name v arg out var e a opt =
   in
   let lhs_ty   = process_lhs_ty e.e_desc out e in
   let fq_query = Gen.to_fq "v" ~cid:1 ~lhs:lhs_ty ~rhs:rhs ~env:(current_env ()) () in
-  debug (Printf.sprintf "%s" fq_query);
+  (*debug (Printf.sprintf "%s" fq_query);*)
   match var with 
     | Zelus.Econst(Ebool(true)) -> add_binding name rhs
     | _ ->
@@ -991,18 +1087,18 @@ let install_fby_binding ~(name:string)
     ; loc  = dummy_loc }
   in
   add_binding x rhs_ty_zpt
+(* [ann_nf] must already be canonicalized to [value_var] by the caller (which
+   is the only one that still knows the source-declared binder), and [binder]
+   must be [value_var] to match it. *)
 let ite_check_via_nf
   ~(name:string)
   ~(binder:string)
   ~(base:string)
-  ~(ann_pred_zls:Zelus.exp)
+  ~(ann_nf:Zparsetree.exp)
   ~(cond:Zelus.exp)
   ~(t_then:Zelus.exp)
   ~(t_else:Zelus.exp)
     : bool =
-    (* Normalize the declared refinement once *)
-    let ann_nf = zls_pred_to_nf ~binder ann_pred_zls in
-
     (* Build guarded branch NFs *)
     let c_zpt   = zpt_of_cond cond in
     let notc_zpt = zpt_of_not c_zpt in
@@ -1058,16 +1154,16 @@ let env_refine_nf_of_type (ty:Zparsetree.type_expression)
     in
     mk_and v_eq (mk_X (mk_G v_eq))
 
+(* [ann_nf] must already be canonicalized to [value_var] by the caller, and
+   [ret_binder] must be [value_var] to match it. *)
 let process_let_rec_fby
   ~(x:string)
   ~(ret_binder:string)
   ~(base_name:string)
-  ~(ann_pred_zls:Zelus.exp)
+  ~(ann_nf:Zparsetree.exp)
   (e1:Zelus.exp) (e2:Zelus.exp)
   : unit
 =
-  (* Normalize annotated predicate once *)
-  let ann_nf  = zls_pred_to_nf ~binder:ret_binder ann_pred_zls in
   ensure_last_from_annotation ~source_name:x ~base_name ~binder:ret_binder ~ann_nf ~shiftable_vars:None;
   let (phi_now, _psi_later) = split_nf ann_nf in
  
@@ -1287,7 +1383,9 @@ let zls_ref_to_nf_parts (t:Zelus.type_expression)
         | _ -> failwith "Param/ret base must be Etypeconstr(Name,[])"
       in
       let nf = zls_pred_to_nf ~binder:vb pred_zls in
-      (vb, base, nf)
+      (* [nf] is over [value_var], so report that as the binder rather than the
+         source-declared [vb]. *)
+      (value_var, base, nf)
   | _ -> failwith "Expected scalar refinement {v:T | phi}"
 let param_from_pattern (p:Zelus.pattern) : fun_param option  =
   match p.p_desc with
@@ -1434,19 +1532,21 @@ let synth_nf_of_rhs ~(binder:string) (base_name:string) (rhs:Zelus.exp) =
           (fun g -> ensure_named_ghost ~ghost_name:g ~base_name:base_name) shifted_ghosts;
           Some (nf_fby_eq ~binder ~e1 ~e2)
     
+      (* Gamma predicates are already over [value_var]; do not rename them by
+         their binder field, which holds the program variable's own name. *)
       | Zelus.Elocal { source = y; _ } ->
           begin match find_binding y with
           | Some ty ->
-              let (vb, _base, pred) = refine_parts_of_gamma_ty ty in
-              Some (if vb = binder then pred else rename_var_in_exp vb binder pred)
+              let (_progvar, _base, pred) = refine_parts_of_gamma_ty ty in
+              Some pred
           | None -> None
           end
-    
+
       | Zelus.Eglobal { lname = Name y } ->
           begin match find_binding y with
           | Some ty ->
-              let (vb, _base, pred) = refine_parts_of_gamma_ty ty in
-              Some (if vb = binder then pred else rename_var_in_exp vb binder pred)
+              let (_progvar, _base, pred) = refine_parts_of_gamma_ty ty in
+              Some pred
           | None -> None
           end
     
@@ -1666,7 +1766,7 @@ let automaton_var_nf_aut
 let preload_refenv_vars_aut (vars : (string * Zelus.type_expression) list) : unit =
   List.iter
     (fun (x, ty_ann_zelus) ->
-      let ty_ann_zpt = to_zpt_type ty_ann_zelus in
+      let ty_ann_zpt = to_zpt_refine_canon ty_ann_zelus in
       (* Bind by INVARIANT only (strip first-value head) — see
          [invariant_only_type]: the head is a t=0-only fact and must not stand
          as an environment hypothesis across inductive-step queries. *)
@@ -1688,14 +1788,17 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
       | _ -> failwith "Let pattern must be a variable with a refinement annotation"
     in
   
-    (* Annotation as ZPT *)
+    (* Annotation as ZPT.  [declared_binder] is what the source wrote; every
+       check below runs over the canonical [value_var] (see [canon_declared_pred]),
+       so [ret_binder] is pinned to it. *)
     let ty_ann_zpt = to_zpt_type ty_ann_zelus in
-    let (ret_binder, base_ty, pred_zpt) =
+    let (declared_binder, base_ty, pred_zpt) =
       match ty_ann_zpt.desc with
       | Zparsetree.Erefinement ((vb, base_ty), pred) -> (vb, base_ty, pred)
       | _ -> failwith "Expected refinement type on let-bound pattern"
     in
-  
+    let ret_binder = value_var in
+
     (* For logging, show NF of the declared predicate *)
     (match ty_ann_zelus.desc with
      | Zelus.Erefinement ((_v, _base_ty), pred_exp) -> debug_nf "let" ~binder:_v pred_exp
@@ -1720,8 +1823,8 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
          | Zelus.Erefinement ((_vb, _base), p) -> p
          | _ -> failwith "Expected refinement type on let-bound pattern"
        in
-       let ann_nf = zls_pred_to_nf ~binder:ret_binder ann_pred_zls in
-  
+       let ann_nf = zls_pred_to_nf ~binder:declared_binder ann_pred_zls in
+
        (* --- Alias fast-path (applies to any RHS shape): if rhs is a known var, compare (rhs) sub Ann(x) in NF. *)
        let rhs_bound_ty_opt =
          match rhs.e_desc with
@@ -1811,7 +1914,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                   ~x
                   ~ret_binder
                   ~base_name
-                  ~ann_pred_zls
+                  ~ann_nf
                   e1 e2
               end else begin
                 ensure_last_from_annotation
@@ -1850,7 +1953,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                 let ok =
                   ite_check_via_nf
                     ~name:x ~binder:ret_binder ~base:base_name
-                    ~ann_pred_zls ~cond:i ~t_then ~t_else
+                    ~ann_nf ~cond:i ~t_then ~t_else
                 in
                 if ok then
                   let base_ty' =
@@ -1864,23 +1967,30 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                   add_binding x rhs_ty'
                 else
                   failwith (Printf.sprintf "Liquid type error: let-bound %s (ITE) violates its annotation" x)
-            | Zelus.Eapp (_ai, fexp, args) ->
-              let fname =
-                match fexp.e_desc with
-                | Zelus.Eglobal { lname = Name n } -> n
-                | Zelus.Eglobal { lname = Modname q } -> q.id
-                | _ -> failwith "Unsupported function expression"
-              in
+            (* USER FUNCTION CALL.  Guarded on [applied_user_fun_name] so that
+               operator applications ([x + 6] is an ordinary [Eapp] on
+               [Stdlib.+], not an [Eop]) fall through to the default arm below,
+               where [vc_gen_expression] renders them into the predicate and
+               fixpoint interprets them natively — the same route the top-level,
+               ITE, fby, automaton and return paths already take. *)
+            | Zelus.Eapp (_ai, fexp, args)
+                when applied_user_fun_name fexp <> None ->
+              let fname = Option.get (applied_user_fun_name fexp) in
               let fsig =
                 match Hashtbl.find_opt fun_sigs fname with
                 | Some s -> s
-                | None -> failwith ("No signature recorded for function " ^ fname)
+                | None ->
+                    failwith
+                      (Printf.sprintf
+                         "No refinement signature recorded for function %s: it must be \
+                          declared in this file with refinement-annotated arguments \
+                          and return type before it can be called here" fname)
               in
-            
+
               (* 1) Callee return NF instantiated with actuals (a -> b/c/ghost) *)
               let callee_ret_nf = instantiate_fun_ret_nf fsig args in
-            
-              (* 2) Caller annotation NF *)
+
+              (* 2) Caller annotation NF, canonicalized to [value_var] *)
               let (ret_binder, ret_base_name, caller_ann_nf) =
                 match (to_zpt_type ty_ann_zelus).desc with
                 | Zparsetree.Erefinement ((vb, base_ty), pred) ->
@@ -1889,10 +1999,12 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                       | Zparsetree.Etypeconstr (Name b, []) -> b
                       | _ -> failwith "Call-site annotation base must be Etypeconstr(Name,[])"
                     in
-                    (vb, base, zpt_pred_to_nf ~binder:vb pred)
+                    ( value_var
+                    , base
+                    , canon_declared_pred ~declared:vb (zpt_pred_to_nf ~binder:vb pred) )
                 | _ -> failwith "Expected refinement on call-site binding"
               in
-            
+
               (* 3) Rewrite caller ann free occurrences of param names to actuals too *)
               let caller_ann_nf' = rewrite_caller_ann_with_actuals fsig args caller_ann_nf in
             
@@ -1913,15 +2025,13 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                 add_binding x { loc = dummy_loc
                               ; desc = Zparsetree.Erefinement ((ret_binder, base_ty'), caller_ann_nf') }
             
-            (* Default: synthesize v=rhs && X(G(v=rhs)) and match against ann NF *)
+            (* Default: synthesize v=rhs && X(G(v=rhs)) and match against ann NF.
+               Also reached by operator applications and by calls to functions
+               with no recorded signature. *)
             | _ ->
-              let ann_pred_zls =
-                match ty_ann_zelus.desc with
-                | Zelus.Erefinement ((_vb, _base), p) -> p
-                | _ -> failwith "Expected refinement type on let-bound pattern"
-              in
-              let ann_nf = zls_pred_to_nf ~binder:ret_binder ann_pred_zls in
-            
+              (* [ann_nf] from the enclosing scope is already the canonical NF
+                 of this same annotation. *)
+
               (match rhs_var_name rhs with
               | Some y -> (
                   match find_binding y with
@@ -2365,7 +2475,7 @@ let preload_last_vars_aut (vars : (string * Zelus.type_expression) list) : unit 
     (fun (x, ty_ann_zelus) ->
       (* skip explicit last_* entries if the user wrote any *)
       if not (String.length x >= 5 && String.sub x 0 5 = "last_") then
-        let ty_ann_zpt = to_zpt_type ty_ann_zelus in
+        let ty_ann_zpt = to_zpt_refine_canon ty_ann_zelus in
         match ty_ann_zpt.desc with
         | Zparsetree.Erefinement ((ret_binder, base_ty), _pred) ->
             let base_name =
@@ -2414,7 +2524,7 @@ let process_automaton_ref_eq_aut
     (* Now verify each ordinary variable x in the refenv individually. *)
     List.iter
       (fun (x, ty_ann_zelus) -> begin
-          let ty_ann_zpt = to_zpt_type ty_ann_zelus in
+          let ty_ann_zpt = to_zpt_refine_canon ty_ann_zelus in
           let (ret_binder, base_name, ann_nf) = refine_parts_of_gamma_ty ty_ann_zpt in
           let ann_nf = zpt_pred_to_nf ~binder:ret_binder ann_nf in
           let (phi_ann, psi_ann) = base_ind_of_nf ann_nf in
@@ -2597,10 +2707,121 @@ let process_automaton_ref_eq_aut
        return-alias check compares against the full [globally(...)] annotation,
        not the invariant-only form used as an inductive hypothesis above. *)
     List.iter
-      (fun (x, ty_ann_zelus) -> add_binding x (to_zpt_type ty_ann_zelus))
+      (fun (x, ty_ann_zelus) -> add_binding x (to_zpt_refine_canon ty_ann_zelus))
       vars
   end
         
+
+(* Base sort of an inferred Zelus type.  The liquid pass runs after [Typing]
+   (see compiler/main/compiler.ml), so [e_typ] on every expression is resolved. *)
+let rec base_of_deftype (t : Deftypes.typ) : string option =
+  match t.t_desc with
+  | Deftypes.Tlink t'          -> base_of_deftype t'
+  | Deftypes.Tconstr (q, _, _) ->
+      if      q = Initial.int_ident   then Some "int"
+      else if q = Initial.float_ident then Some "float"
+      else if q = Initial.bool_ident  then Some "bool"
+      else None
+  | _ -> None
+
+(* An equation with NO refinement annotation: [let n = theta in ...].
+
+   Previously dropped on the floor, which left [n] absent from gamma — so any
+   later query about [n] saw an undeclared symbol and the refinement of whatever
+   [n] was defined from was lost. Install what we can instead:
+
+   - stateless RHS (constant, alias, arithmetic over in-scope vars): the singleton
+     [v = rhs && X(G(v = rhs))], via [synth_nf_of_rhs];
+   - stateful RHS ([fby], [last], reset blocks) or a self-recursive definition:
+     only [{v:base | true}]. The singleton would be unsound there — the value
+     changes between instants, so [v = rhs] does not hold at every instant — but
+     declaring the variable still beats leaving it dangling.
+
+   With no determinable base sort we bind nothing, as before: a wrong sort would
+   make fixpoint reject the query outright. *)
+
+(* Would a synthesized singleton for this RHS name a symbol the query never
+   declares?  [Gen.to_fq] emits function sorts for the four LTL operators only,
+   plus one SCALAR bind per gamma entry — and a verified function's own name is
+   bound as a scalar (its return value), not as a function. So an application of
+   anything but an interpreted operator has no sort to be applied at. *)
+let rec synthesizable_rhs (e : Zelus.exp) : bool =
+  match e.e_desc with
+  | Zelus.Eapp (_, fexp, args) ->
+      (match applied_user_fun_name fexp with
+       | Some _ -> false                   (* named callee: no function sort *)
+       | None   -> List.for_all synthesizable_rhs args)   (* operator: fine *)
+  | Zelus.Etuple es
+  | Zelus.Eop (_, es) -> List.for_all synthesizable_rhs es
+  | _ -> true
+
+(* The callee's return refinement, instantiated with the actuals, for an
+   unannotated [let y = f a]. Same rule the annotated path uses; without it the
+   singleton would be [v = f a], which has no sort. *)
+let call_ret_nf_of_rhs (rhs : Zelus.exp) : (Zparsetree.exp * string) option =
+  match rhs.e_desc with
+  | Zelus.Eapp (_, fexp, args) ->
+      (match applied_user_fun_name fexp with
+       | Some fname ->
+           (match Hashtbl.find_opt fun_sigs fname with
+            | Some fsig ->
+                (try Some (instantiate_fun_ret_nf fsig args, fsig.ret_base)
+                 with _ -> None)
+            | None -> None)
+       | None -> None)
+  | _ -> None
+
+let process_unannotated_scalar_eq (x : string) (rhs : Zelus.exp) : unit =
+  let base_opt =
+    match base_of_deftype rhs.e_typ with
+    | Some b -> Some b
+    | None ->
+        (* Fall back to the RHS shape: a literal carries its own sort, and an
+           alias can borrow the sort recorded for the variable it copies. *)
+        (match rhs.e_desc with
+         | Zelus.Econst i -> (try Some (snd (literal_and_base i)) with _ -> None)
+         | _ ->
+             (match rhs_var_name rhs with
+              | Some y ->
+                  (match find_binding y with
+                   | Some ty -> let (_, b, _) = refine_parts_of_gamma_ty ty in Some b
+                   | None -> None)
+              | None -> None))
+  in
+  (* A call to a function with a recorded signature carries its own return
+     refinement and its own base, so it needs neither of the above. *)
+  match call_ret_nf_of_rhs rhs with
+  | Some (call_nf, ret_base) ->
+      debug (Printf.sprintf "[NF:let-noann call] %s"
+               (pp_nf_as_type ~binder:value_var ~base:ret_base call_nf));
+      add_binding x (mk_refine value_var (String.lowercase_ascii ret_base) call_nf)
+  | None ->
+  match base_opt with
+  | None ->
+      debug (Printf.sprintf
+               "[NF:let-noann] %s: base sort undetermined, no binding installed" x)
+  | Some base_name ->
+      let opaque =
+        match rhs.e_desc with
+        | Zelus.Eop (Zelus.Efby, _)
+        | Zelus.Eop (Zelus.Eunarypre, _)
+        | Zelus.Eblock _ -> true            (* stateful: v = rhs is not an invariant *)
+        | _ ->
+            (* [last y] ANYWHERE in the RHS, not just at the head: the singleton
+               would name a [last_y] ghost that only the annotated paths install,
+               leaving an undeclared symbol in every later query. *)
+            expr_mentions x rhs
+            || collect_last_vars rhs <> []
+            || not (synthesizable_rhs rhs)
+      in
+      let nf_opt =
+        if opaque then None
+        else synth_nf_of_rhs ~binder:value_var base_name rhs
+      in
+      let pred = match nf_opt with Some nf -> nf | None -> mk_and mk_true (mk_X mk_true) in
+      debug (Printf.sprintf "[NF:let-noann] %s"
+               (pp_nf_as_type ~binder:value_var ~base:base_name pred));
+      add_binding x (mk_refine value_var (String.lowercase_ascii base_name) pred)
 
 let process_let_eq (eq : Zelus.eq) : unit =
       match eq.eq_desc with
@@ -2635,6 +2856,10 @@ let process_let_eq (eq : Zelus.eq) : unit =
               | _ ->
                   failwith "Unsupported let pattern"
             end
+          (* Unannotated scalar equation: infer what we can (see
+             [process_unannotated_scalar_eq]).  Unannotated tuple patterns still
+             carry no refinement. *)
+          | Zelus.Evarpat id -> process_unannotated_scalar_eq (zident_pretty id) rhs
           | _ -> ()
         end
       | EQinit(id,e) -> debug((zident_pretty id)); Hashtbl.add init_table ((zident_pretty id)) e
@@ -2765,8 +2990,13 @@ let check_return ~(fname:string)
                    ~(ret_pred:Zelus.exp)
                    (e:Zelus.exp)
                    (ret_ann_zelus:Zelus.type_expression) : unit =
-    
-    debug_nf_synth_lhs e;
+
+  (* [ret_binder] as passed in is the source-declared binder; every check below
+     runs over the canonical [value_var], so keep the declared name only for
+     canonicalizing the annotation itself. *)
+  let declared_binder = ret_binder in
+  let ret_binder = value_var in
+    debug_nf_synth_lhs ~base:ret_base e;
   (* An unannotated node return carries the placeholder base [emptytype];
      there is no refinement obligation on the return in that case. *)
   if String.lowercase_ascii ret_base = "emptytype" then ()
@@ -2792,7 +3022,8 @@ let check_return ~(fname:string)
         singleton_type_of_const { desc = vc_gen_expression el; loc = dummy_loc } ret_base
       in
       let phi =
-        { desc = vc_gen_expression ret_pred; loc = dummy_loc }
+        canon_declared_pred ~declared:declared_binder
+          { desc = vc_gen_expression ret_pred; loc = dummy_loc }
       in
       let base_ty =
         mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base), []))
@@ -2827,7 +3058,7 @@ let check_return ~(fname:string)
         let lhs_nf = mk_and v_eq_e1 (mk_X (mk_G ( v_eq_e2))) in
   
         (* Normalize the annotated return predicate once *)
-        let rhs_pred_nf = zls_pred_to_nf ~binder:ret_binder ret_pred in
+        let rhs_pred_nf = zls_pred_to_nf ~binder:declared_binder ret_pred in
   
         (* NF-aware check: compares heads, then strips x/g/m on the “later” side *)
         let ok_nf =
@@ -2842,7 +3073,7 @@ let check_return ~(fname:string)
   
       | _ ->(
         (* Normalize the declared return annotation once to NF:  && X  *)
-        let ann_nf = zls_pred_to_nf ~binder:ret_binder ret_pred in
+        let ann_nf = zls_pred_to_nf ~binder:declared_binder ret_pred in
 
         (* ALIAS FAST-PATH: if the returned expression is a variable already in _nf,
           compare its NF directly to ann_nf; do NOT synthesize v=e && X(G(v=e)). *)
@@ -2855,9 +3086,8 @@ let check_return ~(fname:string)
                  stored raw (e.g. `globally P`), and split_nf cannot decompose a
                  bare temporal head — it would treat `globally P` as the whole
                  "now" part and try to prove `globally P => P`, which fails since
-                 `globally` is uninterpreted. pred_nf_of_refine also renames the
-                 stored binder to ret_binder. *)
-              let (rhs_nf, rhs_base) = pred_nf_of_refine ~binder:ret_binder rhs_ty in
+                 `globally` is uninterpreted. *)
+              let (rhs_nf, rhs_base) = pred_nf_of_gamma_ty rhs_ty in
                 if String.lowercase_ascii rhs_base
                   <> String.lowercase_ascii ret_base
                 then failwith "Return base mismatch between body variable and annotation";
@@ -2943,21 +3173,22 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
       | Zelus.Erefinement ((v, base_ty), ann_pred) ->
           begin match base_ty.desc with
           | Zelus.Etypeconstr (Name base_name, []) ->
-              (* Guard-first NF ITE check *)
+              (* Guard-first NF ITE check. [v] is the source-declared binder;
+                 [ann_nf] is canonicalized to [value_var] by [zls_pred_to_nf]. *)
+              let ann_nf = zls_pred_to_nf ~binder:v ann_pred in
               let ok = ite_check_via_nf
                           ~name:id
-                          ~binder:v
+                          ~binder:value_var
                           ~base:base_name
-                          ~ann_pred_zls:ann_pred
+                          ~ann_nf
                           ~cond:i ~t_then ~t_else in
               if ok then
                 (* Install normalized annotation in env *)
-                let ann_nf = zls_pred_to_nf ~binder:v ann_pred in
                 let base_ty_zpt =
                   mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii base_name), []))
                 in
                 let rhs_ty_zpt =
-                  { desc = Zparsetree.Erefinement ((v, base_ty_zpt), ann_nf); loc = dummy_loc }
+                  { desc = Zparsetree.Erefinement ((value_var, base_ty_zpt), ann_nf); loc = dummy_loc }
                 in
                 add_binding id rhs_ty_zpt
               else
@@ -3049,14 +3280,19 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               (* Parse declared return refinement exactly like before *)
               let saved_gamma   = !gamma in
               let saved_gamma1 = !gamma1 in
-              let (ret_pred_exp, ret_binder, ret_base_ty) =
+              (* [is_tuple_ret]: a labeled-tuple return predicate mentions ALL
+                 component binders at once, so it has no single value variable to
+                 canonicalize to — renaming just the head component's binder would
+                 corrupt it. Those returns keep their declared binders and are
+                 checked by [check_return_tuple_plain]. *)
+              let (ret_pred_exp, ret_binder, ret_base_ty, is_tuple_ret) =
                 match rettype.desc with
                 | Zelus.Erefinement ((vret, tbase), pred) ->
                     debug_nf "ret" ~binder:vret pred;
-                    (pred, vret, tbase)
+                    (pred, vret, tbase, false)
                 | Zelus.Erefinementlabeledtuple (t_list, e) ->
-                    (List.iter (fun (nm, _ty) -> debug_nf "ret-tuple" ~binder:nm e) t_list;
-                    (e, (fst (List.hd t_list)), (snd (List.hd t_list))))
+                    (List.iter (fun (nm, _ty) -> debug_nf_raw "ret-tuple" ~binder:nm e) t_list;
+                    (e, (fst (List.hd t_list)), (snd (List.hd t_list)), true))
                 | _ -> failwith "Not a refinement type in the return type"
               in
 
@@ -3074,7 +3310,13 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               let base_ty =
                 mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii ret_base), []))
               in
-              let ret_pred_nf = zls_pred_to_nf ~binder:ret_binder ret_pred_exp in
+              let ret_pred_nf =
+                (* Passing [value_var] makes the canonicalizing rename a no-op,
+                   which is what a multi-binder tuple predicate needs. *)
+                zls_pred_to_nf
+                  ~binder:(if is_tuple_ret then value_var else ret_binder)
+                  ret_pred_exp
+              in
               let fun_as_value_ty =
                 mk_type (Zparsetree.Erefinement (("v", base_ty), ret_pred_nf))
               in
@@ -3087,9 +3329,12 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               in
               let sig_entry = {
                 params     = params_sig;
-                ret_binder = ret_binder;
+                (* [ret_nf] came out of [zls_pred_to_nf], so it is over
+                   [value_var] whatever the source called its binder — except for
+                   a tuple return, which keeps its declared component binders. *)
+                ret_binder = (if is_tuple_ret then ret_binder else value_var);
                 ret_base   = ret_base;
-                ret_nf     = ret_pred_nf;  
+                ret_nf     = ret_pred_nf;
               } in
               Hashtbl.replace fun_sigs n sig_entry;
             )

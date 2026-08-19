@@ -1,0 +1,10 @@
+(* ==== NEG: anti-vacuity for the binder canonicalization ====
+   `x > 0` gives `x + 6 > 6`, so `r > 10` does not follow. A non-`v` return
+   binder must not turn into a vacuous pass now that the query actually mentions
+   the value variable. *)
+let node f (x : {(v:int) | v > 0}) : {(r:int) | r > 10} = x + 6
+
+let dt = 0.1
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (r) = f (1) in
+        (print_int r; print_newline ())) else ()

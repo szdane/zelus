@@ -1,0 +1,17 @@
+(* ==== POS: arithmetic on the RHS of an ANNOTATED node-local let ====
+   `x + 6` is an ordinary application of Stdlib.(+), so it used to be sent to the
+   user-function rule and died with "No signature recorded for function +". It
+   belongs in the generic synthesis rule: v = x + 6 && X(G(v = x + 6)). *)
+let node exec (x : {(v:int) | v > 0}) : {(flow:int) | flow > 0} =
+  let (flow : {(v:int) | v > 0}) = x + 6
+  in flow
+
+(* Same, with the annotation relating the result to the argument. *)
+let node bump (x : {(v:int) | true}) : {(v:int) | true} =
+  let (y : {(v:int) | v > x}) = x + 6
+  in y
+
+let dt = 0.1
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (r) = exec (1) in
+        (print_int r; print_newline ())) else ()

@@ -1,8 +1,0 @@
-bind 1 v : {v:Int | v < 5}
-bind 2 v : {v:Int | v < 5}
-
-constraint:
-  env [1;2]
-  lhs {v:Int | v < 0}
-  rhs {y:Int | x + 5}
-  id 1 tag []
