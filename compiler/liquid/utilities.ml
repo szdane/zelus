@@ -541,6 +541,15 @@ let normalize_pred_for_fixpoint ~(binder:string) (p:Zparsetree.exp)
 
 
 let add_binding (name:string) (ty:Zparsetree.type_expression) =
+  (* "v" is the refinement value variable everywhere in the encoding (see
+     [value_var] in liquidrefinement.ml): source annotations are alpha-renamed to
+     it, and gamma predicates are written over it. A program variable of that name
+     would be captured by that renaming, silently changing what every query
+     means — so refuse it outright rather than mis-verify. *)
+  if name = "v" then
+    failwith
+      "`v` is reserved as the refinement value variable and cannot be used as a \
+       program variable name; rename it";
   match ty.desc with
   | Erefinement ((var, base_ty), lpred) ->
       (* Normalize predicate so LF sees only vars under temporal ops *)

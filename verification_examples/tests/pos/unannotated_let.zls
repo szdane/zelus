@@ -1,0 +1,36 @@
+(* ==== POS: node-local equations with NO refinement annotation ====
+   These used to be dropped silently, so the bound name never entered the
+   environment and the refinement of whatever it was defined from was lost.
+   A stateless RHS now gets the singleton v = rhs && X(G(v = rhs)). *)
+
+let theta : {v:float | v = 1.} = 1.
+
+(* alias of a refined global *)
+let node noise () : {(v:float) | 2. >= v} =
+  let n = theta
+  in n
+
+(* arithmetic over a refined argument *)
+let node shift (x : {(v:int) | v > 0}) : {(v:int) | v > 6} =
+  let y = x + 7
+  in y
+
+(* unannotated binding of a CALL: takes the callee's declared return refinement,
+   which also keeps the callee's name out of the query as an uninterpreted symbol
+   it would have no sort for *)
+let node inc (a : {(v:int) | v > 0}) : {(v:int) | v > 1} = a + 1
+let node use (x : {(v:int) | v > 0}) : {(v:int) | v > 0} =
+  let y = inc (x) in
+  let w = y + 1
+  in w
+
+(* chain of unannotated equations *)
+let node chain (x : {(v:int) | v = 2}) : {(v:int) | v = 6} =
+  let a = x + 1 in
+  let b = a * 2
+  in b
+
+let dt = 0.1
+let hybrid main () = let rec trigger = (period (dt)) in
+        present (trigger) -> (let (r) = noise () in
+        (print_float r; print_newline ())) else ()

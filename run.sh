@@ -6,7 +6,7 @@ dune build @install
 dune install
 cd verification_examples/
 cd watertank/
-# make clean
+make clean
 make sim
 
 echo "All done "
