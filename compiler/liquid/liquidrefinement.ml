@@ -314,10 +314,14 @@ let ensure_last_of_bound_var ?(shiftable_vars:string list option=None) (y:string
       match find_binding y with
       | None -> ()
       | Some ty ->
-          let (vb, base_name, pred) = refine_parts_of_gamma_ty ty in
+          let (_vb, base_name, pred) = refine_parts_of_gamma_ty ty in
+          (* [pred] comes straight out of gamma, so it is already written over
+             [value_var] ("v"), not over the program variable's own name (see
+             [pred_nf_of_gamma_ty] above) — shifting must treat "v" as the
+             self-reference to leave alone, or it wrongly turns "v" itself
+             into a bogus "last_v" free variable. *)
           let psi = step_pred_of_ann_nf pred in
-          let psi = shift_current_vars_to_last_in_exp ~shiftable_vars ~binder:vb psi in
-          let psi = rename_var_in_exp vb "v" psi in
+          let psi = shift_current_vars_to_last_in_exp ~shiftable_vars ~binder:value_var psi in
           ensure_unbound_last_vars_declared psi;
           let base_ty =
             mk_type
@@ -1811,7 +1815,16 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
       | Zparsetree.Etypeconstr (Name b, []) -> b
       | _ -> failwith "Refinement base must be Etypeconstr(Name,[])"
     in
-  
+
+    (* Any [last y] occurring directly in the RHS must have its ghost
+       [last_y] registered in gamma before the fixpoint query below is
+       built. Otherwise [last_y] shows up as an unbound free variable in
+       the generated .fq encoding and the Liquid Fixpoint solver crashes
+       instead of verifying (or rejecting) the annotation. The FBY and
+       T-RESET arms below already register the [last_*] ghosts they need;
+       this covers every other shape (ITE, calls, plain synthesis). *)
+    List.iter ensure_last_of_bound_var (collect_last_vars rhs);
+
     (* {v | true} fast-path *)
     (match pred_zpt.desc with
      | Zparsetree.Econst (Ebool true) ->

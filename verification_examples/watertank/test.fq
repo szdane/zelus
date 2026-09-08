@@ -1,0 +1,12 @@
+bind 0 nxt : {v:func(1, [bool, bool]) | true }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 globally : {v:func(1, [bool, bool]) | true}
+bind 3 m  : {v:func(1, [bool, bool]) | true}
+bind 4 v: {v: int | true}
+bind 5 m : {v: int | v = 0.1}
+
+constraint:
+  env [0;1;2;3;5]
+  lhs {v:real | (v = m)}
+  rhs {v:real | ((v > 0.0) && (v = 0.1))}
+  id 5 tag []

@@ -1,0 +1,14 @@
+let a : {a:float|a = 1.} = 1.
+
+
+let node test () =
+let rec (t : {t:float|t = 1.}) = a fby t
+in t
+
+
+
+
+ let hybrid main () =
+ let rec trigger = (period (0.1)) in
+     present (trigger) -> (let x = test () in
+     (print_float x; print_newline ())) else ()

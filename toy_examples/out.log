@@ -1,0 +1,114 @@
+
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0m
+
+Liquid-Fixpoint Copyright 2013-21 Regents of the University of California.
+All Rights Reserved.
+
+[1;92mSafe ( 1  constraints checked)
+[0mcompiling last
+ide: IDENT: test
+ide: IDENT: x
+Desc const
+Simple expression
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vx:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: vx
+ext_ident: ide: vx
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+ide: IDENT: y
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vy:type_expression
+ide: IDENT: vy
+ext_ident: ide: vy
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 >= e2
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+ide: IDENT: x
+Desc last
+Simple expression
+ide: IDENT: y
+ext_ident: ide: y
+Desc var
+Simple expression
+Kinded non-refinement function test 
+ ide: IDENT: main
+ide: IDENT: trigger
+simple_pattern: ide
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: trigger
+ext_ident: ide: trigger
+Desc var
+ide: IDENT: x
+simple_pattern: ide
+Desc const
+Simple expression
+ide: IDENT: print_newline
+ext_ident: ide: print_newline
+Desc var
+Desc void
+Desc seq expression
+Simple expression
+Desc void
+Simple expression
+Kinded non-refinement function main 
+ [DEBUG] : Efundecl test
+
+[DEBUG] : # of Arguments: 1
+
+[DEBUG] : [NF:ret] {v | (true && nxt true)}  (declared binder emptyalias)
+[DEBUG] : x
+[DEBUG] : Processing let eq with annotation
+[DEBUG] : [NF:synth LHS] {v:Int | ((v = 0.0) && nxt (globally ((v = 0.0))))}
+[DEBUG] : [NF:let] {v | ((v = 0.0) && nxt (globally ((v = 0.0))))}  (declared binder vx)
+[DEBUG] : [NF:later stripped] LHS: (v = 0.0)
+[DEBUG] : [NF:later stripped] RHS: (v = 0.0)
+[DEBUG] : Processing let eq with annotation
+[DEBUG] : [NF:synth LHS] {v:Int | ((v = (1.0 + last_x)) && nxt (globally ((v = (1.0 + last_x)))))}
+[DEBUG] : [NF:let] {v | ((v >= 0.0) && nxt true)}  (declared binder vy)
+[DEBUG] : [NF:later stripped] LHS: globally ((v = (1.0 + last_x)))
+[DEBUG] : [NF:later stripped] RHS: true
+[DEBUG] : [NF:synth LHS] {v:emptytype | ((v = y) && nxt (globally ((v = y))))}
+[DEBUG] : Efundecl main
+
+[DEBUG] : # of Arguments: 1
+
+[DEBUG] : skipping main function
+[DEBUG] : [32mProgram is well-typed: all generated fixpoint checks are safe.[0m

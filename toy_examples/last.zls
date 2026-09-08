@@ -1,0 +1,10 @@
+let node test () =
+ let rec init x = 0.
+ and (x : {vx:float|globally(vx = 0.)}) = 0.
+ and (y : {vy:float|vy >= 0.}) = 1. +. last x
+in y
+
+
+let hybrid main () =
+  let rec trigger = (period (0.1))
+in present trigger -> (let x = 1. in print_newline () ) else ()
