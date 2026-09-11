@@ -1,0 +1,10 @@
+let energy ((x:{vx:float | true}), (y:{vy: float|true})) = (2.,3.)
+
+let dt = 0.1 
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x,y) = energy (1., 1.) in
+        (print_float x; print_newline ())) else ()
+
+
+
