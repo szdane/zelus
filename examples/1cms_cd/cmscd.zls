@@ -1,0 +1,136 @@
+(* Descrete PID applied to sys (controlled mass spring) target at 1.0 *)
+
+let setpoint : {v : float | globally(v = 1.)} = 1.    (* Desired setpoint *)
+let m : {v:float | globally(v = 4.)} = 4.             (* Mass *)
+let k : {v:float | globally(v = 15.)} = 15.           (* Spring stiffness *)
+let b : {v:float | globally(v = 4.)} = 4.             (* Damping coefficient *)
+
+let kp : {v:float | globally(v = 80.)} = 80.          (* Proportional gain *)
+let ki : {v:float | globally(v = 20.)} = 20.          (* Integral gain *)
+let kd : {v:float | globally(v = 25.)} = 25.          (* Derivative gain *)
+
+let u_max : {v:float | globally(v = 40.)} = 40.       (* Maximum input allowed *)
+let u_min : {v:float | globally(v = -40.)} = -40.     (* Minimum input allowed *)
+
+let dt : {v:float | globally(v = 0.1)} = 0.1          (* Time step *)
+
+
+(* Characteristic polynomial: P(z) = z**3 + a1*z**2 + a2*z + a3 *)
+let a1 : {v:float | v = (b +. kd) *. dt /. m -. 3.} = (b +. kd) *. dt /. m -. 3.
+let a2 : {v:float | v = 3. +. (-2. *. (b +. kd) *. dt +. (kp +. k) *. dt *. dt) /. m} = 3. +. (-2. *. (b +. kd) *. dt +. (kp +. k) *. dt *. dt) /. m      (* There is a problem with liquid fixpoint when using dt ** 2. *)
+let a3 : {v:float | v = ((b +. kd) *. dt -.(kp +. k) *. dt *. dt +. ki *. dt *. dt *. dt) /. m -. 1.} = ((b +. kd) *. dt -.(kp +. k) *. dt *. dt +. ki *. dt *. dt *. dt) /. m -. 1.
+
+(* Jury criteria for stability
+condition1 |a3| < 1.
+condition2 P(1.) = 1 +. a1 +. a2 +. a3 > 0.
+condition3 P(-1.) = -1. +. a1 -. a2 +. a3 < 0.
+condition4 |a2 -. a1 *. a3| < 1. -. a3 ** 2. *)
+
+let stability_condition1 : {v:float | (1. > v) && (v > -1.)} = a3
+let stability_condition2 : {v:float | v > 0.} = 1. +. a1 +. a2 +. a3
+let stability_condition3 : {v:float | v < 0. } = -1. +. a1 -. a2 +. a3
+let stability_condition41 : {v:float | v > 0.} = 1. -. a3 *. a3 +. a1 *. a3 -. a2
+let stability_condition42 : {v:float | v > 0.} = 1. -. a3 *. a3 -. a1 *. a3 +. a2
+
+
+
+let node saturate_umax (u:{vu:float|true}) : {vu:float|true} = 
+  (if (u > u_max) then u_max else u)
+
+let node saturate_u (u:{vu:float|true}) = 
+  (if (saturate_umax (u) < u_min) then u_min else saturate_umax (u))
+
+
+let hybrid noise () : {(n:float) | true} =
+  let rec der n = v init 0.05
+  and der v = -. 25. *. n init 0.
+in n
+
+
+let hybrid sys (u : {(vu:float) | true}) : {(vx:float)*(vv:float) | true} = (x, v) where
+  rec der x = v init 0.
+  and der v = (-.k *. x -. b *. v +. u) /. m init 0.
+
+
+let node pid ((x:{(vx:float) | true}), (v:{(vv:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. x
+  and (u : {(u:float) | true}) =  (kp *. error +. ki *. last integral_antiwindup -. kd *. v)
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and u_sat = saturate_u (u)
+in error, u_sat
+
+
+let node pid_esin ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise)
+  and (u : {(u:float) | true}) = kp *. error +. ki *. last integral_antiwindup -. kd *. (v +. 0.)
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and u_sat = saturate_u (u)
+in error, u_sat
+
+let node pid_estat ((x:{(vx:float) | true}), (v:{(vv:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x -. 0.5)
+  and (u : {(u:float) | true}) = kp *. error +. ki *. last integral_antiwindup -. kd *. (v +. 0.) +. 0.
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and u_sat = saturate_u (u)
+in error, u_sat
+
+let node pid_e ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise -. 0.5)
+  and (u : {(u:float) | true}) = kp *. error +. ki *. last integral_antiwindup -. kd *. (v +. 0.) +. noise
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and u_sat = saturate_u (u)
+in error, u_sat
+
+
+
+let hybrid exec () : {(vx:float)*(vv:float)*(ve:float)*(vu:float) | true } = (x, v, error, u) where
+  rec trigger = (period (dt))
+  and error, u = (present(trigger) -> pid (x, v) init (0., 0.))
+  and x, v = sys (u)
+
+
+let hybrid exec_esin () : {(vx:float)*(vv:float)*(ve:float)*(vu:float)*(vn:float) | true } = (x, v, error, u, n) where
+  rec trigger = (period (dt))
+  and n = noise ()
+  and error, u = (present(trigger) -> pid_esin (x, v, n) init (0., 0.))
+  and x, v = sys (u)
+
+let hybrid exec_estat () : {(vx:float)*(vv:float)*(ve:float)*(vu:float) | true } = (x, v, error, u) where
+  rec trigger = (period (dt))
+  and error, u = (present(trigger) -> pid_estat (x, v) init (0., 0.))
+  and x, v = sys (u)
+
+let hybrid exec_e () : {(vx:float)*(vv:float)*(ve:float)*(vu:float) | true } = (x, v, error, u) where
+  rec trigger = (period (dt))
+  and n = noise ()
+  and error, u = (present(trigger) -> pid_e (x, v, n) init (0., 0.))
+  and x, v = sys (u)
+
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1))
+    and x, v, _, u = exec () 
+    and x_esin,_,_,_,noise = exec_esin () 
+    and x_estat,_,_,_ = exec_estat () 
+    and x_e,_,_,_ = exec_e () 
+  in present trigger -> (
+                        print_float x;
+                        print_string ", ";
+                        print_float v;
+                        print_string ",";
+                        print_float u;
+                        print_string ",";
+                        print_float x_esin;
+                        print_string ",";
+                        print_float noise;
+                        print_string ",";
+                        print_float x_estat;
+                        print_string ",";
+                        print_float x_e;
+                        print_newline ()) else ()
+

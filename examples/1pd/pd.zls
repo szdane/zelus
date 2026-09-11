@@ -1,0 +1,57 @@
+(* PD discrete *)
+
+let r : {v : float | globally(v = 1.)} = 1.           (* Desired reference *)
+
+let mass : {v:float | globally(v = 4.)} = 4.          (* Mass *)
+
+let k : {v:float | globally(v = 15.)} = 15.           (* Spring stiffness *)
+let b : {v:float | globally(v = 4.)} = 4.             (* Damping coefficient *)
+
+let kp : {v : float | globally(v = 2.)} = 2.          (* Proportional gain *)
+let kd : {v : float | globally(v = 0.5)} = 0.5        (* Derivative gain *)
+
+let dt : {v : float | globally(v = 0.1)} = 0.1        (* Time step *)
+
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+  and (xk1 : {xk1:float|true}) = xk +. spdk *. dt
+
+  and init spdk1 = 0.
+  and (spdk : {spdk:float|true}) = last spdk1
+  and (spdk1 : {spdk1:float|true}) = spdk +. (-. k *. xk -. b *. spdk +. uk) *. dt /. mass
+
+
+  and init errork = 1.
+  and (errork : {errork:float|errork = r -. xk}) = r -. xk
+  and (errorkm1 : {errorkm1:float|true}) = last errork
+
+  and (xkm1 : {xkm1:float|xkm1 = r -. errorkm1}) = r -. errorkm1
+
+  and (derivativek : {derivativek:float|derivativek =(errork -. errorkm1) /. dt}) = (errork -. errorkm1) /. dt
+
+  and (uk : {uk:float|uk = kp *. errork -. kd *. derivativek}) = kp *. errork -. kd *. derivativek
+
+
+in xk, uk, errork, derivativek
+
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error, derivative = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_string ",";
+        print_float derivative;        
+        print_newline ()
+
+    )
+  else ()
+

@@ -77,7 +77,7 @@ let fixpoint_is_safe (fq_txt : string) : bool =
   output_string oc fq_txt;
   close_out oc;
   let status = Sys.command (Printf.sprintf "fixpoint %s" (Filename.quote tmp)) in
-  Sys.remove tmp;
+  (if (status = 0) then (Sys.remove tmp; ()) else ());
   status = 0
 
 let rec contains_X (e:Zparsetree.exp) : bool =

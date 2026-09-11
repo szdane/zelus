@@ -1,0 +1,156 @@
+(* Descrete PID applied to sys (controlled mass spring) target at 1.0 *)
+
+let setpoint : {v : float | globally(v = 1.)} = 1.    (* Desired setpoint *)
+let mass : {v:float | globally(v = 4.)} = 4.             (* Mass *)
+let k : {v:float | globally(v = 15.)} = 15.           (* Spring stiffness *)
+let b : {v:float | globally(v = 4.)} = 4.             (* Damping coefficient *)
+
+let kp : {v:float | globally(v = 30.)} = 30.          (* Proportional gain *)
+let ki : {v:float | globally(v = 40.)} = 40.          (* Integral gain *)
+let kd : {v:float | globally(v = 10.)} = 10.          (* Derivative gain *)
+
+
+let u_max : {v:float | globally(v = 40.)} = 40.       (* Maximum input allowed *)
+let u_min : {v:float | globally(v = -40.)} = -40.     (* Minimum input allowed *)
+
+let dt : {v:float | globally(v = 0.1)} = 0.1          (* Time step *)
+
+
+(* Characteristic polynomial: P(z) = z**3 + a1*z**2 + a2*z + a3 *)
+let a1 : {v:float | v = (b +. kd) *. dt /. mass -. 3.} = (b +. kd) *. dt /. mass -. 3.
+let a2 : {v:float | v = 3. +. (-2. *. (b +. kd) *. dt +. (kp +. k) *. dt *. dt) /. mass} = 3. +. (-2. *. (b +. kd) *. dt +. (kp +. k) *. dt *. dt) /. mass      (* There is a problem with liquid fixpoint when using dt ** 2. *)
+let a3 : {v:float | v = ((b +. kd) *. dt -.(kp +. k) *. dt *. dt +. ki *. dt *. dt *. dt) /. mass -. 1.} = ((b +. kd) *. dt -.(kp +. k) *. dt *. dt +. ki *. dt *. dt *. dt) /. mass -. 1.
+
+
+(* Jury criteria for stability
+condition1 |a3| < 1.
+condition2 P(1.) = 1 +. a1 +. a2 +. a3 > 0.
+condition3 P(-1.) = -1. +. a1 -. a2 +. a3 < 0.
+condition4 |a2 -. a1 *. a3| < 1. -. a3 ** 2. *)
+
+let stability_condition1 : {v:float | (1. > v) && (v > -1.)} = a3
+let stability_condition2 : {v:float | v > 0.} = 1. +. a1 +. a2 +. a3
+let stability_condition3 : {v:float | v < 0. } = -1. +. a1 -. a2 +. a3
+let stability_condition41 : {v:float | v > 0.} = 1. -. a3 *. a3 +. a1 *. a3 -. a2
+let stability_condition42 : {v:float | v > 0.} = 1. -. a3 *. a3 -. a1 *. a3 +. a2
+
+
+
+(* let node saturate_umax (u:{vu:float|true}) : {vu:float|true} = 
+  (if (u > u_max) then u_max else u)
+
+let node saturate_u (u:{vu:float|true}) = 
+  (if (saturate_umax (u) < u_min) then u_min else saturate_umax (u)) *)
+
+let node saturate_u_cont_sym (u:{vu:float|true}) =
+  let u_sat = 40. *. tanh(u /. 40.)
+in u_sat
+
+
+
+  let node noise () : {(n:float) | true } =
+  let rec (n : {(n:float) | true}) = 0.05 *. cos(theta)
+  and theta = last theta +. 5. *. dt
+  and init theta = 0.
+in n
+
+
+
+let node sys (u : {(vu:float) | true}) : {(vx:float)*(vs:float) | true} = 
+  let rec (x : {(x:float) | true}) = last x +. last spd *. dt
+  and init x = 0.
+  and (spd : {(v:float) | true}) = last spd +. (-.k *. last x -. b *. last spd +. u) *. dt /. mass
+  and init spd = 0.
+in x, spd
+
+
+let node pid ((x:{(vx:float) | true}), (spd:{(vs:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. x
+  and init integral_antiwindup = 0.
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. spd
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = saturate_u_cont_sym (u)
+in error, u
+
+
+let node pid_esin ((x:{(vx:float) | true}), (spd:{(vs:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise)
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. (spd +. 0.)
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = saturate_u_cont_sym (u)
+in error, u_sat
+
+let node pid_estat ((x:{(vx:float) | true}), (spd:{(vs:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x -. 0.5)
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. (spd +. 0.) +. 0.
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = saturate_u_cont_sym (u)
+in error, u_sat
+
+let node pid_e ((x:{(vx:float) | true}), (spd:{(vs:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise -. 0.5)
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. (spd +. 0.) +. noise
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = saturate_u_cont_sym (u)
+in error, u_sat
+
+
+
+let node exec () : {(vx:float)*(vs:float)*(ve:float)*(vu:float) | true } =
+  let rec init x = 0.
+  and init spd = 0.
+  and error, u = pid (last x, last spd)
+  and x, spd = sys (u)
+in x, spd, error, u
+
+
+let node exec_esin () : {(vx:float)*(vs:float)*(ve:float)*(vu:float)*(vn:float) | true } = 
+  let rec init x = 0.
+  and init spd = 0.
+  and n = noise ()
+  and error, u = pid_esin (last x, last spd, n)
+  and x, spd = sys (u)  
+in x, spd, error, u, n
+
+let node exec_estat () : {(vx:float)*(vs:float)*(ve:float)*(vu:float) | true } = 
+  let rec init x = 0.
+  and init spd = 0.
+  and error, u = pid_estat (last x, last spd)
+  and x, spd = sys (u)  
+in x, spd, error, u
+
+let node exec_e () : {(vx:float)*(vs:float)*(ve:float)*(vu:float) | true } = 
+  let rec init x = 0.
+  and init spd = 0.
+  and n = noise ()
+  and error, u = pid_e (last x, last spd, n)
+  and x, spd = sys (u)  
+in x, spd, error, u
+
+
+
+  let hybrid main () =
+    let rec trigger = (period (0.1))  
+  in present trigger -> (let x, spd, _, u = exec () 
+                          and x_esin,_,_,_,noise = exec_esin () 
+                          and x_estat,_,_,_ = exec_estat () 
+                          and x_e,_,_,_ = exec_e () 
+                        in
+                        print_float x;
+                        print_string ",";
+                        print_float spd;
+                        print_string ",";
+                        print_float u;
+                        print_string ",";
+                        print_float x_esin;
+                        print_string ",";
+                        print_float noise;
+                        print_string ",";
+                        print_float x_estat;
+                        print_string ",";
+                        print_float x_e;
+                        print_newline () ) else ()
+

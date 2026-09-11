@@ -1,0 +1,53 @@
+(* PID discrete cms *)
+
+let r : {v : float | globally(v = 1.)} = 1.  (* Desired reference *)
+
+let kp = 30.         (* Proportional gain *)
+let ki = 40.         (* Integral gain *)
+let kd = 10.         (* Derivative gain *)
+
+let mass : {v:float | globally(v = 4.)} = 4.          (* Mass *)
+let k : {v:float | globally(v = 15.)} = 15.           (* Spring stiffness *)
+let b : {v:float | globally(v = 4.)} = 4.             (* Damping coefficient *)
+
+let dt = 0.1         (* Time step *)
+
+
+let node exec () =
+  let rec init xk1 = 0.
+  and xk = last xk1
+  and (xk1 : {(x:float) | true}) = xk +. spdk *. dt
+
+  and init spdk1 = 0.
+  and spdk = last spdk1
+  and (spdk1 : {(v:float) | true}) = spdk +. (-.k *. xk -. b *. spdk +. uk) *. dt /. mass
+
+  and (errork : {(error:float) | true}) = r -. xk
+
+  and init integralk1 = 0.
+  and integralk = last integralk1
+  and (integralk1 : {integralk1:float|true}) = integralk +. errork *. dt
+
+
+  and (uk : {(u:float) | true}) =  kp *. errork +. ki *. integralk -. kd *. spdk
+
+in xk, uk, errork, integralk, spdk
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let xk, uk, errork, integralk, derivativek = exec () in
+
+        print_float xk;
+        print_string ",";
+        print_float uk;
+        print_string ",";
+        print_float errork;
+        print_string ",";
+        print_float integralk;
+        print_string ",";
+        print_float derivativek;
+        print_newline ()
+
+    )
+  else ()

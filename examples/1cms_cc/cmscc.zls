@@ -1,0 +1,109 @@
+(* PID applied to sys (controlled mass spring) target at 1.0 *)
+
+let setpoint : {v : float | globally(v = 1.)} = 1.    (* Desired setpoint *)
+let m : {v:float | globally(v = 4.)} = 4.             (* Mass *)
+let k : {v:float | globally(v = 15.)} = 15.           (* Spring stiffness *)
+let b : {v:float | globally(v = 4.)} = 4.             (* Damping coefficient *)
+
+let kp : {v:float | globally(v = 80.)} = 80.          (* Proportional gain *)
+let ki : {v:float | globally(v = 20.)} = 20.          (* Integral gain *)
+let kd : {v:float | globally(v = 25.)} = 25.          (* Derivative gain *)
+
+
+
+(* Characteristic polynomial: P(s) = m *. s**3. +. (b +. kd) *. s**2. +. (k +. kp) *. s +. ki *)
+
+(* Critère de Routh-Hurwitz pour stabilite
+(m > 0) && (b + kd > 0) && (k + kp > 0) && (ki > 0) && ((b + kd) * (k + kp) > m * ki) *)
+
+let stability_condition1 : {v:float | globally(v > 0.)} = m
+let stability_condition2 : {v:float | globally(v > 0.)} = b +. kd
+let stability_condition3 : {v:float | globally(v > 0.)} = k +. kp
+let stability_condition4 : {v:float | globally(v > 0.)} = ki
+let stability_condition5 : {v:float | globally(v > 0.)} = (b +. kd) *. (k +. kp) -. m *. ki
+
+
+let hybrid noise () : {(n:float) | true} = n where
+  rec der n = v init 0.05
+  and der v = -. 25. *. n init 0.
+
+
+let hybrid sys (u : {(vu:float) | true}) : {(vx:float)*(vv:float) | true} = (x, v) where
+  rec der x = v init 0.
+  and der v = (-.k *. x -. b *. v +. u) /. m init 0.
+
+let pid ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (integral:{(vi:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. x
+  and (u : {(u:float) | true}) =  (kp *. error +. ki *. integral -. kd *. v)
+in error, u
+
+let pid_esin ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (integral:{(vi:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise)
+  and (u : {(u:float) | true}) = kp *. error +. ki *. integral -. kd *. (v +. 0.)
+in error, u
+
+let pid_estat ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (integral:{(vi:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x -. 0.5)
+  and (u : {(u:float) | true}) = kp *. error +. ki *. integral -. kd *. (v +. 0.) +. 0.
+in error, u
+
+let pid_e ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (integral:{(vi:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise -. 0.5)
+  and (u : {(u:float) | true}) = kp *. error +. ki *. integral -. kd *. (v +. 0.) +. noise
+in error, u
+
+
+
+let hybrid exec () : {(vx:float)*(vv:float)*(ve:float)*(vi:float)*(vu:float)*(vt:float) | true } = (x, v, error, integral, u, t) where
+  rec der integral = error init 0.
+  and (error : {(ve:float) | true}), (u : {(vu:float) | true}) = pid (x, v, integral) 
+  and x, v = sys (u)
+  and der t = 1. init 0.
+
+
+let hybrid exec_esin () : {(vx:float)*(vv:float)*(ve:float)*(vi:float)*(vu:float)*(vn:float) | true } = (x, v, error, integral, u, n) where
+  rec der integral = error init 0.
+  and n = noise ()
+  and (error : {(ve:float) | true}), (u : {(vu:float) | true}) = pid_esin (x, v, integral, n) 
+  and x, v = sys (u)
+
+let hybrid exec_estat () : {(vx:float)*(vv:float)*(ve:float)*(vi:float)*(vu:float) | true } = (x, v, error, integral, u) where
+  rec der integral = error init 0.
+  and (error : {(ve:float) | true}), (u : {(vu:float) | true}) = pid_estat (x, v, integral) 
+  and x, v = sys (u)
+
+  let hybrid exec_e () : {(vx:float)*(vv:float)*(ve:float)*(vi:float)*(vu:float) | true } = (x, v, error, integral, u) where
+  rec der integral = error init 0.
+  and n = noise ()
+  and (error : {(ve:float) | true}), (u : {(vu:float) | true}) = pid_e (x, v, integral, n) 
+  and x, v = sys (u)
+
+
+
+let hybrid main () =
+  let rec trigger = period (0.1)
+  and x, v, _, _, u, t = exec ()
+  and x_esin, _, _, _, _, noise = exec_esin ()
+  and x_estat, _, _, _, _ = exec_estat ()
+  and x_e, _, _, _, _ = exec_e ()
+  in present trigger -> (
+      if (t < 2.) then
+      (
+        print_float x;
+        print_string ",";
+        print_float v;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float x_esin;
+        print_string ",";
+        print_float noise;
+        print_string ",";
+        print_float x_estat;
+        print_string ",";
+        print_float x_e;
+        print_newline ()
+      )
+      else ()
+    )
+  else ()

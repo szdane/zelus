@@ -1,0 +1,185 @@
+(* Descrete PID applied to sys (controlled mass spring) target at 1.0 *)
+
+let setpoint : {v : float | globally(v = 1.)} = 1.     (* Desired setpoint *)
+
+let sysuncertainty : {v:float | globally(v = 1.1)} = 1.1
+
+let m : {v:float | globally(v = 4. *. sysuncertainty)} = 4. *. sysuncertainty              (* Mass *)
+let k : {v:float | globally(v = 15. *. sysuncertainty)} = 15. *. sysuncertainty            (* Spring stiffness *)
+let b : {v:float | globally(v = 4. *. sysuncertainty)} = 4. *. sysuncertainty              (* Damping coefficient *)
+
+let piduncertainty : {v:float | globally(v = 1.)} = 1.
+
+let kp : {v:float | globally(v = 80. *. piduncertainty)} = 80. *. piduncertainty          (* Proportional gain *)
+let ki : {v:float | globally(v = 20. *. piduncertainty)} = 20. *. piduncertainty           (* Integral gain *)
+let kd : {v:float | globally(v = 25. *. piduncertainty)} = 25. *. piduncertainty           (* Derivative gain *)
+
+let dt : {v:float | globally(v = 0.1)} = 0.1           (* Time step *)
+
+let u_max : {v:float | globally(v = 40.)} = 40.        (* Maximum input allowed *)
+let u_min : {v:float | globally(v = -40.)} = -40.      (* Minimum input allowed *)
+
+
+(* Characteristic polynomial: P(z) = z**3 + a1*z**2 + a2*z + a3 *)
+let a1 : {v:float | (v = (b +. kd) *. dt /. m -. 3.)} = (b +. kd) *. dt /. m -. 3.
+let a2 : {v:float | (v = 3. +. (-2. *. (b +. kd) *. dt +. (kp +. k) *. dt *. dt) /. m)} = 3. +. (-2. *. (b +. kd) *. dt +. (kp +. k) *. dt *. dt) /. m      (* There is a problem with liquid fixpoint when using dt ** 2. *)
+let a3 : {v:float | (v = ((b +. kd) *. dt -.(kp +. k) *. dt *. dt +. ki *. dt *. dt *. dt) /. m -. 1.)} = ((b +. kd) *. dt -.(kp +. k) *. dt *. dt +. ki *. dt *. dt *. dt) /. m -. 1.
+
+
+(* Jury criteria for stability
+condition1 |a3| < 1.
+condition2 P(1.) = 1 +. a1 +. a2 +. a3 > 0.
+condition3 P(-1.) = -1. +. a1 -. a2 +. a3 < 0.
+condition4 |a2 -. a1 *. a3| < 1. -. a3 ** 2. *)
+
+let stability_condition1 : {v:float | (1. > v) && (v > -1.)} = a3
+let stability_condition2 : {v:float | v > 0.} = 1. +. a1 +. a2 +. a3
+let stability_condition3 : {v:float | v < 0. } = -1. +. a1 -. a2 +. a3
+let stability_condition41 : {v:float | v > 0.} = 1. -. a3 *. a3 +. a1 *. a3 -. a2
+let stability_condition42 : {v:float | v > 0.} = 1. -. a3 *. a3 -. a1 *. a3 +. a2
+
+
+(* let sysuncertainty : {v:float | globally(v = 1.1)} = 1.1
+let mu : {v:float | globally(v = 5.)} = 5.           (* Uncertain Mass *)
+let ku : {v:float | globally(v = 17.)} = 17.           (* Uncertain Spring stiffness *)
+let bu : {v:float | globally(v = 5.)} = 5.           (* Uncertain Damping coefficient *)
+
+let piduncertainty : {v:float | globally(v = 1.1)} = 1.1
+let newkp : {v:float | globally(v = 88.)} = 88.           (* Uncertain Proportional gain *)
+let newki : {v:float | globally(v = 22.)} = 22.           (* Uncertain Integral gain *)
+let newkd : {v:float | globally(v = 28.)} = 28.           (* Uncertain Derivative gain *)
+ *)
+
+
+(* let a1u : {v:float | v = (b +. kdu) *. dt /. m -. 3.} = (b +. kdu) *. dt /. m -. 3.
+let a2u : {v:float | v = 3. +. (-2. *. (b +. kdu) *. dt +. (kpu +. k) *. dt *. dt) /. m} = 3. +. (-2. *. (b +. kdu) *. dt +. (kpu +. k) *. dt *. dt) /. m      (* There is a problem with liquid fixpoint when using dt ** 2. *)
+let a3u : {v:float | v = ((b +. kdu) *. dt -.(kpu +. k) *. dt *. dt +. kiu *. dt *. dt *. dt) /. m -. 1.} = ((b +. kdu) *. dt -.(kpu +. k) *. dt *. dt +. kiu *. dt *. dt *. dt) /. m -. 1.
+
+
+let stability_condition1u : {v:float | (1. > v) && (v > -1.)} = a3u
+let stability_condition2u : {v:float | v > 0.} = 1. +. a1u +. a2u +. a3u
+let stability_condition3u : {v:float | v < 0. } = -1. +. a1u -. a2u +. a3u
+let stability_condition41u : {v:float | v > 0.} = 1. -. a3u *. a3u +. a1u *. a3u -. a2u
+let stability_condition42u : {v:float | v > 0.} = 1. -. a3u *. a3u -. a1u *. a3u +. a2u *)
+
+
+
+let node saturate_umax (u:{vu:float|true}) : {vu:float|true} = 
+  (if (u > u_max) then u_max else u)
+
+let node saturate_u_cont_sym (u:{vu:float|true}) = 
+  (if (saturate_umax (u) < u_min) then u_min else saturate_umax (u))
+
+(* let node saturate_u_cont_sym (u:{vu:float|true}) =
+  let u_sat = 40. *. tanh(u /. 40.)
+in u_sat *)
+
+
+
+  let node noise () : {(n:float) | true }  =
+  let rec (n : {(n:float) | true}) = 0.05 *. cos(theta)
+  and theta = last theta +. 5. *. dt
+  and init theta = 0.
+in n
+
+
+
+let node sys (u : {(vu:float) | true}) : {(vx:float)*(vv:float) | true} = 
+  let rec (x : {(x:float) | true}) = last x +. last v *. dt
+  and init x = 0.
+  and (v : {(v:float) | true}) = last v +. (-.k *. last x -. b *. last v +. u) *. dt /. m
+  and init v = 0.
+in x, v
+
+
+let node pid ((x:{(vx:float) | true}), (v:{(vv:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. x
+  and init integral_antiwindup = 0.
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. v
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = u
+in error, u_sat
+
+
+let node pid_esin ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise)
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. (v +. 0.)
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = saturate_u_cont_sym (u)
+in error, u_sat
+
+let node pid_estat ((x:{(vx:float) | true}), (v:{(vv:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x -. 0.5)
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. (v +. 0.) +. 0.
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = saturate_u_cont_sym (u)
+in error, u_sat
+
+let node pid_e ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (noise:{(vn:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = setpoint -. (x +. noise -. 0.5)
+  and (u : {(u:float) | true}) =  kp *. error +. ki *. last integral_antiwindup -. kd *. (v +. 0.) +. noise
+  and init integral_antiwindup = 0.
+  and (integral_antiwindup : {(integral_antiwindup:float) | true}) = if ((u > u_max && error > 0.) || (u < u_min && error < 0.)) then last integral_antiwindup else last integral_antiwindup +. dt *. error
+  and (u_sat : {(u_sat:float) | true}) = saturate_u_cont_sym (u)
+in error, u_sat
+
+
+
+let node exec () : {(vx:float)*(vv:float)*(ve:float)*(vu:float) | true } =
+  let rec init x = 0.
+  and init v = 0.
+  and error, u = pid (last x, last v)
+  and x, v = sys (u)
+in x, v, error, u
+
+
+let node exec_esin () : {(vx:float)*(vv:float)*(ve:float)*(vu:float)*(vn:float) | true } = 
+  let rec init x = 0.
+  and init v = 0.
+  and n = noise ()
+  and error, u = pid_esin (last x, last v, n)
+  and x, v = sys (u)  
+in x, v, error, u, n
+
+let node exec_estat () : {(vx:float)*(vv:float)*(ve:float)*(vu:float) | true } = 
+  let rec init x = 0.
+  and init v = 0.
+  and error, u = pid_estat (last x, last v)
+  and x, v = sys (u)  
+in x, v, error, u
+
+let node exec_e () : {(vx:float)*(vv:float)*(ve:float)*(vu:float) | true } = 
+  let rec init x = 0.
+  and init v = 0.
+  and n = noise ()
+  and error, u = pid_e (last x, last v, n)
+  and x, v = sys (u)  
+in x, v, error, u
+
+
+
+  let hybrid main () =
+    let rec trigger = (period (0.1))  
+  in present trigger -> (let x, v, _, u = exec () 
+                          and x_esin,_,_,_,noise = exec_esin () 
+                          and x_estat,_,_,_ = exec_estat () 
+                          and x_e,_,_,_ = exec_e () 
+                        in
+                        print_string "x= ";
+                        print_float x;
+                        print_string " v= ";
+                        print_float v;
+                        print_string " u=";
+                        print_float u;
+                        (* print_string ",";
+                        print_float x_esin;
+                        print_string ",";
+                        print_float noise;
+                        print_string ",";
+                        print_float x_estat;
+                        print_string ",";
+                        print_float x_e; *)
+                        print_newline () ) else ()
+
