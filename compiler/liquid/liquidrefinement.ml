@@ -70,7 +70,7 @@ let ensure_fixpoint_installed () =
 
 let fixpoint_is_safe (fq_txt : string) : bool =
   ensure_fixpoint_installed ();
-  (*debug (Printf.sprintf "%s" fq_txt);*)
+  debug (Printf.sprintf "%s" fq_txt);
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in
   let oc = open_out tmp in
@@ -1417,80 +1417,46 @@ let param_from_pattern (p:Zelus.pattern) : fun_param option  =
       let v_eq = mk_eq (mk_v ()) { desc = vc_gen_expression e; loc = dummy_loc } in
       mk_and v_eq (mk_X (mk_G v_eq))
 
-  let check_fun_call
-  ~(x_name:string)
-  ~(ret_ann_zls:Zelus.type_expression)
-  ~(fname:string)
-  ~(actuals:Zelus.exp list)
-  : unit =
-  (* 1) Lookup signature *)
-  let sig_entry =
-    match Hashtbl.find_opt fun_sigs fname with
-    | None -> failwith (Printf.sprintf "Unknown function '%s' (no signature recorded)" fname)
-    | Some s -> s
-  in
-  (* 2) Arity *)
-  let formals = sig_entry.params in
-  if List.length formals <> List.length actuals then
-    failwith (Printf.sprintf "Arity mismatch in call to %s" fname);
+  (* Discharge the callee's preconditions at the call site: for every formal,
+     NF(actual) <: NF(formal).  The formal's predicate is first instantiated
+     with the actuals, the same substitution [instantiate_fun_ret_nf] applies
+     to the return, so that a precondition mentioning another parameter
+     (e.g. [g (a) (b : {v:float | v > a})]) is read in the caller's scope.
 
-  (* 3) For each argument: NF(actual)  <:  NF(formal) *)
+     Without this the callee is verified under an assumption the caller never
+     pays for, which is unsound: [f (a : {v | v >= 100.}) : {v | v >= 100.}]
+     applied to [0.] would establish [v >= 100.] for [0.]. *)
+  let check_call_args ~(fname:string) (fsig:fun_sig) (args:Zelus.exp list) : unit =
+  if List.length fsig.params <> List.length args then
+    failwith (Printf.sprintf "Arity mismatch in call to %s" fname);
+  let name_map =
+    List.map2
+      (fun (fp:fun_param) (ea:Zelus.exp) -> (fp.p_name, actual_name_or_ghost ea fp.p_base))
+      fsig.params args
+  in
   List.iter2
     (fun (fp:fun_param) (ea:Zelus.exp) ->
        let lhs_nf = nf_of_expr_or_alias ~binder:fp.p_binder ~base:fp.p_base ea in
+       let rhs_nf = zpt_subst_names fp.p_nf (fun nm -> List.assoc_opt nm name_map) in
+       debug (Printf.sprintf "[call-arg] %s.%s LHS: %s"
+                fname fp.p_name
+                (pp_nf_as_type ~binder:fp.p_binder ~base:fp.p_base lhs_nf));
+       debug (Printf.sprintf "[call-arg] %s.%s RHS: %s"
+                fname fp.p_name
+                (pp_nf_as_type ~binder:fp.p_binder ~base:fp.p_base rhs_nf));
        let ok =
          nf_match_and_check
            ~cid:5
            ~name:(Printf.sprintf "arg:%s.%s" fname fp.p_name)
            ~binder:fp.p_binder
            ~base:fp.p_base
-           lhs_nf fp.p_nf
+           lhs_nf rhs_nf
        in
        if not ok then
          failwith (Printf.sprintf
            "Liquid type error: in call to %s, argument '%s' violates its annotation"
            fname fp.p_name))
-    formals actuals;
-
-  (* 4) Return: NF(f_ret)  <:  NF(LHS annotation for x) *)
-  let (lhs_ret_binder, lhs_ret_base, lhs_ret_nf) =
-    match ret_ann_zls.desc with
-    | Zelus.Erefinement ((vb, base_ty), pred) ->
-        let base =
-          match base_ty.desc with
-          | Zelus.Etypeconstr (Name b, []) -> b
-          | _ -> failwith "LHS annotation base must be Etypeconstr(Name,[])"
-        in
-        (vb, base, zls_pred_to_nf ~binder:vb pred)
-    | _ -> failwith "Let-bound LHS must be annotated with a scalar refinement"
-  in
-  if String.lowercase_ascii sig_entry.ret_base
-     <> String.lowercase_ascii lhs_ret_base
-  then failwith "Base mismatch between function return and LHS annotation";
-
-  let ok_ret =
-    nf_match_and_check
-      ~cid:5
-      ~name:(Printf.sprintf "%s:ret" fname)
-      ~binder:lhs_ret_binder
-      ~base:lhs_ret_base
-      sig_entry.ret_nf lhs_ret_nf
-  in
-  if not ok_ret then
-    failwith (Printf.sprintf
-      "Liquid type error: return of %s does not satisfy the annotation of %s"
-      fname x_name);
-
-  (* 5) On success, install x with the normalized LHS annotation *)
-  let base_ty' =
-    mk_type (Zparsetree.Etypeconstr (Name (String.lowercase_ascii lhs_ret_base), []))
-  in
-  let rhs_ty' =
-    { desc = Zparsetree.Erefinement ((lhs_ret_binder, base_ty'), lhs_ret_nf)
-    ; loc  = dummy_loc
-    }
-  in
-  add_binding x_name rhs_ty'
+    fsig.params args
 
 let as_desugared_reset (rhs: Zelus.exp) : (Zelus.exp * Zelus.exp) option =
     match rhs.e_desc with
@@ -2000,10 +1966,13 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                           and return type before it can be called here" fname)
               in
 
-              (* 1) Callee return NF instantiated with actuals (a -> b/c/ghost) *)
+              (* 1) Discharge the callee's preconditions against the actuals *)
+              check_call_args ~fname fsig args;
+
+              (* 2) Callee return NF instantiated with actuals (a -> b/c/ghost) *)
               let callee_ret_nf = instantiate_fun_ret_nf fsig args in
 
-              (* 2) Caller annotation NF, canonicalized to [value_var] *)
+              (* 3) Caller annotation NF, canonicalized to [value_var] *)
               let (ret_binder, ret_base_name, caller_ann_nf) =
                 match (to_zpt_type ty_ann_zelus).desc with
                 | Zparsetree.Erefinement ((vb, base_ty), pred) ->
@@ -2018,10 +1987,10 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                 | _ -> failwith "Expected refinement on call-site binding"
               in
 
-              (* 3) Rewrite caller ann free occurrences of param names to actuals too *)
+              (* 4) Rewrite caller ann free occurrences of param names to actuals too *)
               let caller_ann_nf' = rewrite_caller_ann_with_actuals fsig args caller_ann_nf in
             
-              (* 4) Subtyping: (callee_ret_nf  caller_ann_nf') in NF *)
+              (* 5) Subtyping: (callee_ret_nf  caller_ann_nf') in NF *)
               let ok =
                 nf_match_and_check
                   ~cid:5 ~name:(fname ^ ":call-ret")

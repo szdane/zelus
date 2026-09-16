@@ -8,7 +8,6 @@ let dt : {v : float | globally(v = 0.1)} = 0.1         (* Time step *)
 
 let eps : {v : float | globally(v = 0.1)} = 0.1        (* Bound for stability verification *)
 
-let x_max : {v : float | globally(v = 1.)} = 1.        (* Upper bound of xk1 *)
 
 
 (* let stable (ek : {ek:float | ek <= 0.1}) : {ek1:float| ek1 <= 0.1} =
@@ -49,7 +48,7 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
   (* and abs_errork = if errork >= 0. then errork else -.errork
   and test_stable_sup = if abs_errork <= eps then stable (abs_errork) else 0. *)
 
-  and (bound : {bound:float| 0. <= bound && bound <= x_max}) = xk1
+  and (bound : {bound:float| 0. <= bound && bound <= 1.0}) = xk1
 
 in xk, uk, errork
 
