@@ -1,0 +1,15 @@
+(* ==== NEG: [last] is not part of the refinement language ====
+   [last] is an equation-level operator.  A refinement constrains a variable's
+   own value; writing [last] inside one would introduce a ghost symbol that
+   nothing declares.  The equation may read [last s]; the refinement may not. *)
+let node exec () : {(vy:float)|true} =
+  let rec init s = 0.
+  and (y : {y:float | y = last s}) = last s
+  and (s : {s:float | globally(0. <= s && s <= 1.)}) = y *. 0.5
+in y
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_float x; print_newline ()))
+  else ()

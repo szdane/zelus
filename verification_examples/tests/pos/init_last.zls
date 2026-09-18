@@ -1,0 +1,16 @@
+(* ==== POS: init + last in a plain let rec, last-read BEFORE the definition ====
+   This is the ordering a state feedback loop naturally has: [s] is read through
+   [last] to break the cycle, and defined further down in terms of that read.
+   The invariant is written with [globally], which is what makes [last_s] carry
+   a usable fact at every instant t>=1. *)
+let node exec () : {(vy:float)|true} =
+  let rec init s = 0.
+  and (y : {y:float | globally(0. <= y && y <= 1.)}) = last s
+  and (s : {s:float | globally(0. <= s && s <= 1.)}) = y *. 0.5
+in y
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_float x; print_newline ()))
+  else ()

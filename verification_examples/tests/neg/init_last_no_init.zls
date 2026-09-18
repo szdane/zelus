@@ -1,0 +1,14 @@
+(* ==== NEG: [last s] with no [init s] ====
+   Without an init there is no value for [last s] at the first instant, so no
+   sound t=0 fact exists.  (The compiler's own initialization analysis rejects
+   this too, but it runs after verification.) *)
+let node exec () : {(vy:float)|true} =
+  let rec (y : {y:float | globally(0. <= y && y <= 1.)}) = last s
+  and (s : {s:float | globally(0. <= s && s <= 1.)}) = y *. 0.5
+in y
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_float x; print_newline ()))
+  else ()

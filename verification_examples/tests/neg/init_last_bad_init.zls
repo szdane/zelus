@@ -1,0 +1,15 @@
+(* ==== NEG: the init value violates the invariant assumed for [last s] ====
+   [last s] is 5. at the first instant, so [y = last s] cannot satisfy
+   [0. <= y && y <= 1.] at t=0.  Assuming [s]'s invariant for [last_s] without
+   checking the t=0 case would wrongly accept this. *)
+let node exec () : {(vy:float)|true} =
+  let rec init s = 5.
+  and (y : {y:float | globally(0. <= y && y <= 1.)}) = last s
+  and (s : {s:float | globally(0. <= s && s <= 1.)}) = y *. 0.5
+in y
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_float x; print_newline ()))
+  else ()

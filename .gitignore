@@ -5,3 +5,4 @@
 .merlin
 zconfig.ml
 _build/
+liquid_failures/

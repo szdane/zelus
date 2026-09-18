@@ -15,21 +15,21 @@ let eps : {v : float | globally(v = 0.1)} = 0.1        (* Bound for stability ve
 in ek1 *)
 
 
-let x_bound (xk : {xk:float|(0. < (1. -. kp *. dt) && (0. <= xk && xk <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk && xk <= 2.))}) : 
-            {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.)))} =
-  let (xk1 : {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.)))}) = xk +. kp *. (r -. xk) *. dt
+let x_bound (xk : {xk:float|globally((0. < (1. -. kp *. dt) && (0. <= xk && xk <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk && xk <= 2.)))}) : 
+            {xk1:float|globally((xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.))))} =
+  let (xk1 : {xk1:float|globally((xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.))))}) = xk +. kp *. (r -. xk) *. dt
 in xk1
 
 
 
 let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
   let rec init xk1 = 0.
-  and (xk : {xk:float|true}) = last xk1
+  and (xk : {xk:float|globally((0. < (1. -. kp *. dt) && (0. <= xk && xk <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk && xk <= 2.)))}) = last xk1
 
   and (errork : {errork:float|errork = r -. xk})= r -. xk
   and (uk : {uk:float|uk = kp *. errork}) = kp *. errork
 
-  and (xk1 : {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.)))}) = x_bound (xk)
+  and (xk1 : {xk1:float|globally((xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.))))}) = x_bound (xk)
   
   and (errork1 : {errork1:float|errork1 = r -. xk1}) = r -. xk1
   

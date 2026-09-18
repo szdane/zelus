@@ -1,0 +1,13 @@
+(* ==== NEG: invariant not preserved by the recurrence ====
+   [s] grows without bound, so [0. <= s && s <= 1.] is not inductive. *)
+let node exec () : {(vy:float)|true} =
+  let rec init s = 0.
+  and (y : {y:float | globally(0. <= y && y <= 1.)}) = last s
+  and (s : {s:float | globally(0. <= s && s <= 1.)}) = y +. 2.
+in y
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_float x; print_newline ()))
+  else ()

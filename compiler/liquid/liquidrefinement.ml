@@ -68,7 +68,72 @@ let ensure_fixpoint_installed () =
        is not installed. Install it (see https://github.com/ucsd-progsys/liquid-fixpoint) \
        and ensure `fixpoint` is on your PATH."
 
-let fixpoint_is_safe (fq_txt : string) : bool =
+(* Where a query that did NOT check out is kept, so the failure can be replayed
+   against the solver by hand instead of reconstructed from the error message:
+
+     fixpoint liquid_failures/<Module>_001_<check>.fq
+
+   Overridable with ZELUS_FQ_DUMP_DIR; the default is [./liquid_failures],
+   i.e. relative to wherever `zeluc` was invoked. *)
+let fq_dump_dir =
+  lazy (
+    match Sys.getenv_opt "ZELUS_FQ_DUMP_DIR" with
+    | Some d when String.trim d <> "" -> d
+    | _ -> Filename.concat (Sys.getcwd ()) "liquid_failures")
+
+(* Numbers the dumps in the order the checks ran, which is also the order in
+   which they are reported. *)
+let fq_dump_count = ref 0
+
+let sanitize_label (s : string) : string =
+  let s = if String.trim s = "" then "check" else String.trim s in
+  let s = if String.length s > 48 then String.sub s 0 48 else s in
+  String.map
+    (function ('A'..'Z' | 'a'..'z' | '0'..'9' | '-' | '.') as c -> c | _ -> '_')
+    s
+
+(* [Sys.mkdir] makes one level only, so a nested ZELUS_FQ_DUMP_DIR needs this. *)
+let rec mkdir_p (dir : string) : unit =
+  if not (Sys.file_exists dir) then begin
+    let parent = Filename.dirname dir in
+    if parent <> dir then mkdir_p parent;
+    Sys.mkdir dir 0o755
+  end
+
+(* Write [fq_txt] where the user can re-run it, and return the path.
+
+   The file is the query verbatim, preceded by `//` comments (which the fq
+   parser accepts), so the saved file is directly replayable. Every failure of
+   the dump itself is swallowed: this is a debugging aid, and an unwritable
+   directory must not turn into a compile error on top of the type error that
+   is the real news. *)
+let save_failing_fq ~(label : string) (fq_txt : string) : string option =
+  try
+    let dir = Lazy.force fq_dump_dir in
+    mkdir_p dir;
+    incr fq_dump_count;
+    (* The module name keeps the dumps of a whole-directory run (say the neg
+       test suite, which shares one dump dir) from colliding on a check name
+       as common as [x]. *)
+    let md = sanitize_label Modules.current.name in
+    let path =
+      Filename.concat dir
+        (Printf.sprintf "%s_%03d_%s.fq" md !fq_dump_count (sanitize_label label))
+    in
+    let oc = open_out path in
+    Printf.fprintf oc
+      "// UNSAFE liquid-refinement query\n\
+       // module : %s\n\
+       // check  : %s\n\
+       // replay : fixpoint %s\n\n%s\n"
+      Modules.current.name label (Filename.quote path) fq_txt;
+    close_out oc;
+    Some path
+  with _ -> None
+
+(* [label] names the check being run; it only ever reaches the dumped file name
+   and the message that points at it. *)
+let fixpoint_is_safe ?(label = "check") (fq_txt : string) : bool =
   ensure_fixpoint_installed ();
   debug (Printf.sprintf "%s" fq_txt);
   let tmp_dir = Filename.get_temp_dir_name () in
@@ -77,7 +142,18 @@ let fixpoint_is_safe (fq_txt : string) : bool =
   output_string oc fq_txt;
   close_out oc;
   let status = Sys.command (Printf.sprintf "fixpoint %s" (Filename.quote tmp)) in
-  (if (status = 0) then (Sys.remove tmp; ()) else ());
+  (try Sys.remove tmp with Sys_error _ -> ());
+  if status <> 0 then begin
+    match save_failing_fq ~label fq_txt with
+    | Some path ->
+        Printf.printf
+          "[liquid] failing query saved to %s\n         replay with: fixpoint %s\n%!"
+          path (Filename.quote path)
+    | None ->
+        Printf.printf
+          "[liquid] failing query for %s could not be saved (dump dir %s is not writable)\n%!"
+          label (Lazy.force fq_dump_dir)
+  end;
   status = 0
 
 let rec contains_X (e:Zparsetree.exp) : bool =
@@ -450,7 +526,7 @@ let run_fq name lhs rhs =
   let fq_query = Gen.to_fq "v" ~cid:5 ~lhs:lhs ~rhs:rhs ~env:(current_env ()) () in
   (*search for fixpoint query io*)
   (* debug (Printf.sprintf "%s" fq_query); *)
-  fixpoint_is_safe fq_query
+  fixpoint_is_safe ~label:name fq_query
 
 let rhs_var_name (e:Zelus.exp) : string option =
   match e.e_desc with
@@ -490,8 +566,15 @@ let nf_match_and_check ~cid ~(name:string) ~(binder:string) ~(base:string)
     else
     if is_ltl_free psi_lhs' && is_ltl_free psi_rhs' then
       run_subtyping_pred ~cid ~name ~binder ~base psi_lhs' psi_rhs'
-    else
-    false
+    else begin
+      (* Rejected before any query is built, so there is no .fq to dump: say
+         so, otherwise the absence of a saved file reads as a lost dump. *)
+      Printf.printf
+        "[liquid] %s: temporal residual not comparable (LHS: %s | RHS: %s); \
+         rejected without running the solver, so no .fq was saved\n%!"
+        name (Pprint.string_of_expr psi_lhs') (Pprint.string_of_expr psi_rhs');
+      false
+    end
 let nf_eq_v_rhs_fby_tail_guarded_zpt ~(rhs:Zelus.exp) ~(guard_zpt:Zparsetree.exp)
     : Zparsetree.exp =
     let loc   = dummy_loc in
@@ -657,7 +740,7 @@ let process_bool name v base var e =
   match var with 
   | Zelus.Econst(Ebool(true)) -> add_binding name rhs
   | _ ->
-    if fixpoint_is_safe fq_query then
+    if fixpoint_is_safe ~label:name fq_query then
       add_binding name rhs
     else
       failwith (Printf.sprintf "Liquid type error: %s does not satisfy its annotation" name)
@@ -679,7 +762,7 @@ let process_bool_fun name v arg out var e a opt =
   match var with 
     | Zelus.Econst(Ebool(true)) -> add_binding name rhs
     | _ ->
-          if fixpoint_is_safe fq_query then
+          if fixpoint_is_safe ~label:name fq_query then
             add_binding name rhs
           else
             failwith (Printf.sprintf "Liquid type error: %s does not satisfy its annotation" name)
@@ -1743,6 +1826,261 @@ let preload_refenv_vars_aut (vars : (string * Zelus.type_expression) list) : uni
       add_binding x (invariant_only_type ty_ann_zpt))
     vars
 
+(* ===================== [init] / [last] in a plain [let rec] ================ *)
+
+(* [init x = e] equations seen so far.
+
+   In Zelus [init x = e] initializes the MEMORY of [x] — that is, [last x] at
+   the first instant — and never [x] itself; at t=0 [x] is whatever its own
+   equation computes.  (Typing records [EQinit] in the *initialized* set and
+   never in the *defined* set, and code generation emits a static [init] into
+   the machine's [reset] method only, never into [step].)  So this table is
+   exactly what a t=0 query must substitute for [last_x]. *)
+let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
+
+(* The sound environment fact for the ghost [last_y] at every instant t>=1.
+
+   [y]'s declared NF is [phi && nxt(globally psi)]: [phi] is [y]'s value at the
+   FIRST instant only, [psi] its invariant at every t>=1.  Since
+   [last_y(t) = y(t-1)], at t=1 the ghost holds [y(0)], which satisfies [phi]
+   and NOT necessarily [psi]; only from t=2 on does it satisfy [psi].  So
+   [phi || psi] is the strongest fact valid at every t>=1, and unlike [psi]
+   alone it needs no extra base check to be sound.  When the annotation is
+   written [globally(P)] we have [phi = psi = P] and this collapses to [P],
+   so the common case loses no precision.
+
+   Taking [psi] alone would be unsound at t=1; taking [phi] alone would be
+   unsound from t=2 on. *)
+let last_ghost_pred_of_ann_nf (ann_nf : Zparsetree.exp) : Zparsetree.exp =
+  (* [mk_paren] is an [Eapp] on an empty-named var, so two structurally equal
+     predicates can still print differently.  Compare them stripped, or the
+     [globally(P)] case emits a pointless [P || P] that costs solver time on
+     the nonlinear queries. *)
+  let rec strip_parens (e : Zparsetree.exp) : Zparsetree.exp =
+    match e.desc with
+    | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name ""); _ }, [inner]) ->
+        strip_parens inner
+    | Zparsetree.Eapp (ai, f, args) ->
+        { e with desc =
+            Zparsetree.Eapp (ai, strip_parens f, List.map strip_parens args) }
+    | Zparsetree.Etuple es ->
+        { e with desc = Zparsetree.Etuple (List.map strip_parens es) }
+    | _ -> e
+  in
+  let (phi, psi) = base_ind_of_nf ann_nf in
+  let same =
+    String.equal
+      (Pprint.string_of_expr (strip_parens phi))
+      (Pprint.string_of_expr (strip_parens psi))
+  in
+  if same then psi else mk_or (mk_paren phi) (mk_paren psi)
+
+(* Install [last_y] from [y]'s DECLARED annotation, independently of where
+   [y]'s own equation sits in the block.
+
+   [locals] is the block's own variables.  Only those shift one step into the
+   past: [y]'s invariant may relate [y] to another local at the same instant
+   (p.zls has [xk1 = xk +. ...]), and the corresponding fact about [last_y]
+   relates it to [last_&lt;that local&gt;].  Global constants must NOT be shifted —
+   [kp], [r], [dt] mean the same at every instant, and rewriting them to
+   [last_kp] etc. only manufactures free variables that make fixpoint die. *)
+let install_block_last_ghost
+      ~(locals : string list)
+      (y : string) (ty_ann_zelus : Zelus.type_expression)
+  : unit =
+  let ghost_name = "last_" ^ y in
+  match find_binding ghost_name with
+  | Some _ -> ()
+  | None ->
+      let ty_zpt = to_zpt_refine_canon ty_ann_zelus in
+      (match ty_zpt.desc with
+       | Zparsetree.Erefinement ((vb, base_ty), pred) ->
+           let base_name =
+             match base_ty.desc with
+             | Zparsetree.Etypeconstr (Name b, []) -> b
+             | _ -> failwith "Block last-preload: base must be Etypeconstr(Name,[])"
+           in
+           let ann_nf = zpt_pred_to_nf ~binder:vb pred in
+           let psi = last_ghost_pred_of_ann_nf ann_nf in
+           let psi =
+             shift_current_vars_to_last_in_exp
+               ~shiftable_vars:(Some locals) ~binder:value_var psi
+           in
+           ensure_unbound_last_vars_declared psi;
+           add_binding ghost_name (mk_refine value_var base_name psi)
+       | _ -> ()  (* labeled-tuple refinements: scalar path only *))
+
+(* Pre-pass over a [let rec] block, run before any of its equations is checked.
+
+   A [rec] block is unordered: the scheduler sorts by data dependency and
+   [last y] reads are placed after [init y] and before [y]'s own equation,
+   which is exactly how [last] breaks a feedback cycle.  So [last y] routinely
+   occurs in an equation processed BEFORE [y] is bound in gamma, and the gamma
+   lookup in [ensure_last_of_bound_var] comes back empty, leaving [last_y] as
+   a free variable that makes Liquid Fixpoint die rather than answer.  Seeding
+   the ghosts from the DECLARED annotations up front removes the ordering
+   assumption, the same way [preload_last_vars_aut] does for an automaton's
+   [refenv]. *)
+let preload_block_lasts (eqs : Zelus.eq list) : unit =
+  (* 1) Record every [init x = e] first, so that a [last x] read by an earlier
+        equation can still find it. *)
+  List.iter
+    (fun (eq : Zelus.eq) ->
+       match eq.eq_desc with
+       | EQinit (id, e) -> Hashtbl.replace init_table (zident_pretty id) e
+       | _ -> ())
+    eqs;
+  (* 2) Declared annotations of the block's annotated locals. *)
+  let decls =
+    List.filter_map
+      (fun (eq : Zelus.eq) ->
+         match eq.eq_desc with
+         | EQeq (pat, _) ->
+             (match pat.p_desc with
+              | Zelus.Etypeconstraintpat (bp, ann) ->
+                  (match bp.p_desc with
+                   | Zelus.Evarpat id -> Some (zident_pretty id, ann)
+                   | _ -> None)
+              | _ -> None)
+         | _ -> None)
+      eqs
+  in
+  (* 2b) [last] is an equation-level operator, not part of the refinement
+         language.  A refinement is a predicate on a variable's own value; the
+         way to relate it to a previous value is to write the [last] in the
+         EQUATION and let that variable carry its own refinement.  Allowing it
+         here would silently introduce a [last_y] symbol into a predicate that
+         nothing declares.  Rejected explicitly so the error names the fix
+         rather than surfacing as a solver crash about a free variable. *)
+  List.iter
+    (fun (y, (ann : Zelus.type_expression)) ->
+       match ann.desc with
+       | Zelus.Erefinement (_, pred) ->
+           (match collect_last_vars pred with
+            | [] -> ()
+            | z :: _ ->
+                failwith
+                  (Printf.sprintf
+                     "Liquid type error: the refinement of '%s' uses 'last %s'. \
+                      'last' is not part of the refinement language; write it in the \
+                      equation instead (e.g. '%s = last %s') and give '%s' a \
+                      refinement over its own value" y z y z z))
+       | _ -> ())
+    decls;
+  (* 3) [last y] read by an ANNOTATED equation must have an [init y]: that
+        equation carries a proof obligation, and discharging it at t=0 needs a
+        value for [last y].  An unannotated equation generates no constraint
+        (its RHS is treated as opaque precisely because it mentions [last]), so
+        it needs neither a ghost nor an [init] — [let rec i = 0 -> 1 + last i]
+        with no refinement stays legal. *)
+  let lasts =
+    List.fold_left
+      (fun acc (eq : Zelus.eq) ->
+         match eq.eq_desc with
+         | EQeq (pat, rhs) ->
+             (match pat.p_desc with
+              | Zelus.Etypeconstraintpat (_, _) -> collect_last_vars rhs @ acc
+              | _ -> acc)
+         | _ -> acc)
+      [] eqs
+    |> List.sort_uniq String.compare
+  in
+  List.iter
+    (fun y ->
+       if not (Hashtbl.mem init_table y) then
+         failwith
+           (Printf.sprintf
+              "Liquid type error: 'last %s' is used in this block but there is no \
+               'init %s = ...' to give its value at the first instant" y y))
+    lasts;
+  (* 4) Install a ghost ONLY for the variables actually read through [last],
+        then close over whatever further [last_z] their facts name.
+
+        Installing one for every annotated local instead would poison blocks
+        that never mention [last]: a ghost's predicate may refer to names that
+        are not block locals (a function parameter, say), those are not shifted
+        into the past, and the resulting fact can contradict the variable's own
+        refinement.  An inconsistent environment makes every query vacuously
+        "safe", which is exactly how a false invariant slips through. *)
+  let locals = List.map fst decls in
+  let seen : (string, unit) Hashtbl.t = Hashtbl.create 8 in
+  let rec install_needed (y : string) : unit =
+    if Hashtbl.mem seen y then ()
+    else begin
+      Hashtbl.replace seen y ();
+      match List.assoc_opt y decls with
+      | None -> ()  (* unannotated local: left to [ensure_last_of_bound_var] *)
+      | Some ann ->
+          install_block_last_ghost ~locals y ann;
+          (* [y]'s invariant may relate it to another local at the same
+             instant, so the ghost's fact names that local's past value; that
+             name has to be declared too, or fixpoint sees a free variable. *)
+          (match find_binding ("last_" ^ y) with
+           | None -> ()
+           | Some ty ->
+               let (_vb, _base, pred) = refine_parts_of_gamma_ty ty in
+               List.iter
+                 (fun nm ->
+                    if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
+                      let z = String.sub nm 5 (String.length nm - 5) in
+                      if List.mem_assoc z decls then install_needed z)
+                 (collect_last_vars_zpt pred []))
+    end
+  in
+  List.iter install_needed lasts
+
+(* [nf_match_and_check] for an equation whose RHS reads [last y].
+
+   [nf_match_and_check] runs its t=0 and t>=1 sub-queries against the SAME
+   environment, but the [last_*] facts are t>=1 facts: at t=0 [last y] is
+   [init y], which need not satisfy [y]'s invariant.  Left in scope for the t=0
+   query they would let an out-of-range [init] be "proved" in range.  So the
+   t=0 query runs with every [last_*] fact neutralized and with [last_y]
+   substituted by [init y] on both sides, while the t>=1 query keeps the full
+   environment — the same discipline as the automaton head / globally-base
+   checks. *)
+let nf_match_and_check_with_last
+      ~(name:string) ~(binder:string) ~(base:string)
+      (lhs_nf:Zparsetree.exp) (rhs_nf:Zparsetree.exp) : bool =
+  let (phi_lhs, psi_lhs) = split_nf lhs_nf in
+  let (phi_rhs, psi_rhs) = split_nf rhs_nf in
+  let init_of_last nm =
+    if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
+      let y = String.sub nm 5 (String.length nm - 5) in
+      match Hashtbl.find_opt init_table y with
+      | Some e -> Some { Zparsetree.desc = vc_gen_expression e; loc = dummy_loc }
+      | None -> None
+    else None
+  in
+  let rec subst_last (e : Zparsetree.exp) : Zparsetree.exp =
+    match e.desc with
+    | Zparsetree.Evar (Name s) ->
+        (match init_of_last s with Some e' -> e' | None -> e)
+    | Zparsetree.Eapp (ai, fn, args) ->
+        { e with desc =
+            Zparsetree.Eapp (ai, subst_last fn, List.map subst_last args) }
+    | Zparsetree.Etuple es ->
+        { e with desc = Zparsetree.Etuple (List.map subst_last es) }
+    | _ -> e
+  in
+  (* t=0 *)
+  let saved_t0_gamma = neutralize_stream_facts_for_t0 [] in
+  let ok_now =
+    run_subtyping_pred ~cid:5 ~name:(name ^ ":t0") ~binder ~base
+      (subst_last phi_lhs) (subst_last phi_rhs)
+  in
+  gamma := saved_t0_gamma;
+  if not ok_now then false
+  else begin
+    (* t>=1, with the full environment restored *)
+    let psi_lhs', psi_rhs' = strip_matching_ltl psi_lhs psi_rhs in
+    if is_true psi_rhs' then true
+    else if is_ltl_free psi_lhs' && is_ltl_free psi_rhs' then
+      run_subtyping_pred ~cid:5 ~name:(name ^ ":tail") ~binder ~base
+        psi_lhs' psi_rhs'
+    else false
+  end
+
 let process_scalar_eq base_pat ty_ann_zelus rhs =
     debug "Processing let eq with annotation";
     (match as_desugared_reset rhs with
@@ -1790,6 +2128,19 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
        T-RESET arms below already register the [last_*] ghosts they need;
        this covers every other shape (ITE, calls, plain synthesis). *)
     List.iter ensure_last_of_bound_var (collect_last_vars rhs);
+
+    (* When the RHS reads [last y], the t=0 and t>=1 obligations need different
+       environments (see [nf_match_and_check_with_last]); otherwise the ordinary
+       one-environment check applies. *)
+    let rhs_reads_last = collect_last_vars rhs <> [] in
+    let check_synth_nf ~(name:string) lhs_nf rhs_nf =
+      if rhs_reads_last then
+        nf_match_and_check_with_last
+          ~name ~binder:value_var ~base:base_name lhs_nf rhs_nf
+      else
+        nf_match_and_check
+          ~cid:5 ~name ~binder:value_var ~base:base_name lhs_nf rhs_nf
+    in
 
     (* {v | true} fast-path *)
     (match pred_zpt.desc with
@@ -2043,11 +2394,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                       (* Not found in  -> fall back to synthesizing v=rhs && X(G(v=rhs)) *)
                       let v_eq_rhs = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc = dummy_loc } in
                       let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
-                      let ok_nf =
-                        nf_match_and_check
-                          ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
-                          lhs_nf ann_nf
-                      in
+                      let ok_nf = check_synth_nf ~name:x lhs_nf ann_nf in
                       let rhs_ty_zpt =
                         { desc = Zparsetree.Erefinement ((ret_binder, base_ty), ann_nf)
                         ; loc  = dummy_loc }
@@ -2056,14 +2403,12 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                       else failwith (Printf.sprintf "Liquid type error: let-bound %s does not satisfy its annotation" x)
                 )
               | None ->
-                  (* RHS is not a plain variable -> original synthesized NF check *)
+                  (* RHS is not a plain variable -> original synthesized NF check.
+                     This is the arm [x = last y] reaches, since [last y] is an
+                     [Elast] node and not a plain variable reference. *)
                   let v_eq_rhs = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc = dummy_loc } in
                   let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
-                  let ok_nf =
-                    nf_match_and_check
-                      ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
-                      lhs_nf ann_nf
-                  in
+                  let ok_nf = check_synth_nf ~name:x lhs_nf ann_nf in
                   let rhs_ty_zpt =
                     { desc = Zparsetree.Erefinement ((ret_binder, base_ty), ann_nf)
                     ; loc  = dummy_loc }
@@ -2075,8 +2420,6 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
       )
   
     
-let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
-
 let nf_last_of_x ~(binder:string) ~(x_name:string) ~(e_init:Zelus.exp) : Zparsetree.exp =
   let v_eq_init = mk_eq (mk_v ()) { desc = vc_gen_expression e_init; loc = dummy_loc } in
   let v_eq_x    = mk_eq (mk_v ()) (mk_var x_name) in
@@ -2844,7 +3187,9 @@ let process_let_eq (eq : Zelus.eq) : unit =
           | Zelus.Evarpat id -> process_unannotated_scalar_eq (zident_pretty id) rhs
           | _ -> ()
         end
-      | EQinit(id,e) -> debug((zident_pretty id)); Hashtbl.add init_table ((zident_pretty id)) e
+      (* Also recorded up front by [preload_block_lasts]; [replace] keeps the two
+         in agreement instead of stacking shadowed entries. *)
+      | EQinit(id,e) -> debug((zident_pretty id)); Hashtbl.replace init_table ((zident_pretty id)) e
       | EQautomatonRef (is_weak, aut_refenv_opt, states, init_state_opt, tail_refenv_opt) ->
         process_automaton_ref_eq_aut
           is_weak
@@ -3119,6 +3464,10 @@ let check_return ~(fname:string)
     match e.e_desc with
     | Zelus.Elet (l_block, r_exp) ->
         with_env_snapshot (fun () ->
+          (* Seed [init_table] and the [last_*] ghosts from the block's own
+             declarations before checking any equation: a [rec] block is
+             unordered, so [last y] may be read before [y] is bound. *)
+          preload_block_lasts l_block.l_eq;
           (* handle “let ... and ... and ...” *)
           List.iter process_let_eq l_block.l_eq;
           (* continue into the body; handles further nested lets too *)
@@ -3130,6 +3479,7 @@ let check_return ~(fname:string)
           match e.e_desc with
           | Zelus.Elet (l_block, r_exp) ->
               with_env_snapshot (fun () ->
+                preload_block_lasts l_block.l_eq;
                 List.iter process_let_eq l_block.l_eq;
                 process_lets_only r_exp)
           | Zelus.Eseq (a,b) -> process_lets_only a; process_lets_only b

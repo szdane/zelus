@@ -1,0 +1,21 @@
+(* ==== NEG: [last s] at t=1 is s's FIRST value, which satisfies s's head, not
+   its invariant ====
+   [s] is declared [s = 0.] at the first instant and [s >= 10.] thereafter.  So
+   [last s] is [init s] at t=0 and [s(0) = 0.] at t=1 -- it only reaches
+   [>= 10.] from t=2 on.  [z] therefore cannot claim [z >= 10.] from t=1.
+
+   This is the case that forces the ghost fact for [last_s] to be the
+   disjunction [head || invariant]: assuming the invariant alone would wrongly
+   accept this program. *)
+let node exec () : {(vz:float)|true} =
+  let rec init s = 0.
+  and (z : {z:float | z = 0. && nxt(globally(z >= 10.))}) = last s
+  and (s : {s:float | s = 0. && nxt(globally(s >= 10.))}) = w
+  and (w : {w:float | w = 0. && nxt(globally(w >= 10.))}) = 0. fby 20.
+in z
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_float x; print_newline ()))
+  else ()
