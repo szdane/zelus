@@ -305,8 +305,8 @@ let hybrid main () =
 
 (* let node test () =
  let rec init y = 0.
- and (x : {vx:float|globally(vx = last y)}) = last y
- and (y : {vy:float|globally(vy = x +. 1.)}) = x +. 1.
+ and (x : {vx:float|globally(vx >= 0.)}) = last y
+ and (y : {vy:float|globally(vy >= 0.)}) = x +. 1.
 in y
 
 
@@ -333,16 +333,16 @@ in t
       present (trigger) -> (let x = test () in
       (print_float x; print_newline ())) else () *)
 
-(* let in_rate: {v:int | globally(v = 2)} = 2
+let in_rate: {v:int | globally(v = 2)} = 2
 
 let node exec () =
- let rec (lev : {(v:int) | globally(v >= 0)}) = 1 fby (lev + in_rate)
+  let rec (lev : {(v:int) | globally(v >= 0)}) = 1 fby (lev + in_rate)
 in lev
 
   let hybrid main () = 
   let rec trigger = (period (0.1)) in
       present (trigger) -> (let x = exec () in
-      (print_int x; print_newline ())) else () *)
+      (print_int x; print_newline ())) else ()
 
 
 (* #12 Refinement using variable not verified  *)
@@ -399,28 +399,26 @@ in z
  in present trigger -> (let aaa = 1. in print_newline () ) else () *)
 
 
- (* #16 Not possible to refine a variable without a calculation *)
+ (* #16 Refinement when walling a function *)
 
-let calc ((x : {vx:float|true}), (y : {vy:float|true})) : {z:float|true} =
-  let (z : {vz:float|globally(true)}) = x +. 0.
-in z
-
-let node test () =
-  let init x = 1.
-  and (y : {vy:float|true}) = last x
-  and (x : {vx:float|globally(vx = 1.)}) = 1.
-  (* and (x : {vx:float|globally(vx = 1.)}) = 1.
-  and (y : {vy:float|globally(vy = 2.)}) = 2. *)
-  and (z : {vz:float|globally(true)}) = calc (x, y)
-in x, y
+(* let energy_bound ((energyk : {venergyk:float|true}), (xk : {vxk:float|true})) =
+  let (energyk1 : {energyk1:float|energyk1 = energyk +. 0.}) = energyk +. 0.
+in energyk1
 
 
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)*(ven:float)*(vf:float)|true} =
+  let rec (xk : {xk:float|globally(1.)}) = 1.
+  
+  and init energyk1 = 1.
+  and (energyk : {energyk:float|true}) = last energyk1
+  
+  (* and (energyk1 : {energyk1:float|(energyk1 = energyk +. 0.) && (energyk1 <= 1.)}) = energy_bound (errork) *)
 
- (* let hybrid main () =
+  and (energyk1 : {venergyk1:float|venergyk1 = energyk +. 0.}) = energy_bound (energyk, xk)
+
+ in energyk
+
+
+ let hybrid main () =
    let rec trigger = (period (0.1)) 
  in present trigger -> (let aaa = 1. in print_newline () ) else () *)
-
-let hybrid main () =
-    let rec trigger = (period (0.1)) in
-        present (trigger) -> (let erk, aaa = test () in 
-        (print_int erk; print_newline ())) else ()

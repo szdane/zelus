@@ -1,0 +1,68 @@
+(* P discrete simple sys parametric *)
+
+let r : {v : float | globally((v > 0.) && (v = 1.))} = 1.                               (* Desired reference *)
+
+let dt : {v : float |globally((v > 0.) && (v = 0.1))} = 0.1                            (* Time step *)
+
+let kp : {v : float |globally((0. < v) && (v *. dt < 2.) && (v = 2.0))} = 2.           (* Proportional gain *)
+
+
+let x_bound (xk : {xk:float|(0. < (1. -. kp *. dt) && (0. <= xk && xk <= r)) || ((1. -. kp *. dt) < 0. && (0. <= xk && xk <= 2. *. r))}) : 
+            {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= r)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2. *. r)))} =
+  let (xk1 : {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= r)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2. *. r)))}) = xk +. kp *. (r -. xk) *. dt
+in xk1
+
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+
+  and (errork : {errork:float|globally(errork = r -. xk)})= r -. xk
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+
+  and (xk1 : {xk1:float|globally(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= r)) || 
+  ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2. *. r)))}) = x_bound (xk)
+  
+  and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
+  
+
+  and (v1 : {v1:float|globally(v1 = errork1)}) = ((1. -. kp *. dt) *. errork)
+  
+  and (q : {q:float|globally(-1. < q && q < 1.)}) = 1. -. kp *. dt
+
+  and (v2 : {v2:float|globally((0. < (1. -. kp *. dt) && 0. < errork && 0. < v2 && v2 < errork) || 
+                      (0. < (1. -. kp *. dt) && errork < 0. && v2 < 0. && errork < v2) || 
+                      ((1. -. kp *. dt) < 0. && 0. < errork && v2 < 0. && errork +. v2 > 0. ) || 
+                      ((1. -. kp *. dt) < 0. && errork < 0. && 0. < v2 && errork +. v2 < 0.) || 
+                      (errork = 0. && v2 = 0.))}) = errork1
+
+
+  and (bound : {bound:float|globally((0. < (1. -. kp *. dt) && (0. <= bound && bound <= r)) || ((1. -. kp *. dt) < 0. && (0. <= bound && bound <= 2. *. r)))}) = xk1
+  
+  (* and (verification : {v:float|(((0. <= v) && (v <= r) && (0. <= r) && (0. <= 1. -. kp *. dt))
+                        || ((0. <= v) && (v <= 2. * r) && (0. <= r) && (1. -. kp *. dt < 0.)))}) = xk1 +. 0. *)
+
+
+  (* and (varrelations : {v:float|((0. < v ) && (v < 2.))}) = kp *. dt *)
+  
+in xk, uk, errork
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_newline ()
+
+    )
+  else ()
+
+
+
+

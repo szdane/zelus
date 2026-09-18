@@ -1,0 +1,48 @@
+(* P discrete simple sys reference = 1 then -1 then 1 ... *)
+
+
+let dt : {v : float | true} = 0.1          (* Time step *)
+
+let kp : {v : float | true} = 2.           (* Proportional gain *)
+
+let node exec () =
+  let rec init counter = 0.
+  and init r = 1.
+  and counterm1 = last counter
+  and counter = if counterm1 +. 1. > 5. then 1. else last counter +. 1.
+  and (r : {r:float|true}) = if counter = 5. then -.last r else last r
+
+  and init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+
+  and (errork : {errork:float|true})= r -. xk
+  and (uk : {uk:float|true}) = kp *. errork
+
+  and (xk1 : {xk1:float|true}) = xk +. kp *. (r -. xk) *. dt
+  
+  and (errork1 : {errork1:float|true}) = r -. xk1
+  
+
+  and (v1 : {v1:float|true}) = ((1. -. kp *. dt) *. errork)
+  
+  and (v2 : {v2:float|true}) = 1. -. kp *. dt
+
+
+in xk, uk, counter, r
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, counter, r = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float counter;
+        print_string ",";
+        print_float r;
+        print_newline ()
+
+    )
+  else ()

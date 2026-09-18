@@ -1,55 +1,21 @@
 (* P discrete simple sys *)
 
-let r : {v : float | globally(v = 1.)} = 1.            (* Desired reference *)
+let r : {v : float | globally(v = 1.)} = 1.             (* Desired reference *)
 
-let kp : {v : float | globally(v = 9.)} = 9.           (* Proportional gain *)
+let dt : {v : float | globally(v = 0.1)} = 0.1          (* Time step *)
 
-let dt : {v : float | globally(v = 0.1)} = 0.1         (* Time step *)
-
-let eps : {v : float | globally(v = 0.1)} = 0.1        (* Bound for stability verification *)
-
-
-
-(* let stable (ek : {ek:float | ek <= 0.1}) : {ek1:float| ek1 <= 0.1} =
-  let (ek1 : {ek1:float| ek1 <= 0.1}) = (1. -. kp *. dt) *. ek
-in ek1 *)
-
-
-let x_bound (xk : {xk:float|globally((0. < (1. -. kp *. dt) && (0. <= xk && xk <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk && xk <= 2.)))}) : 
-            {xk1:float|globally((xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.))))} =
-  let (xk1 : {xk1:float|globally((xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.))))}) = xk +. kp *. (r -. xk) *. dt
-in xk1
-
+let kp : {v : float | globally(v = 2.0)} = 2.           (* Proportional gain *)
 
 
 let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
-  let rec init xk1 = 0.
-  and (xk : {xk:float|globally((0. < (1. -. kp *. dt) && (0. <= xk && xk <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk && xk <= 2.)))}) = last xk1
+  (* let rec (xk : {xk:float|globally(0. <= xk && xk <= 1.)}) = 0. fby (xk +. kp *. (r -. xk) *. dt) *)
 
-  and (errork : {errork:float|errork = r -. xk})= r -. xk
-  and (uk : {uk:float|uk = kp *. errork}) = kp *. errork
+  let rec (xk : {xk:float|globally(0. <= xk && xk <= 1.)}) = 0. fby (xk +. 2. *. (1. -. xk) *. 0.1)
 
-  and (xk1 : {xk1:float|globally((xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.))))}) = x_bound (xk)
+  and (errork : {errork:float|globally(errork = r -. xk)})= r -. xk
+
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
   
-  and (errork1 : {errork1:float|errork1 = r -. xk1}) = r -. xk1
-  
-
-  and (v1 : {v1:float| v1 = errork1}) = ((1. -. kp *. dt) *. errork)
-  
-  and (v2 : {v2:float| -1. < v2 && v2 < 1.}) = 1. -. kp *. dt
-
-  and (v3 : {v3:float|(0. < (1. -. kp *. dt) && 0. < errork && 0. < v3 && v3 < errork) || 
-                      (0. < (1. -. kp *. dt) && errork < 0. && v3 < 0. && errork < v3) || 
-                      ((1. -. kp *. dt) < 0. && 0. < errork && v3 < 0. && errork +. v3 > 0. ) || 
-                      ((1. -. kp *. dt) < 0. && errork < 0. && 0. < v3 && errork +. v3 < 0.) || 
-                      (errork = 0. && v3 = 0.)}) = errork1
-
-
-  (* and abs_errork = if errork >= 0. then errork else -.errork
-  and test_stable_sup = if abs_errork <= eps then stable (abs_errork) else 0. *)
-
-  and (bound : {bound:float| 0. <= bound && bound <= 1.0}) = xk1
-
 in xk, uk, errork
 
 
@@ -69,4 +35,100 @@ let hybrid main () =
 
 
 
+(* P discrete simple sys / previous version / not working*)
 
+(* let r : {v : float | globally(v = 1.)} = 1.             (* Desired reference *)
+
+let dt : {v : float | globally(v = 0.1)} = 0.1          (* Time step *)
+
+let kp : {v : float | globally(v = 2.0)} = 2.           (* Proportional gain *)
+
+
+let x_bound (xk : {xk:float|(0. < (1. -. kp *. dt) && (0. <= xk && xk <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk && xk <= 2.))}) : 
+            {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.)))} =
+  let (xk1 : {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.)))}) = xk +. kp *. (r -. xk) *. dt
+in xk1
+
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+
+  and (errork : {errork:float|errork = r -. xk})= r -. xk
+  and (uk : {uk:float|uk = kp *. errork}) = kp *. errork
+
+  and (xk1 : {xk1:float|(xk1 = xk +. kp *. (r -. xk) *. dt) && ((0. < (1. -. kp *. dt) && (0. <= xk1 && xk1 <= 1.)) || ((1. -. kp *. dt) < 0. && (0. <= xk1 && xk1 <= 2.)))}) = x_bound (xk)
+  
+  and (errork1 : {errork1:float|errork1 = r -. xk1}) = r -. xk1
+  
+
+  and (v1 : {v1:float| v1 = errork1}) = ((1. -. kp *. dt) *. errork)
+  
+  and (v2 : {v2:float| -1. < v2 && v2 < 1.}) = 1. -. kp *. dt
+
+  and (v3 : {v3:float|(0. < (1. -. kp *. dt) && 0. < errork && 0. < v3 && v3 < errork) || 
+                      (0. < (1. -. kp *. dt) && errork < 0. && v3 < 0. && errork < v3) || 
+                      ((1. -. kp *. dt) < 0. && 0. < errork && v3 < 0. && errork +. v3 > 0. ) || 
+                      ((1. -. kp *. dt) < 0. && errork < 0. && 0. < v3 && errork +. v3 < 0.) || 
+                      (errork = 0. && v3 = 0.)}) = errork1
+
+
+  and (bound : {bound:float| 0. <= bound && bound <= 1.}) = xk1
+
+in xk, uk, errork
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_newline ()
+
+    )
+  else () *)
+
+
+
+
+
+
+
+
+let r : {v : float | globally(v = 1.)} = 1.             (* Desired reference *)
+
+let dt : {v : float | globally(v = 0.1)} = 0.1          (* Time step *)
+
+let kp : {v : float | globally(v = 2.0)} = 2.           (* Proportional gain *)
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
+  let rec (xk : {xk:float|globally(0. <= xk && xk <= 1.)}) = 0. fby (xk +. kp *. (r -. xk) *. dt)
+
+  (* let rec (xk : {xk:float|globally(0. <= xk && xk <= 1.)}) = 0. fby (xk +. 2. *. (1. -. xk) *. 0.1) *)
+
+  and (errork : {errork:float|globally(errork = r -. xk)})= r -. xk
+
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+  
+in xk, uk, errork
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_newline ()
+
+    )
+  else ()

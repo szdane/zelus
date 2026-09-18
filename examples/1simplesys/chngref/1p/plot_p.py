@@ -7,23 +7,24 @@ import os
 path = os.path.dirname(os.path.abspath(__file__))
 
 data = pd.read_csv(
-    os.path.join(path, "resultsddtestint.csv"),
+    os.path.join(path, "resultsp.csv"),
     header=None,
-    names=["useless1", "x", "useless2", "v", "useless3", "u"]
+    names=["x", "u", "counter", "r"]
 )
 
 dt = 0.1
 t = [i * dt for i in range(len(data))]
 
 fig, axs = plt.subplots(
-    3,
+    2,
     1,
     figsize=(12, 7),
 )
 
 
 # Position
-axs[0].plot(t, data["x"], label="PID normal")
+axs[0].plot(t, data["x"], label="P normal")
+axs[0].plot(t, data["r"], label="refrence")
 
 axs[0].set_ylabel("Position x")
 axs[0].set_xlabel("Temps (s)")
@@ -31,25 +32,17 @@ axs[0].grid(True)
 axs[0].legend()
 
 
-# Vitesse
-axs[1].plot(t, data["v"], color="green")
+# Commande
+axs[1].plot(t, data["u"], color="red")
 
-axs[1].set_ylabel("Speed v normal PID")
+axs[1].set_ylabel("u")
 axs[1].set_xlabel("Temps (s)")
 axs[1].grid(True)
 
 
-# Commande
-axs[2].plot(t, data["u"], color="red")
-
-axs[2].set_ylabel("Control u normal PID")
-axs[2].set_xlabel("Temps (s)")
-axs[2].grid(True)
-
-
 # Titre
 fig.suptitle(
-    "Controlled mass spring system, discrete system & discrete PID int",
+    "Response of a descrete P to a step",
     fontsize=16
 )
 
@@ -58,7 +51,7 @@ plt.tight_layout()
 
 # Sauvegarde image
 plt.savefig(
-    os.path.join(path, "resultsddtestint_PID.png"),
+    os.path.join(path, "results_P.png"),
     dpi=300,
     bbox_inches="tight"
 )

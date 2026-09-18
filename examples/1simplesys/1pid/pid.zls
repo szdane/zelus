@@ -2,8 +2,8 @@
 
 let r : {v : float | globally(v = 1.)} = 1.              (* Desired reference *)
 
-let kp : {v : float | globally(v = 2.)} = 2.             (* Proportional gain *)
-let ki : {v : float | globally(v = 1.)} = 1.             (* Proportional gain *)
+let kp : {v : float | globally(v = 10.)} = 10.             (* Proportional gain *)
+let ki : {v : float | globally(v = 0.5)} = 0.5             (* Proportional gain *)
 let kd : {v : float | globally(v = 0.5)} = 0.5           (* Proportional gain *)
 
 let dt : {v : float | globally(v = 0.1)} = 0.1           (* Time step *)
@@ -68,7 +68,7 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
 
 
 
-  and (energyk : {energyk:float|globally(energyk = 1.1375 *. errork *. errork +. 1.25 *. integralk *. integralk 
+  (* and (energyk : {energyk:float|globally(energyk = 1.1375 *. errork *. errork +. 1.25 *. integralk *. integralk 
   +. 0.05 *. derivativek *. derivativek +. 1. *. errork *. integralk)}) = 
   1.1375 *. errork *. errork +. 1.25 *. integralk *. integralk 
   +. 0.05 *. derivativek *. derivativek +. 1. *. errork *. integralk
@@ -88,7 +88,7 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
   and (energyk1p3dev : {energyk1p3dev:float|globally(energyk1p3dev = energyk1p3)}) = 0.05 *. (-2. *. errork -. integralk +. 0.5 *. derivativek) *. (-2. *. errork -. integralk +. 0.5 *. derivativek)
   and (energyk1p4dev : {energyk1p4dev:float|globally(energyk1p4dev = energyk1p4)}) = 1. *. (0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek) *. (0.08 *. errork +. 0.99 *. integralk +. 0.005 *. derivativek)
 
-  and (energyk1add1 : {energyk1add1:float|globally(energyk1add1 = energyk1)}) = energyk1p1 +. energyk1p2 +. energyk1p3 +. energyk1p4
+  and (energyk1add1 : {energyk1add1:float|globally(energyk1add1 = energyk1)}) = energyk1p1 +. energyk1p2 +. energyk1p3 +. energyk1p4 *)
   (* and (energyk1add2 : {energyk1add2:float|globally(energyk1add2 = energyk1)}) = energyk1p1dev +. energyk1p2dev +. energyk1p3dev +. energyk1p4dev
   and (diffenergy0 : {diffenergy0:float|globally(diffenergy0 = energyk1 -. energyk)}) = energyk1p1dev +. energyk1p2dev +. energyk1p3dev +. energyk1p4dev -. energyk
   and (diffenergy01 : {diffenergy01:float|globally(diffenergy01 = energyk1 -. energyk)}) = 1.1375 *. (0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek) *. (0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek) +. energyk1p2dev +. energyk1p3dev +. energyk1p4dev -. energyk
@@ -123,8 +123,8 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
   1. *. (0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek) *. (0.08 *. errork +. 0.99 *. integralk +. 0.005 *. derivativek) -. 
   (1.1375 *. errork *. errork +. 1.25 *. integralk *. integralk +. 0.05 *. derivativek *. derivativek +. 1. *. errork *. integralk) *)
 
-  and (diffenergy3 : {diffenergy3:float|globally(diffenergy3 = energyk1 -. energyk)}) =  -0.1375 *. errork *. errork -. 0.0625 *. integralk *. integralk -. 0.034375 *. derivativek *. derivativek
-  and (engerydec : {engerydec:float|globally(engerydec <= 0.)}) = energyk1 -. energyk
+  (* and (diffenergy3 : {diffenergy3:float|globally(diffenergy3 = energyk1 -. energyk)}) =  -0.1375 *. errork *. errork -. 0.0625 *. integralk *. integralk -. 0.034375 *. derivativek *. derivativek *)
+  (* and (engerydec : {engerydec:float|globally(engerydec <= 0.)}) = energyk1 -. energyk *)
 
 
 in xk, uk, errork, integralk, derivativek

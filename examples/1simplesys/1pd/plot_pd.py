@@ -9,14 +9,14 @@ path = os.path.dirname(os.path.abspath(__file__))
 data = pd.read_csv(
     os.path.join(path, "resultspd.csv"),
     header=None,
-    names=["x", "u", "v", "error", "derivative"]
+    names=["x", "u", "error", "derivative", "a", "b"]
 )
 
 dt = 0.1
 t = [i * dt for i in range(len(data))]
 
 fig, axs = plt.subplots(
-    3,
+    2,
     1,
     figsize=(12, 7),
 )
@@ -32,18 +32,12 @@ axs[0].legend()
 
 
 # Commande
-axs[2].plot(t, data["u"], color="red")
+axs[1].plot(t, data["u"], color="red")
 
-axs[2].set_ylabel("u")
-axs[2].set_xlabel("Time (s)")
-axs[2].grid(True)
-
-# Speed
-axs[1].plot(t, data["v"], color="orange")
-
-axs[1].set_ylabel("v")
+axs[1].set_ylabel("u")
 axs[1].set_xlabel("Time (s)")
 axs[1].grid(True)
+
 
 
 

@@ -8,11 +8,11 @@ MLFLAGS=-linkpkg -package zelus
 
 sim: zelus-compile 
 
-main.ml: cmsddtestint.zls
-	$(ZELUC) $(ZFLAGS) cmsddtestint.zls
+main.ml: p.zls
+	$(ZELUC) $(ZFLAGS) p.zls
 
 zelus-compile: main.ml
-	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o cmsddtestint.opt cmsddtestint.ml main.ml
+	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o p.opt p.ml main.ml
 
 clean: 
-	rm -f cmsddtestint.opt *.cmi *.cmx *.o *.zci main.ml cmsddtestint.ml 
+	rm -f p.opt *.cmi *.cmx *.o *.zci main.ml p.ml 
