@@ -1,0 +1,414 @@
+(* PD discrete simple sys *)
+
+(* let r : {v : float |globally(v = 1.)} = 1.            (* Desired reference *)
+
+let kp : {v : float |globally(v = 2.)} = 2.           (* Proportional gain *)
+let kd : {v : float |globally(v = 0.5)} = 0.5         (* Derivative gain *)
+
+let dt : {v : float |globally(v = 0.1)} = 0.1         (* Time step *)
+
+
+(* PD discrete simple sys xk bounded with energyk and energyk1 *)
+
+
+(* let energy_bound ((energyk:{energyk:float|energyk <= 1.}), (errork:{errork:float|true}), (derivativek:{derivativek:float|true})) : 
+                  {energyk1:float|(energyk1 = energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek) && (energyk1 <= 1.)} =
+  let (energyk1 : {energyk1:float|(energyk1 = energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek) && (energyk1 <= 1.)}) = 
+  energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek
+in energyk1 *)
+
+(* let energy_bound ((energyk:{energyk:float|true}), (errork:{errork:float|true}), (derivativek:{derivativek:float|true})) : 
+                  {energyk1:float|(energyk1 = energyk +. 0.)} =
+  let (energyk1 : {energyk1:float|energyk1 = energyk +. 0. +. 0.}) = energyk +. 0. +. 0.
+in energyk1 *)
+
+
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)*(ven:float)*(vf:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+
+
+  and init errork = 1.
+  and (errorkm1 : {errorkm1:float|true}) = last errork
+  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
+
+  and (derivativek : {derivativek:float|globally(derivativek =(errork -. errorkm1) /. dt)}) = (errork -. errorkm1) /. dt
+
+  and (uk : {uk:float|globally(uk = kp *. errork -. kd *. derivativek)}) = kp *. errork -. kd *. derivativek
+  
+  and (xk1 : {xk1:float |globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+
+
+  and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
+  and (derivativek1 : {derivativek1:float|globally(derivativek1 = (errork1 -. errork) /. dt)}) = (errork1 -. errork) /. dt
+
+
+
+  and init energyk1 = 1.
+  (* and (energyk : {energyk:float|true}) = last energyk1 *)
+  
+  (* and (energyk1 : {venergyk1:float|venergyk1 = energyk +. 0.}) = energy_bound (energyk, errork, derivativek) *)
+
+  (* and (energyk1 : {venergyk1:float|globallye(energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek) && (energyk1 <= 1.)}) = energy_bound (energyk, errork, derivativek) *)
+
+
+  (* and (energyk : {energyk:float|globally(energyk = errork *. errork +. 0.04 *. derivativek *. derivativek)}) = 
+  errork *. errork +. 0.04 *. derivativek *. derivativek
+
+  and (energyk1 : {energyk1:float|globally(energyk1 = errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1)}) = 
+  errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1 *)
+
+  (* and (energyk1 : {energyk1:float|globally(energyk1 = energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek)}) = 
+  energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek *)
+
+  
+  (* and (diffenergy1 : {diffenergy1:float|globally(diffenergy1 = energyk1 -. energyk)}) = 
+  errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1 -. 
+  (errork *. errork +. 0.04 *. derivativek *. derivativek)
+
+  and (diffenergy2 : {diffenergy2:float|globally(diffenergy2 = energyk1 -. energyk)}) = 
+  (0.8 *. errork +. 0.05 *. derivativek) *. (0.8 *. errork +. 0.05 *. derivativek) +. 
+  0.04 *. (-2. *. errork +. 0.5 *. derivativek) *. (-2. *. errork +. 0.5 *. derivativek) -. 
+  (errork *. errork +. 0.04 *. derivativek *. derivativek) *)
+
+  
+  (* and (diffenergy3 : {diffenergy3:float|globally(diffenergy3 = energyk1 -. energyk)}) =  -0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek
+  and (engerydec : {engerydec:float|globally(engerydec >= 0.)}) = energyk -. energyk1
+  
+
+
+  and (en0 : {en0:float|globally(en0 = 1. *. 1. +. 0.04 *. 0. *. 0.)}) = 1. *. 1. +. 0.04 *. 0. *. 0.
+  and (energy0 : {energy0:float|true}) = energyk fby energy0
+
+  and (en0b : {en0b:float|globally(en0b = 0.)}) = en0 -. energy0 *)
+
+
+
+
+
+  (* and (energy0 : {energy0:float|globally(energy0 >= energyk)}) = energyk fby energy0 *)
+
+  (* and (energybound : {energybound:float|globally(energybound <= 0.)}) = energyk -. energy0 *)
+
+  
+  (* and (errorbound : {errorbound:float|globally(errorbound <= 0.)}) = errork *. errork -. energy0 *)
+
+  
+  (* and (energy0test : {energy0test:float|globally(energy0test = energy0)}) = energy0 *. energy0 *)
+
+
+  (* and (xkbound1 : {xkbound1:float|globally(xkbound1 <= 0.)}) = (r -. xk) *. (r -. xk) -. energy0 *. energy0 *)
+
+  (* and (xkbound2 : {xkbound2:float|globally(xkbound2 <= 0.)}) = (r -. xk) -. energy0 *)
+
+  (* and (xkbound3 : {xkbound3:float|globally(xkbound3 <= 0.)}) = (r -. xk) -. energy0 *)
+
+  (* and (xkbound4 : {xkbound4:float|globally(-. 1.016 +. r <= xkbound4 && xkbound4 <= 1.016 +. r)}) = xk *)
+
+
+ in xk, uk, errork, derivativek, derivativek, derivativek
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error, derivative, energy0, en0 = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_string ",";
+        print_float derivative;        
+        print_string ",";
+        print_float energy0;
+        print_string ",";
+        print_float en0;        
+        print_newline ()
+    )
+  else () *)
+
+
+
+
+
+
+
+
+
+
+(* PD continuous simple sys with different functions *)
+
+(* let hybrid sys (u : {(vu:float)|true}) : {(vx:float)*(vv:float)|true} =
+  let rec der x = v init 0.
+  and der v = u init 0.
+in x, v
+
+
+let pid ((x:{(vx:float) | true}), (v:{(vv:float) | true})) : {(ve:float)*(vd:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | error = r -. 5. && nxt globally(true)}) = r -. 5.
+  and (derivative : {(derivative:float) | true}) = -.v
+  and (u : {(u:float) | true}) =  kp *. error +. kd *. derivative
+in error, derivative , u
+
+
+
+let hybrid exec () : {(vx:float)*(vv:float)*(ve:float)*(vd:float)*(vu:float)| true } = 
+  let rec (error : {(ve:float) | true}), (derivative : {(vd:float) | true}), (u : {(vu:float) | true}) = pid (x, v) 
+  and x, v = sys (u)
+in x, v, error, derivative, u
+
+
+let hybrid main () =
+  let rec trigger = period (0.1)
+  and x, v, error, derivative, u = exec ()
+  in present trigger -> (
+        print_float x;
+        print_string ",";
+        print_float v;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_string ",";
+        print_float derivative;        
+        print_newline ()
+    )
+  else () *)
+
+  
+
+
+
+(* PD continuous simple sys with fby for energyk *)
+
+
+let r : {v : float |globally(v = 1.)} = 1.            (* Desired reference *)
+
+let kp : {v : float |globally(v = 2.)} = 2.           (* Proportional gain *)
+let kd : {v : float |globally(v = 0.5)} = 0.5         (* Derivative gain *)
+
+let dt : {v : float |globally(v = 0.1)} = 0.1         (* Time step *)
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)|true} =
+  let rec (xkm1 : {xkm1:float |globally(0. <= xkm1 && xkm1 <= 1.1)}) = 0. fby xk
+  and (xk : {xk:float |globally(0. <= xk && xk <= 1.1)}) = 0. fby (1.3 *. xk -. 0.5 *. xkm1 +. 0.2)
+
+  (* let rec init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+
+
+  and init errork = 1.
+  and (errorkm1 : {errorkm1:float|true}) = last errork
+  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
+
+  and (derivativek : {derivativek:float|globally(derivativek =(errork -. errorkm1) /. dt)}) = (errork -. errorkm1) /. dt
+
+  and (uk : {uk:float|globally(uk = kp *. errork -. kd *. derivativek)}) = kp *. errork -. kd *. derivativek
+  
+  and (xk1 : {xk1:float |globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+
+  and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
+  and (derivativek1 : {derivativek1:float|globally(derivativek1 = (errork1 -. errork) /. dt)}) = (errork1 -. errork) /. dt
+
+
+
+  and (energyk : {energyk:float|globally(energyk = errork *. errork +. 0.04 *. derivativek *. derivativek)}) = 
+  errork *. errork +. 0.04 *. derivativek *. derivativek
+  (* and (energyk1 : {energyk1:float|globally(energyk1 = errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1)}) = 
+  errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1 *)
+
+  and (energyk1 : {energyk1:float |globally(energyk1 <= 1.)}) = 
+  1. fby (energyk1 -. 2. *. errork1 *. errork1 -. 0.0275 *. derivativek1 *. derivativek1) *)
+
+
+  (* and (diffenergy3 : {diffenergy3:float|globally(diffenergy3 = energyk1 -. energyk)}) =  
+  -0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek *)
+
+
+  (* and (energyk1menk : {energyk1menk:float|globally(energyk1menk <= 1.)}) = 1. fby (energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek)
+
+  
+  and (energyformula : {energyformula:float|globally(energyformula = energyk)}) = 
+  errork *. errork +. 0.04 *. derivativek *. derivativek
+
+  and (energyupper : {energyupper:float|globally(energyupper <= 1.)}) = 
+  errork *. errork +. 0.04 *. derivativek *. derivativek
+
+  and (errorenergy : {errorenergy:float|globally(errork *. errork <= energyformula)}) = 
+  errork *. errork
+
+
+  and (errorbound : {errorbound:float|globally(errork *. errork <= errorbound)}) = energyk *)
+
+
+
+
+ in xkm1, xk, xk, xk
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error, derivative = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_string ",";
+        print_float derivative;      
+        print_newline ()
+    )
+  else ()
+
+
+
+
+(* PD discrete simple sys remake of the first prg *)
+
+
+(* let r : {v : float |globally(v = 1.)} = 1.            (* Desired reference *)
+
+let kp : {v : float |globally(v = 2.)} = 2.           (* Proportional gain *)
+let kd : {v : float |globally(v = 0.5)} = 0.5         (* Derivative gain *)
+
+let dt : {v : float |globally(v = 0.1)} = 0.1         (* Time step *)
+
+
+
+
+(* let energy_bound ((energyk:{energyk:float|energyk <= 1.}), (errork:{errork:float|true}), (derivativek:{derivativek:float|true})) : 
+                  {energyk1:float|(energyk1 = energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek) && (energyk1 <= 1.)} =
+  let (energyk1 : {energyk1:float|(energyk1 = energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek) && (energyk1 <= 1.)}) = 
+  energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek
+in energyk1 *)
+
+(* let energy_bound ((energyk:{energyk:float|true}), (errork:{errork:float|true}), (derivativek:{derivativek:float|true})) : 
+                  {energyk1:float|(energyk1 = energyk +. 0.)} =
+  let (energyk1 : {energyk1:float|energyk1 = energyk +. 0. +. 0.}) = energyk +. 0. +. 0.
+in energyk1 *)
+
+
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)*(ven:float)*(vf:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+
+
+  and init errork = 1.
+  and (errorkm1 : {errorkm1:float|true}) = last errork
+  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
+
+  and (derivativek : {derivativek:float|globally(derivativek =(errork -. errorkm1) /. dt)}) = (errork -. errorkm1) /. dt
+
+  and (uk : {uk:float|globally(uk = kp *. errork -. kd *. derivativek)}) = kp *. errork -. kd *. derivativek
+  
+  and (xk1 : {xk1:float |globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+
+
+  and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
+  and (derivativek1 : {derivativek1:float|globally(derivativek1 = (errork1 -. errork) /. dt)}) = (errork1 -. errork) /. dt
+
+
+
+  and (energyk : {energyk:float|globally(energyk <= 1.)}) =
+    1. fby (energyk -. 0.2 *. errork *. errork +. 0.0275 *. derivativek *. derivativek)
+
+(* and init energyk1 = 1.
+
+  and (energyk : {energyk:float|globally(energyk = errork *. errork +. 0.04 *. derivativek *. derivativek)}) = last energyk1
+
+  and (energyk1 : {energyk1:float|globally(energyk1 = errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1)})
+    = errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1
+    
+
+  and (diffenergyk1 : {diffenergyk1:float|globally(energyk1 -. energyk)}) = 0.2 *. errork *. errork +. 0.0275 *. derivativek *. derivativek *)
+
+
+  (* and (energybound : {energybound:float|globally(energyk <= 1.)}) = energyk -. 1. *)
+  (* and (energyk1 : {venergyk1:float|globallye(energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek) && (energyk1 <= 1.)}) = energy_bound (energyk, errork, derivativek) *)
+
+
+  (* and (energyk : {energyk:float|globally(energyk = errork *. errork +. 0.04 *. derivativek *. derivativek)}) = 
+  errork *. errork +. 0.04 *. derivativek *. derivativek
+
+  and (energyk1 : {energyk1:float|globally(energyk1 = errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1)}) = 
+  errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1 *)
+
+  (* and (energyk1 : {energyk1:float|globally(energyk1 = energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek)}) = 
+  energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek *)
+
+  
+  (* and (diffenergy1 : {diffenergy1:float|globally(diffenergy1 = energyk1 -. energyk)}) = 
+  errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1 -. 
+  (errork *. errork +. 0.04 *. derivativek *. derivativek)
+
+  and (diffenergy2 : {diffenergy2:float|globally(diffenergy2 = energyk1 -. energyk)}) = 
+  (0.8 *. errork +. 0.05 *. derivativek) *. (0.8 *. errork +. 0.05 *. derivativek) +. 
+  0.04 *. (-2. *. errork +. 0.5 *. derivativek) *. (-2. *. errork +. 0.5 *. derivativek) -. 
+  (errork *. errork +. 0.04 *. derivativek *. derivativek) *)
+
+  
+  (* and (diffenergy3 : {diffenergy3:float|globally(diffenergy3 = energyk1 -. energyk)}) =  -0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek
+  and (engerydec : {engerydec:float|globally(engerydec >= 0.)}) = energyk -. energyk1
+  
+
+
+  and (en0 : {en0:float|globally(en0 = 1. *. 1. +. 0.04 *. 0. *. 0.)}) = 1. *. 1. +. 0.04 *. 0. *. 0.
+  and (energy0 : {energy0:float|true}) = energyk fby energy0
+
+  and (en0b : {en0b:float|globally(en0b = 0.)}) = en0 -. energy0 *)
+
+
+
+
+
+  (* and (energy0 : {energy0:float|globally(energy0 >= energyk)}) = energyk fby energy0 *)
+
+  (* and (energybound : {energybound:float|globally(energybound <= 0.)}) = energyk -. energy0 *)
+
+  
+  (* and (errorbound : {errorbound:float|globally(errorbound <= 0.)}) = errork *. errork -. energy0 *)
+
+  
+  (* and (energy0test : {energy0test:float|globally(energy0test = energy0)}) = energy0 *. energy0 *)
+
+
+  (* and (xkbound1 : {xkbound1:float|globally(xkbound1 <= 0.)}) = (r -. xk) *. (r -. xk) -. energy0 *. energy0 *)
+
+  (* and (xkbound2 : {xkbound2:float|globally(xkbound2 <= 0.)}) = (r -. xk) -. energy0 *)
+
+  (* and (xkbound3 : {xkbound3:float|globally(xkbound3 <= 0.)}) = (r -. xk) -. energy0 *)
+
+  (* and (xkbound4 : {xkbound4:float|globally(-. 1.016 +. r <= xkbound4 && xkbound4 <= 1.016 +. r)}) = xk *)
+
+
+ in xk, uk, errork, derivativek, derivativek, derivativek
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error, derivative, energy0, en0 = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_string ",";
+        print_float derivative;        
+        print_string ",";
+        print_float energy0;
+        print_string ",";
+        print_float en0;        
+        print_newline ()
+    )
+  else () *)

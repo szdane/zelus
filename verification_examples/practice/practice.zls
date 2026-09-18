@@ -1,0 +1,434 @@
+(* Learning Example 1 *)
+
+(* let exec () = 5
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let flow = exec () in 
+        (print_int flow; print_newline ())) else () *)
+
+
+
+(* Example 2 *)
+
+(* let node exec () = 
+  let x = (0 fby 1) fby 5 in x
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = exec () in 
+      (print_int x; print_newline ())) else () *)
+
+
+
+(* Example 3 *)
+
+(* let node exec () =
+  let rec (x : {v: int | globally(v>=0)}) = 0 fby x in (x+1)
+  
+let hybrid main () =
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = exec () in 
+      (print_int x; print_newline ())) else () *)
+
+
+      
+(* Example 4 Fibonacci sequence *)
+
+(* let node exec () = 
+    let rec ((x,y) : {(vx:int)*(vy:int) | globally(vx>=0 && vy>=0)}) =
+      (0,1) fby (x+y,x)
+    in (x,y)
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x, y = exec () in 
+      (print_int x; print_string(" "); print_int(y); print_newline ())) else () *)
+
+
+
+(* Example 5: tank *)
+
+(* Doesn't work because of bug with refinements inside functions I think *)
+
+(* let min_level: { v : int | globally(v = 10)} = 10
+let max_level: { v : int | globally(v = 20) } = 20
+let init_level: { v : int | globally(v >= min_level && v <= max_level)} = 15
+let out_rate: { v : int | globally(v = -1)} = -1
+let in_rate: { v : int | globally(v >= 0 && v + out_rate > 0 && (v + out_rate < 3))} = 2
+
+let node exec () =
+  let rec (lev : { v : int | globally(v >= 10 && v <= 20)}) = 
+    15 fby (lev + in_rate * add + out_rate * flow)
+  and init last_min_level = 10
+  and init last_max_level = 20
+  and (add : { v : int | globally(v = 0 || v = 1)}) = 
+    0 fby (if lev + out_rate * flow <= min_level+1 then 1 else (if lev + in_rate + out_rate * flow >= max_level-1 then 0 else add))
+  and (flow : { v : int | globally(v = 1)}) = 
+    1
+in lev, add, flow
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let lev, add, flow = exec () in
+      (print_int lev;print_string" ";print_int add;print_string" ";print_int flow; print_newline ())) else () *)
+
+
+
+(* Exemple 6: tank avec automate *)
+
+(* Water tank automaton template code:*)
+
+(* let min_level: { v : int | globally(v = 10)} = 10
+let max_level: { v : int | globally(v = 20) } = 20
+let init_level: { v : int | globally(v >= min_level && v <= max_level)} = 15
+let out_rate: { v : int | globally(v = -1)} = -1
+let in_rate: { v : int | globally(v >= 0 && v + out_rate > 0 && (v + out_rate < 3))} = 2
+let margin: { v : int | globally(v = 1)} = 1
+
+let node exec () =
+  let rec 
+    init level = 15
+    and automaton_ref:
+    {level : {v:int | globally(v >= min_level + margin && v <= max_level - margin)}}
+    | On -> do level = last level + in_rate + out_rate unless ((last level + in_rate + out_rate + margin) > max_level) then Off
+    | Off -> do level= last level + out_rate unless ((last level + out_rate - margin) < min_level) then On
+    end
+    in level
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let flow = exec () in
+        (print_int flow; print_newline ())) else () *)
+
+
+
+
+(* Test random sinus *)
+
+(* let node exec (x : {(v:float) | true}) : {(vflow:float) | true}=
+  let (flow : {(v:float) | true}) = sin (x *. 100.)
+in flow
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let flow = exec (2.) in
+        (print_float flow; print_newline ())) else () *)
+
+
+
+(* Test saturation *)
+
+(* let saturate (u)= 
+  (if (u <= 10.) then u else 10.)
+
+let hybrid sys (u : {(vu:float) | true}) : {(vx:float)*(vv:float) | true} = (x, v) where
+  rec der x = v init 0.
+  and der v = (-.15. *. x -. 4. *. v +. u) /. 4. init 0.
+
+
+let pid ((x:{(vx:float) | true}), (v:{(vv:float) | true}), (integral:{(vi:float) | true})) : {(ve:float)*(vu:float) | true} =
+  let rec (error : {(error:float) | true}) = 1. -. x
+  and (u : {(u:float) | true}) =  (80. *. error +. 20. *. integral -. 25. *. v)
+  and uf = saturate (u)
+in error, uf
+
+
+let hybrid exec () : {(vx:float)*(vv:float)*(ve:float)*(vi:float)*(vu:float) | true } = (x, v, error, integral, u) where
+  rec der integral = error init 0.
+  and (error : {(ve:float) | true}), (u : {(vu:float) | true}) = pid (x, v, integral) 
+  and x, v = sys (u)
+
+
+let node test (u)=
+  saturate (u)
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x = test (20.) in
+        (print_float x; print_newline ())) else () *)
+
+
+
+(* Test compilation error refinement types on last … in fby with init and last replacing the fby *)
+
+(* let in_rate: {v:int | globally(v = 2)} = 2
+
+let node exec () =
+  let (lev : {(v:int) | globally(v >= 0)}) = (1 + in_rate)
+in lev
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x = exec () in
+        (print_int x; print_newline ())) else () *)
+
+
+(* #1 Function Return Type using wrong refinement variable  *)
+(* Previous version of marvelus, it was on the branch zelus-marvelus *)
+
+(* let node exec () : {vx:int | vx>=0} =
+  10
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) 
+in present trigger -> (let x = 1. in print_newline () ) else () *)
+
+
+
+(* #2 last variable being introduced in let rec *)
+
+(* let min: { v : int | globally(v = 5)} = 5
+
+let node test () =
+   let rec (x : { v : int | globally(v >= min)}) = 15 fby (x + 1)
+in x
+
+
+ let hybrid main () =
+ let rec trigger = (period (0.1)) in
+     present (trigger) -> (let x = test () in
+     (print_int x; print_newline ())) else () *)
+
+
+
+(* #3 No refinement types on last … in a rec fby *)
+
+(* let in_rate: {v:int | globally(v = 2)} = 2
+
+let node exec () =
+  let rec (lev : {(v:int) | globally(v >= 0)}) = 1 fby (lev + in_rate)
+in lev
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x = exec () in
+        (print_int x; print_newline ())) else () *)
+
+
+
+(* #4 Error refining a variable with an equation  *)
+
+(* let node exec (x : {(v:int) | x > 0}) : {(vflow:int) | true}=
+  let (flow : {(v:int) | v > 0}) = x + 6
+in flow
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let flow = exec (4) in
+        (print_int flow; print_newline ())) else () *)
+
+
+
+ (* #5 Error refining a tuple returned by a function *)
+
+(* let calc () =
+  let a = 2 
+  and b = 2 * 2
+in a, b
+
+let node exec () = 
+  let ((x, y) : {(vx:int)*(vy:int) | true}) = calc ()
+in x, y
+
+let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x, y = exec () in
+      (print_int x; print_int y; print_newline ())) else () *)
+
+
+
+(* #6 Error with an if statement inside another if *)
+
+(* let node saturate (u) = 
+  (if (u >= 10) then 10 else (if (u <= 5) then 5 else u))
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = saturate (7) in
+      (print_int x; print_newline ())) else () *)
+
+
+
+(* #7 Function without input used in another function  *)
+
+(* let noise_stat () =
+ let (i : {(i:int) | true}) = 1 in i
+
+let pid () =
+ let (u : {(u:int) | true}) = noise_stat ()
+in u
+
+   let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = pid () in
+      (print_int x; print_newline ())) else () *)
+
+
+
+(* #8 Refinement using - variable *)
+
+(* let eps : {v:float | globally(v = 1.)} = 1.
+
+
+let stable () =
+ let (erk : {erk:float | (-eps <= erk)}) = 0.
+in erk
+
+
+let hybrid main () =
+   let rec trigger = (period (0.1)) in
+       present (trigger) -> (let erk = stable () in
+       (print_float erk; print_newline ())) else () *)
+
+
+
+(* #9 Last not supported with refinements *)
+
+(* let node test () =
+  let rec init xk1 = 0.0
+  (* and (xk1 : {xk1:float| xk1 = last xk1 +. 1.}) = last xk1 +. 1. *)
+  and (xk : {xk:float|true}) = last xk1
+  and (xk1 : {xk1:float| (xk1 = xk +. 1.) && (xk1 >= 0.)}) = xk +. 1.
+in xk1
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let erk = test () in 
+        (print_float erk; print_newline ())) else () *)
+
+
+
+(* #10 Last not supported with refinements *)
+
+let node test () =
+  let rec init xk1 = 0.
+  and init zk1 = 0.
+  and (xk : {xk:float|globally(true)}) = last xk1
+  and (xk1 : {xk1:float|globally(xk1 = 0.)}) = 0.
+  and (zk1 : {zk1:float|globally(zk1 = xk1)}) = xk1
+  and (zk : {zk:float|globally(true)}) = last zk1 
+  and (test : {test:float|globally(test = 0.)}) = zk -. xk 
+
+
+  (* let rec (xk : {xk:float|globally(xk = 0.)}) = 0. fby xk
+  and (zk : {zk:float|globally(zk = xk)}) = 0. fby zk
+  and (zk : {zk:float|globally(zk = xk)}) = last zk1 *)
+
+in zk
+
+
+
+ let hybrid main () =
+   let rec trigger = (period (0.1)) 
+ in present trigger -> (let x = 1. in print_newline () ) else ()
+
+
+(* #11 Rec on fby *)
+
+(* let a : {a:float|globally(a = 1.)} = 1.
+
+let node test () =
+  let rec init y = 0.
+  and (x : {x:float|globally(x = last y)}) = last y
+  and (y : {y:float|globally(y = x +. 1.)}) = x +. 1.
+  and (t : {t:float|globally(t >= 0.)}) = y fby t
+in t
+
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = test () in
+      (print_float x; print_newline ())) else () *)
+
+(* let in_rate: {v:int | globally(v = 2)} = 2
+
+let node exec () =
+  let rec (lev : {(v:int) | globally(v >= 0)}) = 1 fby (lev + in_rate)
+in lev
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = exec () in
+      (print_int x; print_newline ())) else () *)
+
+
+(* #12 Refinement using variable not verified  *)
+
+(* let x = 1.
+
+let test () =
+ let (error : {(error:float) | error = x}) = x
+in error
+
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = test () in
+      (print_float x; print_newline ())) else () *)
+
+
+
+(* #13 Variable name m cannot be used *)
+
+ 
+(* let m : {v:float | globally(v = 4.)} = 4.
+let mu : {v:float | v = m *. 1.1} = m *. 1.1
+
+let k : {v:float | globally(v = 15.)} = 15.
+let b : {v:float | globally(v = 6.)} = 6.
+let r : {v : float | globally(v = 1.)} = 1.
+
+
+ let hybrid main () =
+   let rec trigger = (period (0.1)) 
+ in present trigger -> (let x = 1. in print_newline () ) else () *)
+
+
+ 
+(* #14 Variable name v cannot be used *)
+
+(* let v : {v:float | globally(v = 4.)} = 4.
+
+ let hybrid main () =
+   let rec trigger = (period (0.1)) 
+ in present trigger -> (let x = 1. in print_newline () ) else () *)
+
+
+(* #15 Not possible to refine a variable without a calculation *)
+
+(* let calc ((x : {vx:float|true})) : {z:float|true} =
+  let (z : {vz:float|globally(true)}) = x
+in z
+
+
+ let hybrid main () =
+   let rec trigger = (period (0.1)) 
+ in present trigger -> (let aaa = 1. in print_newline () ) else () *)
+
+
+ (* #16 Refinement when walling a function *)
+
+(* let energy_bound ((energyk : {venergyk:float|true}), (xk : {vxk:float|true})) =
+  let (energyk1 : {energyk1:float|energyk1 = energyk +. 0.}) = energyk +. 0.
+in energyk1
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)*(ven:float)*(vf:float)|true} =
+  let rec (xk : {xk:float|globally(1.)}) = 1.
+  
+  and init energyk1 = 1.
+  and (energyk : {energyk:float|true}) = last energyk1
+  
+  (* and (energyk1 : {energyk1:float|(energyk1 = energyk +. 0.) && (energyk1 <= 1.)}) = energy_bound (errork) *)
+
+  and (energyk1 : {venergyk1:float|venergyk1 = energyk +. 0.}) = energy_bound (energyk, xk)
+
+ in energyk
+
+
+ let hybrid main () =
+   let rec trigger = (period (0.1)) 
+ in present trigger -> (let aaa = 1. in print_newline () ) else () *)
