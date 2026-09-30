@@ -1,0 +1,72 @@
+(* PI discrete simple sys *)
+
+let r : {v : float | globally(v = 1.)} = 1.            (* Desired reference *)
+
+let kp : {v : float | globally(v = 2.)} = 2.           (* Proportional gain *)
+let ki : {v : float | globally(v = 1.)} = 1.           (* Integral gain *)
+
+let dt : {v : float | globally(v = 0.1)} = 0.1         (* Time step *)
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|globally(xk = last_xk1)}) = last xk1
+
+  and init errork1 = 1.
+  and (errork : {errork:float|globally(errork = last_errork1)}) = last errork1
+
+  and init integralk1 = 0.
+  and (integralk : {integralk:float|globally(integralk = last_integralk1)}) = last integralk1
+
+  and (uk : {uk:float|globally(uk = kp *. errork +. ki *. integralk)}) = kp *. errork +. ki *. integralk
+
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+  
+  and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
+
+  and (integralk1 : {integralk1:float|globally(integralk1 = integralk +. errork1 *. dt)}) = integralk +. errork1 *. dt
+
+
+
+  and init energyk1 = 0.99
+  and (energyk : {energyk:float|globally(true)}) = last energyk1
+
+  and (energyk1 : {energyk1:float|globally((energyk1 = 0.99 *. errork1 *. errork1 +. integralk1 *. integralk1) && (energyk1 <= 0.99))}) = 
+  0.99 *. errork1 *. errork1 +. integralk1 *. integralk1
+
+  and (xkbound : {xkbound:float|globally(-1 +. r <= xkbound && xkbound <= 1. +. r)}) = xk
+
+
+in xk, uk, errork, integralk
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let xk, uk, errork, integralk = exec () in
+
+        print_float xk;
+        print_string ",";
+        print_float uk;
+        print_string ",";
+        print_float errork;
+        print_string ",";
+        print_float integralk;
+        print_newline ()
+
+    )
+  else ()
+
+
+
+  (* and (energy_bound : {energy_bound:float|globally(energy_bound <= 0.99)}) = energyk *)
+  
+  (* and (errorbound1 : {errorbound1:float|globally(errorbound1 <= 0.99)}) = 0.99 *. errork *. errork *)
+  (* and (errorbound2 : {errorbound2:float|globally(-1. <= errorbound2 && errorbound2 <= 1.)}) = errork *)
+
+  (* and (energykv2 : {energykv2:float|globally(energykv2 = 0.99 *. errork *. errork +. integralk *. integralk)}) = energyk *)
+
+  (* and (diffenergy : {diffenergy:float|globally(diffenergy = energyk1 -. energyk)}) =  -0.35 *. errork *. errork -. 0.01 *. integralk *. integralk *)
+  
+  (* and (engerydec : {engerydec:float|globally(engerydec <= 0.)}) = energyk1 -. energyk *)
+  
+  (* and (en0 : {en0:float|globally(en0 = 0.99 *. 1. *. 1. +. 1. *. 0. *. 0.)}) = 0.99 *)

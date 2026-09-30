@@ -1,0 +1,40 @@
+(* P discrete simple sys parametric *)
+
+let r : {r : float | globally(true)} = 1. 
+
+let dt : {dt : float | globally((0.01 <= dt) && (dt <= 0.1))} = 0.1 
+
+let kp : {kp : float | globally((0. < kp) && (kp *. dt < 1.))} = 2. 
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} = 
+  let rec init xk1 = 0. 
+  and (xk : {xk:float|globally(((0. <= r) && (0. < (1. -. kp *. dt)) && (0. <= xk && xk <= r)) || 
+                               ((r < 0.) && (0. < (1. -. kp *. dt)) && (r <= xk && xk <= 0.)) ||
+                               ((0. <= r) && ((1. -. kp *. dt) < 0.) && (0. <= xk && xk <= 2. *. r)) ||
+                               ((r < 0.) && ((1. -. kp *. dt) < 0.) && (2. *. r <= xk && xk <= 0.)))}) = last xk1
+
+  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk 
+
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork 
+
+  and (xk1 : {xk1:float |globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt 
+
+in xk, uk, errork
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, u, error = exec () in
+
+        print_float x;
+        print_string ",";
+        print_float u;
+        print_string ",";
+        print_float error;
+        print_newline ()
+
+    )
+  else ()
+
+
+
+

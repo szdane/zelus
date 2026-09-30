@@ -303,27 +303,16 @@ let hybrid main () =
 
 (* #10 Last not supported with refinements *)
 
-let node test () =
-  let rec init xk1 = 0.
-  and init zk1 = 0.
-  and (xk : {xk:float|globally(true)}) = last xk1
-  and (xk1 : {xk1:float|globally(xk1 = 0.)}) = 0.
-  and (zk1 : {zk1:float|globally(zk1 = xk1)}) = xk1
-  and (zk : {zk:float|globally(true)}) = last zk1 
-  and (test : {test:float|globally(test = 0.)}) = zk -. xk 
-
-
-  (* let rec (xk : {xk:float|globally(xk = 0.)}) = 0. fby xk
-  and (zk : {zk:float|globally(zk = xk)}) = 0. fby zk
-  and (zk : {zk:float|globally(zk = xk)}) = last zk1 *)
-
-in zk
-
+(* let node test () =
+  let rec init y = 0.
+  and (x : {vx:float|globally(vx >= 0.)}) = last y
+  and (y : {vy:float|globally(vy >= 0.)}) = x +. 1.
+in y
 
 
  let hybrid main () =
    let rec trigger = (period (0.1)) 
- in present trigger -> (let x = 1. in print_newline () ) else ()
+ in present trigger -> (let x = 1. in print_newline () ) else () *)
 
 
 (* #11 Rec on fby *)
@@ -353,6 +342,7 @@ in lev
   let rec trigger = (period (0.1)) in
       present (trigger) -> (let x = exec () in
       (print_int x; print_newline ())) else () *)
+
 
 
 (* #12 Refinement using variable not verified  *)
@@ -432,3 +422,153 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)*(ven:float)*(vf:
  let hybrid main () =
    let rec trigger = (period (0.1)) 
  in present trigger -> (let aaa = 1. in print_newline () ) else () *)
+
+
+(* #17 Last not properly refining *)
+
+(* let node test () =
+  let rec init xk1 = 0.
+  and init zk1 = 0.
+  and (xk : {xk:float|nxt (globally(xk = 0.))}) = last xk1
+  and (xk1 : {xk1:float|globally(xk1 = 0.)}) = 0.
+  and (zk1 : {zk1:float|globally(zk1 = xk1)}) = xk1
+  and (zk : {zk:float|nxt (globally(zk = 0.))}) = last zk1 
+  and (test : {test:float|nxt (globally(test = 0.))}) = zk -. xk 
+in zk
+
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) 
+in present trigger -> (let x = 1. in print_newline () ) else () *)
+
+
+
+(* #18 Variables in fby not verifiable *)
+
+(* let r : {v : float|globally(v = 1.)} = 1.
+let dt : {v : float|globally(v = 0.1)} = 0.1
+let kp : {v : float|globally(v = 2.0)} = 2.
+
+let node exec () =
+  let rec (xk : {xk:float|globally(0. <= xk && xk <= 1.)}) = 0. fby (xk +. kp *. (r -. xk) *. dt)
+
+  (* let rec (xk : {xk:float|globally(0. <= xk && xk <= 1.)}) = 0. fby (xk +. 2. *. (1. -. xk) *. 0.1) *)
+
+in xk
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = exec () in
+      (print_int 1; print_newline ())) else () *)
+
+
+
+(* #19 != not implemented *)
+
+(* let node exec () =
+  let (xk : {xk:float|globally(xk != 0. )}) = 1.
+in xk
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = exec () in
+      (print_int 1; print_newline ())) else () *)
+
+
+
+(* #20 No restriction to float inside the refinement *)
+
+(* let node exec () =
+  let (xk : {xk:float|globally(xk = 1)}) = 1.
+in xk
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = exec () in
+      (print_int 1; print_newline ())) else () *)
+
+
+
+(* #21 Problem with negative sign in front of a variable *)
+
+let r : {v : float|globally(v = 1.)} = 1.
+
+let node exec () =
+  let (xk : {xk:float|globally(xk = -.r)}) = -.r
+in xk
+
+  let hybrid main () = 
+  let rec trigger = (period (0.1)) in
+      present (trigger) -> (let x = exec () in
+      (print_int 1; print_newline ())) else ()
+
+
+
+
+
+
+(* Test to replace last_... *)
+(* let r : {v : float |globally(v = 1.)} = 1.            (* Desired reference *)
+let kp : {v : float |globally(v = 2.)} = 2.           (* Proportional gain *)
+let kd : {v : float |globally(v = 0.5)} = 0.5         (* Derivative gain *)
+let dt : {v : float |globally(v = 0.1)} = 0.1
+
+let node exec1 () : {(v:int) | true} =
+let rec init xk1 = 0.
+  and (xk : {xk:float|globally(true)}) = last xk1
+
+  and init errork1 = 1.
+  and (errork : {errork:float|globally(true)}) = last errork1
+
+  and init derivativek1 = 0.
+  and (derivativek : {derivativek:float|globally(true)}) = last derivativek1
+
+  and (uk : {uk:float|globally(uk = kp *. errork -. kd *. derivativek)}) = kp *. errork -. kd *. derivativek
+  
+  and (xk1 : {xk1:float |globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+  and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
+
+  and (derivativek1 : {derivativek1:float|globally(derivativek1 = (errork1 -. errork) /. dt)}) = (errork1 -. errork) /. dt
+
+
+
+  and init energyk1 = 1.
+  and (energyk : {energyk:float|globally(energyk <= 1.)}) = last energyk1
+
+  and (energyk1 : {energyk1:float|globally(energyk1 <= 1.)}) = energyk -. 0.2 *. errork *. errork -. 0.0275 *. derivativek *. derivativek
+  and (energyk1v2 : {energyk1v2:float|globally(energyk1v2 = energyk1)}) = errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1
+
+  and (xkbound : {xkbound:float|globally(-1 +. r <= xkbound && xkbound <= 1. +. r)}) = xk1
+
+in xk *)
+
+(* let rec init ex = 0
+  and (prev : {prev:int | globally(true)}) = last pres
+  and (pres : {pres:int | globally(pres < prev)}) = prev - 1  
+in pres*)
+
+
+(* let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = exec1 () in
+        (print_int 1; print_newline ())) else () *)
+
+
+
+
+
+(* Example parametric relations *)
+
+
+(* let q : {v : float | globally((v = 1. && v > 0.))} = 1.
+let q1 : {v : float | globally((v >= 0.))} = q -. 1.
+
+let r : {v : float | globally((v > 0.))} = 1.
+let r1 : {v : float | globally((v >= .))} = r -. 1.
+
+
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) 
+in present trigger -> (let x = 1. in print_newline () ) else () *)
