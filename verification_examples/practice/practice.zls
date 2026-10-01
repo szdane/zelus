@@ -466,7 +466,7 @@ in xk
 (* #19 != not implemented *)
 
 (* let node exec () =
-  let (xk : {xk:float|globally(xk != 0. )}) = 1.
+  let (xk : {xk:float|globally(not (xk = 0.))}) = 1.
 in xk
 
   let hybrid main () = 
@@ -491,7 +491,7 @@ in xk
 
 (* #21 Problem with negative sign in front of a variable *)
 
-let r : {v : float|globally(v = 1.)} = 1.
+(* let r : {v : float|globally(v = 1.)} = 1.
 
 let node exec () =
   let (xk : {xk:float|globally(xk = -.r)}) = -.r
@@ -500,7 +500,7 @@ in xk
   let hybrid main () = 
   let rec trigger = (period (0.1)) in
       present (trigger) -> (let x = exec () in
-      (print_int 1; print_newline ())) else ()
+      (print_int 1; print_newline ())) else () *)
 
 
 
