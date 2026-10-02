@@ -57,7 +57,7 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
     0.064 *. errork *. errork +. 0.784 *. errork *. integralk +. 0.008 *. errork *. derivativek
     -. 0.099 *. integralk *. integralk +. 0.049 *. integralk *. derivativek +. 0.00025 *. derivativek *. derivativek && energyk1p4v3 = energyk1p4)}) = energyk1p4
 
-  and (energyk1v2 : {energyk1v2:float|globally(energyk1v2 = energyk1p1 +. energyk1p2 +. energyk1p3 +. energyk1p4 )}) = energyk1
+  (* and (energyk1v2 : {energyk1v2:float|globally(energyk1v2 = energyk1p1 +. energyk1p2 +. energyk1p3 +. energyk1p4 )}) = energyk1 *)
 
   and (energyk1p1v3 : {energyk1p1v3:float|globally(energyk1p1v3 = 
     0.728 *. errork *. errork +. 0.011375 *. integralk *. integralk +. 0.00284375 *. derivativek *. derivativek -. 
@@ -71,9 +71,8 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
     0.2 *. errork *. errork +. 0.05 *. integralk *. integralk +. 0.0125 *. derivativek *. derivativek
     +. 0.2 *. errork *. integralk -. 0.1 *. errork *. derivativek -. 0.05 *. integralk *. derivativek && energyk1p3v3 = energyk1p3)}) = energyk1p3
 
-
   
-  and (energyk1v5 : {energyk1v5:float|globally(energyk1v5 = 1. *. errork *. errork +. 1.1875 *. integralk *. integralk
+  (* and (energyk1v5 : {energyk1v5:float|globally(energyk1v5 = 1. *. errork *. errork +. 1.1875 *. integralk *. integralk
     +. 0.015625 *. derivativek *. derivativek +. errork *. integralk)}) = energyk1p1v3 +. energyk1p2v3 +. energyk1p3v3 +. energyk1p4v3
 
   and (energyk1v6 : {energyk1v6:float|globally(energyk1v6 = 1. *. errork *. errork +. 1.1875 *. integralk *. integralk
@@ -81,9 +80,9 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
 
 
   and (diffenergy1 : {diffenergy1:float|(diffenergy1 = -0.1375 *. errork *. errork 
-    -. 0.0625 *. integralk *. integralk -. 0.034375 *. derivativek *. derivativek)}) = energyk1 -. energyk
+    -. 0.0625 *. integralk *. integralk -. 0.034375 *. derivativek *. derivativek)}) = energyk1 -. energyk *)
 
-  and (diffenergy2 : {diffenergy2:float|globally(diffenergy2 <= 0.)}) = energyk1 -. energyk
+  (* and (diffenergy2 : {diffenergy2:float|globally(diffenergy2 <= 0.)}) = energyk1 -. energyk *)
 
   and (energyk1bound : {energyk1bound:float|globally(energyk1bound = energyk1 && energyk1bound <= 1.1375)}) = energyk1
 (* and (energyk1squares : {energyk1squares:float|globally(energyk1squares = 0.9375 *. errork1 *. errork1 +. 
