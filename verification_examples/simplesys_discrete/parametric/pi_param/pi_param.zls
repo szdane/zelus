@@ -1,57 +1,56 @@
 (* PD discrete simple sys *)
 
-let r : {v : float |globally(true)} = 1.            (* Desired reference *)
+let r : {v : float |globally(true)} = 1.
 
-let kp : {v : float |globally(v = 2.)} = 2.           (* Proportional gain *)
-let kd : {v : float |globally(v = 0.5)} = 0.5         (* Derivative gain *)
+let dt : {dt : float |globally((0.01 < dt) && (dt <= 0.1))} = 0.1
 
-let dt : {v : float |globally(v = 0.1)} = 0.1         (* Time step *)
+let kp : {kp : float |globally((0. < kp ) && (kp *. dt < 1.) && (kp *. dt < 0.3))} = 2.
+
+let kd : {kd : float |globally((0. < kd || kd < 0.) && (kd *. kd +. kp *. dt < 1.))} = 0.5
 
 
-let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)|true} =
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)|true} =
   let rec init xk1 = 0.
   and (xk : {xk:float|globally(xk = last_xk1)}) = last xk1
 
   and init errork1 = 1.
   and (errork : {errork:float|globally(errork = last_errork1)}) = last errork1
 
-  and init derivativek1 = 0.
-  and (derivativek : {derivativek:float|globally(derivativek = last_derivativek1)}) = last derivativek1
+  and init integralk1 = 0.
+  and (integralk : {integralk:float|globally(integralk = last_integralk1)}) = last integralk1
 
-  and (uk : {uk:float|globally(uk = kp *. errork -. kd *. derivativek)}) = kp *. errork -. kd *. derivativek
+  and (uk : {uk:float|globally(uk = kp *. errork +. ki *. integralk)}) = kp *. errork +. ki *. integralk
+
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
   
-  and (xk1 : {xk1:float |globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
-
   and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
 
-  and (derivativek1 : {derivativek1:float|globally(derivativek1 = (errork1 -. errork) /. dt)}) = (errork1 -. errork) /. dt
+  and (integralk1 : {integralk1:float|globally(integralk1 = integralk +. errork1 *. dt)}) = integralk +. errork1 *. dt
 
 
 
-
-  and init energyk1 = 1.
+  and init energyk1 = 0.99
   and (energyk : {energyk:float|globally(true)}) = last energyk1
 
-  and (energyk1 : {energyk1:float|globally((energyk1 = errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1) && (energyk1 <= 1.))}) = 
-  errork1 *. errork1 +. 0.04 *. derivativek1 *. derivativek1
-  
+  and (energyk1 : {energyk1:float|globally((energyk1 = 0.99 *. errork1 *. errork1 +. integralk1 *. integralk1) && (energyk1 <= 0.99))}) = 
+  0.99 *. errork1 *. errork1 +. integralk1 *. integralk1
+
   and (xkbound : {xkbound:float|globally(-1 +. r <= xkbound && xkbound <= 1. +. r)}) = xk
 
 
-in xk, uk, errork, derivativek
+in xk, uk, errork, integralk
 
 
 let hybrid main () =
     let rec trigger = (period (0.1)) in
-        present (trigger) -> (let xk, uk, errork, derivativek = exec () in
-
+        present (trigger) -> (let xk, uk, errork, integralk = exec () in
         print_float xk;
         print_string ",";
         print_float uk;
         print_string ",";
         print_float errork;
         print_string ",";
-        print_float derivativek;        
+        print_float integralk;        
         print_newline ()
     )
   else ()

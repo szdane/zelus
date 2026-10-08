@@ -34,18 +34,19 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
 
 
 
-
   and init energyk1bound = 1.1375
   and (energyk : {energyk:float|globally((energyk = last_energyk1bound))}) = last energyk1bound
   and (energyk1 : {energyk1:float|globally(energyk1 = 1.1375 *. errork1 *. errork1 +. 1.25 *. integralk1 *. integralk1 
-  +. 0.05 *. derivativek1 *. derivativek1 +. errork1 *. integralk1)}) = 
-  1.1375 *. errork1 *. errork1 +. 1.25 *. integralk1 *. integralk1 +. 0.05 *. derivativek1 *. derivativek1 +. 1. *. errork1 *. integralk1
-(* energyk1 <= 1.1375 *)
+    +. 0.05 *. derivativek1 *. derivativek1 +. errork1 *. integralk1)}) = 
+    1.1375 *. errork1 *. errork1 +. 1.25 *. integralk1 *. integralk1 +. 0.05 *. derivativek1 *. derivativek1 +. errork1 *. integralk1
 
 
-  and (errork1dev : {errork1dev:float|globally(errork1dev = errork1 && errork1dev = 0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek)}) = 0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek
-  and (integralk1dev : {integralk1dev:float|globally(integralk1dev = integralk1 && integralk1dev = 0.08 *. errork +. 0.99 *. integralk +. 0.005 *. derivativek)}) = 0.08 *. errork +. 0.99 *. integralk +. 0.005 *. derivativek
-  and (derivativek1dev : {derivativek1dev:float|globally(derivativek1dev = derivativek1 && derivativek1dev = -2. *. errork -. integralk +. 0.5 *. derivativek)}) = -2. *. errork -. integralk +. 0.5 *. derivativek
+  and (errork1dev : {errork1dev:float|globally((errork1dev = errork1) && (errork1dev = 0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek))}) = 
+    0.8 *. errork -. 0.1 *. integralk +. 0.05 *. derivativek
+  and (integralk1dev : {integralk1dev:float|globally((integralk1dev = integralk1) && (integralk1dev = 0.08 *. errork +. 0.99 *. integralk +. 0.005 *. derivativek))}) = 
+    0.08 *. errork +. 0.99 *. integralk +. 0.005 *. derivativek
+  and (derivativek1dev : {derivativek1dev:float|globally((derivativek1dev = derivativek1) && (derivativek1dev = -2. *. errork -. integralk +. 0.5 *. derivativek))}) = 
+    -2. *. errork -. integralk +. 0.5 *. derivativek
 
 
   and (energyk1p1 : {energyk1p1:float|globally(energyk1p1 = 1.1375 *. errork1dev *. errork1dev)}) = 1.1375 *. errork1dev *. errork1dev
@@ -53,48 +54,51 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true}
   and (energyk1p3 : {energyk1p3:float|globally(energyk1p3 = 0.05 *. derivativek1dev *. derivativek1dev)}) = 0.05 *. derivativek1dev *. derivativek1dev
   and (energyk1p4 : {energyk1p4:float|globally(energyk1p4 = errork1dev *. integralk1dev)}) = errork1dev *. integralk1dev
  
-  and (energyk1p4v3 : {energyk1p4v3:float|globally(energyk1p4v3 = 
-    0.064 *. errork *. errork +. 0.784 *. errork *. integralk +. 0.008 *. errork *. derivativek
-    -. 0.099 *. integralk *. integralk +. 0.049 *. integralk *. derivativek +. 0.00025 *. derivativek *. derivativek && energyk1p4v3 = energyk1p4)}) = energyk1p4
-
   (* and (energyk1v2 : {energyk1v2:float|globally(energyk1v2 = energyk1p1 +. energyk1p2 +. energyk1p3 +. energyk1p4 )}) = energyk1 *)
 
-  and (energyk1p1v3 : {energyk1p1v3:float|globally(energyk1p1v3 = 
-    0.728 *. errork *. errork +. 0.011375 *. integralk *. integralk +. 0.00284375 *. derivativek *. derivativek -. 
-    0.182 *. errork *. integralk +. 0.091 *. errork *. derivativek -. 0.011375 *. integralk *. derivativek && energyk1p1v3 = energyk1p1)}) = energyk1p1
 
-  and (energyk1p2v3 : {energyk1p2v3:float|globally(energyk1p2v3 = 
-    0.008 *. errork *. errork+. 1.225125 *. integralk *. integralk +. 0.00003125 *. derivativek *. derivativek +. 
-    0.198 *. errork *. integralk +. 0.001 *. errork *. derivativek +. 0.012375 *. integralk *. derivativek && energyk1p2v3 = energyk1p2)}) = energyk1p2
+  and (energyk1p4dev : {energyk1p4dev:float|globally((energyk1p4dev = energyk1p4) && (energyk1p4dev = 0.064 *. errork *. errork +. 
+    0.784 *. errork *. integralk +. 0.008 *. errork *. derivativek-. 0.099 *. integralk *. integralk 
+    +. 0.049 *. integralk *. derivativek +. 0.00025 *. derivativek *. derivativek))}) = energyk1p4
 
-  and (energyk1p3v3 : {energyk1p3v3:float|globally(energyk1p3v3 = 
-    0.2 *. errork *. errork +. 0.05 *. integralk *. integralk +. 0.0125 *. derivativek *. derivativek
-    +. 0.2 *. errork *. integralk -. 0.1 *. errork *. derivativek -. 0.05 *. integralk *. derivativek && energyk1p3v3 = energyk1p3)}) = energyk1p3
+  and (energyk1p1dev : {energyk1p1dev:float|globally((energyk1p1dev = energyk1p1) && (energyk1p1dev = 0.728 *. errork *. errork 
+  +. 0.011375 *. integralk *. integralk +. 0.00284375 *. derivativek *. derivativek -. 0.182 *. errork *. integralk 
+  +. 0.091 *. errork *. derivativek -. 0.011375 *. integralk *. derivativek))}) = energyk1p1
+
+  and (energyk1p2dev : {energyk1p2dev:float|globally((energyk1p2dev = energyk1p2) && (energyk1p2dev = 0.008 *. errork *. errork 
+  +. 1.225125 *. integralk *. integralk +. 0.00003125 *. derivativek *. derivativek +. 0.198 *. errork *. integralk 
+  +. 0.001 *. errork *. derivativek +. 0.012375 *. integralk *. derivativek))}) = energyk1p2
+
+  and (energyk1p3dev : {energyk1p3dev:float|globally((energyk1p3dev = energyk1p3) && (energyk1p3dev = 0.2 *. errork *. errork 
+  +. 0.05 *. integralk *. integralk +. 0.0125 *. derivativek *. derivativek+. 0.2 *. errork *. integralk 
+  -. 0.1 *. errork *. derivativek -. 0.05 *. integralk *. derivativek))}) = energyk1p3
 
   
-  (* and (energyk1v5 : {energyk1v5:float|globally(energyk1v5 = 1. *. errork *. errork +. 1.1875 *. integralk *. integralk
-    +. 0.015625 *. derivativek *. derivativek +. errork *. integralk)}) = energyk1p1v3 +. energyk1p2v3 +. energyk1p3v3 +. energyk1p4v3
+  (* and (energyk1v3 : {energyk1v3:float|globally(energyk1v3 = errork *. errork +. 1.1875 *. integralk *. integralk
+    +. 0.015625 *. derivativek *. derivativek +. errork *. integralk)}) = energyk1p1dev +. energyk1p2dev +. energyk1p3dev +. energyk1p4dev
 
-  and (energyk1v6 : {energyk1v6:float|globally(energyk1v6 = 1. *. errork *. errork +. 1.1875 *. integralk *. integralk
+  and (energyk1v4 : {energyk1v4:float|globally(energyk1v4 = errork *. errork +. 1.1875 *. integralk *. integralk
     +. 0.015625 *. derivativek *. derivativek +. errork *. integralk)}) = energyk1
 
 
-  and (diffenergy1 : {diffenergy1:float|(diffenergy1 = -0.1375 *. errork *. errork 
-    -. 0.0625 *. integralk *. integralk -. 0.034375 *. derivativek *. derivativek)}) = energyk1 -. energyk *)
+  and (diffenergy1 : {diffenergy1:float|(diffenergy1 = -0.1375 *. errork *. errork -. 0.0625 *. integralk *. integralk 
+  -. 0.034375 *. derivativek *. derivativek)}) = energyk1 -. energyk *)
 
   (* and (diffenergy2 : {diffenergy2:float|globally(diffenergy2 <= 0.)}) = energyk1 -. energyk *)
 
   and (energyk1bound : {energyk1bound:float|globally(energyk1bound = energyk1 && energyk1bound <= 1.1375)}) = energyk1
-(* and (energyk1squares : {energyk1squares:float|globally(energyk1squares = 0.9375 *. errork1 *. errork1 +. 
-  1.25 *. (0.4 *. errork1 +. integralk1) *. (0.4 *. errork1 +. integralk1) +. 0.05 *. derivativek1 *. derivativek1)}) = energyk1 *)
 
-  (* and (boundsquares : {boundsquares:float|globally(0. <= boundsquares)}) = 
-    1.25 *. (0.4 *. errork1 +. integralk1) *. (0.4 *. errork1 +. integralk1) +. 0.05 *. derivativek1 *. derivativek1 *)
+  (* and (energyk1squares : {energyk1squares:float|globally(energyk1squares = 0.9375 *. errork1 *. errork1 +. 
+    1.25 *. (0.4 *. errork1 +. integralk1) *. (0.4 *. errork1 +. integralk1) +. 0.05 *. derivativek1 *. derivativek1)}) = energyk1
 
-(* and (errorkbound2 : {errorkbound2:float|globally(errorkbound2 = 0.9375 *. errork1 *. errork1 +. boundsquares)}) =
-  0.9375 *. errork1 *. errork1 +. boundsquares *)
+  and (boundsquares : {boundsquares:float|globally(0. <= boundsquares)}) = 
+    1.25 *. (0.4 *. errork1 +. integralk1) *. (0.4 *. errork1 +. integralk1) +. 0.05 *. derivativek1 *. derivativek1
 
-(* and (errorkbound3 : {errorkbound3:float|globally(errorkbound3 <= 0.9375 *. errork1 *. errork1 +. boundsquares)}) = 0.9375 *. errork1 *. errork1 *)
+  and (errorkbound1 : {errorkbound1:float|globally(errorkbound1 = 0.9375 *. errork1 *. errork1 +. boundsquares)}) =
+    0.9375 *. errork1 *. errork1 +. boundsquares
+
+  and (errorkbound2 : {errorkbound2:float|globally(errorkbound2 <= 0.9375 *. errork1 *. errork1 +. boundsquares)}) = 
+    0.9375 *. errork1 *. errork1 *)
 
 (* sqrt(1.1375 /. 0.9375) = 1.1015... *)
 and (xkbound : {xkbound:float|globally(-1.11 +. r <= xkbound && xkbound <= 1.11 +. r)}) = xk
