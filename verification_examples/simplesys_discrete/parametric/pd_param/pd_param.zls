@@ -9,11 +9,6 @@ let kp : {kp : float |globally((0. < kp ) && (kp *. dt < 1.) && (kp *. dt < 0.3)
 let kd : {kd : float |globally((not (kd = 0.)) && (kd *. kd +. kp *. dt < 1.))} = 0.5
 
 
-(* let calcenergy (alpha, beta, errork1, derivativek1, energyk, diffenergy2) : {(venk1:float)|true} =
-  let (energyk1calc : {energyk1calc:float|globally((true))}) = 
-    alpha *. errork1 *. errork1 +. beta *. derivativek1 *. derivativek1
-in energyk1calc *)
-
 
 let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)|true} =
   let rec init xk1 = 0.
@@ -40,7 +35,6 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)|true} =
   and (energyk : {energyk:float|globally(energyk = last_energyk1bound)}) = last energyk1bound
   and (energyk1 : {energyk1:float|globally((energyk1 = alpha *. errork1 *. errork1 +. beta *. derivativek1 *. derivativek1))}) = 
     alpha *. errork1 *. errork1 +. beta *. derivativek1 *. derivativek1
-  (* energyk1 <= alpha *)
 
   and (errork1dev : {errork1dev:float|globally((errork1dev = errork1) && (errork1dev = (1. -. kp *. dt) *. errork +. kd *. dt *. derivativek))}) = 
     (1. -. kp *. dt) *. errork +. kd *. dt *. derivativek
@@ -64,15 +58,14 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)|true} =
  
   and (energyk1v2 : {energyk1v2:float|globally((energyk1v2 = energyk1) && (energyk1v2 = energyk1p1dev +. energyk1p2dev))}) = energyk1
  
- 
   and (energyk1v3 : {energyk1v3:float|globally((energyk1v3 = energyk1v2) && 
     (energyk1v3  = kp *. (1. -. kp *. dt) *. errork *. errork +. kd *. kd *. dt *. derivativek *. derivativek))}) = energyk1v2
  
-  and (energyk1v4 : {energyk1v4:float|globally((energyk1v4 = energyk1) && 
-    (energyk1v4 = kp *. (1. -. kp *. dt) *. errork *. errork +. kd *. kd *. dt *. derivativek *. derivativek))}) = energyk1
- 
-  and (energykv2 : {energykv2:float|globally(
+  and (energyk1v4 : {energyk1v4:float|globally((energyk1v4 = energyk1v3) && (energyk1v4 = energyk1))}) = energyk1v3
+
+    and (energykv2 : {energykv2:float|globally(
     (energykv2 = energyk && energykv2 = alpha *. errork *. errork +. beta *. derivativek *. derivativek))}) = energyk
+
 
 
 
