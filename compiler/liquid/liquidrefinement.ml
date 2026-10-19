@@ -1474,6 +1474,22 @@ let zls_ref_to_nf_parts (t:Zelus.type_expression)
          source-declared [vb]. *)
       (value_var, base, nf)
   | _ -> failwith "Expected scalar refinement {v:T | phi}"
+
+
+(* Added code *)
+(* Flatten tuple patterns / tuple actuals so that a function declared with
+   [(a, b, c)] has arity 3 both in its signature and at its call sites. *)
+let rec pat_leaves (p : Zelus.pattern) : Zelus.pattern list =
+  match p.p_desc with
+  | Zelus.Etuplepat ps -> List.concat_map pat_leaves ps
+  | _ -> [p]
+
+let rec expr_leaves (e : Zelus.exp) : Zelus.exp list =
+  match e.e_desc with
+  | Zelus.Etuple es -> List.concat_map expr_leaves es
+  | _ -> [e]
+
+
 let param_from_pattern (p:Zelus.pattern) : fun_param option  =
   match p.p_desc with
   | Zelus.Etypeconstraintpat (bp, ann) ->
@@ -2317,6 +2333,8 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                           and return type before it can be called here" fname)
               in
 
+              (* Added code *)
+              let args = List.concat_map expr_leaves args in
               (* 1) Discharge the callee's preconditions against the actuals *)
               check_call_args ~fname fsig args;
 
@@ -3226,8 +3244,10 @@ let to_nf_refine (t:Zelus.type_expression) : Zparsetree.type_expression =
       failwith "to_nf_refine: unsupported argument type"
 
 
-  
-let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
+
+
+(* Previous version of add_annotated_arg_to_env *)
+(* let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
   match p.p_desc with
   | Zelus.Etypeconstraintpat (bp, ann_ty) ->
       (* extract the binder name from the (possibly wrapped) base pattern *)
@@ -3245,8 +3265,30 @@ let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
       in
       add_binding x ann_zpt_nf
   | _ ->
-      ()
-  
+      () *)
+
+(* Added code *)
+let rec add_annotated_arg_to_env (p : Zelus.pattern) : unit =
+  match p.p_desc with
+  | Zelus.Etuplepat ps ->
+      List.iter add_annotated_arg_to_env ps
+  | Zelus.Etypeconstraintpat (bp, ann_ty) ->
+      (match bp.p_desc with
+       | Zelus.Etuplepat _ ->
+           ()  (* annotation globale sur un tuple : voir la réponse précédente *)
+       | _ ->
+           let x = zelus_var_name_of_pat bp in
+           let ann_zpt = to_zpt_type ann_ty in
+           let ann_zpt_nf =
+             match ann_ty.desc, ann_zpt.desc with
+             | Zelus.Erefinement ((_vb_z, _base_z), pred_z),
+               Zparsetree.Erefinement ((vb, base_zpt), _pred_zpt) ->
+                 let pred_nf = zls_pred_to_nf ~binder:vb pred_z in
+                 mk_type (Zparsetree.Erefinement ((vb, base_zpt), pred_nf))
+             | _ -> ann_zpt
+           in
+           add_binding x ann_zpt_nf)
+  | _ -> ()  
 
 
   let with_env_snapshot (f : unit -> unit) : unit =
@@ -3566,13 +3608,6 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                 match out.desc with
                   |Zelus.Etypeconstr(Name base_out, []) -> (
                     match pred.e_desc with
-                    (* | Zelus.Eapp({ app_inline = bool1; app_statefull = bool2 },
-                    { e_desc = Zelus.Eglobal{lname = (Name op)}; _ },
-                    list) -> process_eapp ~name:id ~v ~base:base ~op list  ~e
-                    | Zelus.Eop(_,_) -> failwith (Printf.sprintf "Yes it is an Eop") *)
-                    (* | Zelus.Elocal{num = i; source = n} -> failwith (Printf.sprintf "Yes it is an Elocal")
-                    | Zelus.Eglobal{lname = Modname qualid} -> failwith (Printf.sprintf "Yes it is an Eglobal modname") *)
-                    (* | Zelus.Eglobal{lname = Name var} -> process_global id v base var e *)
                     | Zelus.Eglobal(_)-> process_bool_fun id v base base_out pred.e_desc e (to_zpt_kind a) (zident_opt_to_string_opt b) 
                     | Zelus.Econst(Ebool(_)) -> process_bool_fun id v base base_out pred.e_desc e (to_zpt_kind a) (zident_opt_to_string_opt b) 
                     | _ -> failwith (Printf.sprintf "Not an Eapp"))
@@ -3587,10 +3622,6 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                     | Zelus.Eifthenelse -> failwith (Printf.sprintf "Not handling ifthenelse for now")
                     | _ -> failwith (Printf.sprintf "Not handling this Eop for now inside implementation")
                 )
-                (*Liquid fixpoint doesn't allow having {v:Int| c or var} only {v:base| true or false} that's why I commented out the following predicate matchings*)
-                (* | Zelus.Elocal{num = i; source = n} -> failwith (Printf.sprintf "Yes it is an Elocal")
-                | Zelus.Eglobal{lname = Modname qualid} -> failwith (Printf.sprintf "Yes it is an Eglobal modname") *)
-                (* | Zelus.Eglobal{lname = Name var} -> process_global id v base var e *)
                 | Zelus.Eglobal(_)-> process_bool id v base pred.e_desc e
                 | Zelus.Econst(Ebool(_)) -> process_bool id v base pred.e_desc e
                 | _ -> failwith (Printf.sprintf "Not an Eapp")
@@ -3656,8 +3687,13 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
               gamma   := saved_gamma;
               gamma1 := saved_gamma1; 
               
-              let params_sig =
+              (* Previous version *)
+              (* let params_sig =
                 List.filter_map param_from_pattern p_list
+              in *)
+              (* Added code *)
+              let params_sig =
+                List.filter_map param_from_pattern (List.concat_map pat_leaves p_list)
               in
               let sig_entry = {
                 params     = params_sig;
