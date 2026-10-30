@@ -1,0 +1,65 @@
+bind 0 nxt : {v:func(1, [bool, bool]) | true }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 globally : {v:func(1, [bool, bool]) | true}
+bind 3 m  : {v:func(1, [bool, bool]) | true}
+bind 3081 alpha : {v:real | ( ((tmp_50 =  ((v = (1.0 - ((ki * dt) * dt)))))) && ((v = (1.0 - ((ki * dt) * dt))) && nxt (globally tmp_50)))}
+bind 3082 beta : {v:real | ( ((tmp_51 =  ((v = ki)))) && ((v = ki) && nxt (globally tmp_51)))}
+bind 3083 dt : {v:real | ( ((tmp_1 =  ((0.01 < v)))) && ((0.01 < v) && nxt (globally tmp_1)))}
+bind 3084 energyk : {v:real | ( ((tmp_52 =  ((v = last_energyk1bound)))) && ((v = last_energyk1bound) && nxt (globally tmp_52)))}
+bind 3085 energyk1 : {v:real | ( ((tmp_53 =  ((v = (((alpha * errork1) * errork1) + ((beta * integralk1) * integralk1)))))) && ((v = (((alpha * errork1) * errork1) + ((beta * integralk1) * integralk1))) && nxt (globally tmp_53)))}
+bind 3086 energyk1v2 : {v:real | ( ((tmp_56 =  (((v = energyk1) && (v = (((alpha * errork1dev) * errork1dev) + ((beta * integralk1dev) * integralk1dev))))))) && ( (((v = energyk1) && (v = (((alpha * errork1dev) * errork1dev) + ((beta * integralk1dev) * integralk1dev))))) && nxt (globally tmp_56)))}
+bind 3087 energyk1v2p1 : {v:real | ( ((tmp_57 =  ((v = ((alpha * errork1dev) * errork1dev))))) && ((v = ((alpha * errork1dev) * errork1dev)) && nxt (globally tmp_57)))}
+bind 3088 energyk1v2p1vf : {v:real | ( ((tmp_58 =  (((v = energyk1v2p1) && (v = (((1.0 - ((ki * dt) * dt)) * (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk))) * (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk)))))))) && ( (((v = energyk1v2p1) && (v = (((1.0 - ((ki * dt) * dt)) * (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk))) * (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk)))))) && nxt (globally tmp_58)))}
+bind 3089 energyk1v2p2 : {v:real | ( ((tmp_59 =  ((v = ((beta * integralk1dev) * integralk1dev))))) && ((v = ((beta * integralk1dev) * integralk1dev)) && nxt (globally tmp_59)))}
+bind 3090 errork : {v:real | ( ((tmp_44 =  ((v = last_errork1)))) && ((v = last_errork1) && nxt (globally tmp_44)))}
+bind 3091 errork1 : {v:real | ( ((tmp_48 =  ((v = (r - xk1))))) && ((v = (r - xk1)) && nxt (globally tmp_48)))}
+bind 3092 errork1dev : {v:real | ( ((tmp_54 =  (((v = errork1) && (v = (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk))))))) && (((v = errork1) && (v = (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk)))) && nxt (globally tmp_54)))}
+bind 3093 integralk : {v:real | ( ((tmp_45 =  ((v = last_integralk1)))) && ((v = last_integralk1) && nxt (globally tmp_45)))}
+bind 3094 integralk1 : {v:real | ( ((tmp_49 =  ((v = (integralk + (errork1 * dt)))))) && ((v = (integralk + (errork1 * dt))) && nxt (globally tmp_49)))}
+bind 3095 integralk1dev : {v:real | ( ((tmp_55 =  (((v = integralk1) && (v = (((dt * (1.0 - (kp * dt))) * errork) + ((1.0 - ((ki * dt) * dt)) * integralk))))))) && (((v = integralk1) && (v = (((dt * (1.0 - (kp * dt))) * errork) + ((1.0 - ((ki * dt) * dt)) * integralk)))) && nxt (globally tmp_55)))}
+bind 3096 ki : {v:real | ( ((tmp_3 =  ((((0.0 < v) && ((v * (dt * dt)) < 1.0)) && ((((kp * kp) + v) * dt) < (2.0 * kp)))))) && ((((0.0 < v) && ((v * (dt * dt)) < 1.0)) && ((((kp * kp) + v) * dt) < (2.0 * kp))) && nxt (globally tmp_3)))}
+bind 3097 kp : {v:real | ( ((tmp_2 =  (((0.0 < v) && ((v * dt) < 2))))) && (((0.0 < v) && ((v * dt) < 2)) && nxt (globally tmp_2)))}
+bind 3098 last_alpha : {v:real | (v = (1.0 - ((ki * dt) * dt)))}
+bind 3099 last_beta : {v:real | (v = ki)}
+bind 3100 last_energyk1 : {v:real | (v = (((last_alpha * last_errork1) * last_errork1) + ((last_beta * last_integralk1) * last_integralk1)))}
+bind 3101 last_energyk1bound : {v:real | ((v = last_energyk1) && (v <= last_alpha))}
+bind 3102 last_errork : {v:real | (v = last_last_errork1)}
+bind 3103 last_errork1 : {v:real | (v = (r - last_xk1))}
+bind 3104 last_integralk : {v:real | (v = last_last_integralk1)}
+bind 3105 last_integralk1 : {v:real | (v = (last_integralk + (last_errork1 * dt)))}
+bind 3106 last_last_errork1 : {v:real | true}
+bind 3107 last_last_integralk1 : {v:real | true}
+bind 3108 last_last_xk1 : {v:real | true}
+bind 3109 last_uk : {v:real | (v = ((kp * last_errork) + (ki * last_integralk)))}
+bind 3110 last_xk : {v:real | (v = last_last_xk1)}
+bind 3111 last_xk1 : {v:real | (v = (last_xk + (last_uk * dt)))}
+bind 3112 r : {v:real | (true && nxt (globally true))}
+bind 3113 tmp_1 : {v:bool | true}
+bind 3114 tmp_2 : {v:bool | true}
+bind 3115 tmp_3 : {v:bool | true}
+bind 3116 tmp_43 : {v:bool | true}
+bind 3117 tmp_44 : {v:bool | true}
+bind 3118 tmp_45 : {v:bool | true}
+bind 3119 tmp_46 : {v:bool | true}
+bind 3120 tmp_47 : {v:bool | true}
+bind 3121 tmp_48 : {v:bool | true}
+bind 3122 tmp_49 : {v:bool | true}
+bind 3123 tmp_50 : {v:bool | true}
+bind 3124 tmp_51 : {v:bool | true}
+bind 3125 tmp_52 : {v:bool | true}
+bind 3126 tmp_53 : {v:bool | true}
+bind 3127 tmp_54 : {v:bool | true}
+bind 3128 tmp_55 : {v:bool | true}
+bind 3129 tmp_56 : {v:bool | true}
+bind 3130 tmp_57 : {v:bool | true}
+bind 3131 tmp_58 : {v:bool | true}
+bind 3132 tmp_59 : {v:bool | true}
+bind 3133 uk : {v:real | ( ((tmp_46 =  ((v = ((kp * errork) + (ki * integralk)))))) && ((v = ((kp * errork) + (ki * integralk))) && nxt (globally tmp_46)))}
+bind 3134 xk : {v:real | ( ((tmp_43 =  ((v = last_xk1)))) && ((v = last_xk1) && nxt (globally tmp_43)))}
+bind 3135 xk1 : {v:real | ( ((tmp_47 =  ((v = (xk + (uk * dt)))))) && ((v = (xk + (uk * dt))) && nxt (globally tmp_47)))}
+
+constraint:
+  env [0;1;2;3;3081;3082;3083;3084;3085;3086;3087;3088;3089;3090;3091;3092;3093;3094;3095;3096;3097;3098;3099;3100;3101;3102;3103;3104;3105;3106;3107;3108;3109;3110;3111;3112;3113;3114;3115;3116;3117;3118;3119;3120;3121;3122;3123;3124;3125;3126;3127;3128;3129;3130;3131;3132;3133;3134;3135]
+  lhs {v:real | ((v = integralk1) && (v = (((dt * (1.0 - (kp * dt))) * errork) + ((1.0 - ((ki * dt) * dt)) * integralk))))}
+  rhs {v:real | (v = (((dt * (1.0 - (kp * dt))) * errork) + ((1.0 - ((ki * dt) * dt)) * integralk)))}
+  id 5 tag []

@@ -1,0 +1,247 @@
+
+
+constraint:
+  lhs {VV : real | [(VV = (integralk + (errork1 * dt)));
+                    (VV =
+                       (((dt * (1.0 - (kp * dt))) * last_errork1) +
+                          ((1.0 - ((ki * dt) * dt)) * last_integralk1)))]}
+  rhs {VV : real | [(VV =
+                       (((dt * (1.0 - (kp * dt))) * last_errork1) +
+                          ((1.0 - ((ki * dt) * dt)) * last_integralk1)))]}
+  id 5 tag []
+  // META constraint id 5 : ()
+  environment:
+    // elided some likely irrelevant bindings
+    
+    alpha :
+      {v : real |
+         [(nxt (globally tmp_41));
+          (tmp_41 = (v = (1.0 - ((ki * dt) * dt))));
+          (v = (1.0 - ((ki * dt) * dt)))]}
+    
+    beta :
+      {v : real |
+         [(nxt (globally tmp_42)); (tmp_42 = (v = ki)); (v = ki)]}
+    
+    dt :
+      {v : real |
+         [(nxt (globally tmp_1)); (tmp_1 = (1.0e-2 < v)); (1.0e-2 < v)]}
+    
+    energyk1 :
+      {v : real |
+         [(nxt (globally tmp_44));
+          (tmp_44 =
+             (v =
+                (((alpha * errork1) * errork1) +
+                   ((beta * integralk1) * integralk1))));
+          (v =
+             (((alpha * errork1) * errork1) +
+                ((beta * integralk1) * integralk1)))]}
+    
+    energyk1v2p1 :
+      {v : real |
+         [(nxt (globally tmp_48));
+          (tmp_48 = (v = ((alpha * errork1dev) * errork1dev)));
+          (v = ((alpha * errork1dev) * errork1dev))]}
+    
+    errork :
+      {v : real |
+         [(nxt (globally tmp_35));
+          (tmp_35 = (v = last_errork1));
+          (v = last_errork1)]}
+    
+    errork1 :
+      {v : real |
+         [(nxt (globally tmp_39));
+          (tmp_39 = (v = (r - xk1)));
+          (v = (r - xk1))]}
+    
+    errork1dev :
+      {v : real |
+         [(nxt (globally tmp_45));
+          (tmp_45 =
+             && [(v = errork1);
+                 (v = (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk)))]);
+          (v = errork1);
+          (v = (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk)))]}
+    
+    globally : {v : func(1 , [bool; bool]) | []}
+    
+    integralk :
+      {v : real |
+         [(nxt (globally tmp_36));
+          (tmp_36 = (v = last_integralk1));
+          (v = last_integralk1)]}
+    
+    integralk1 :
+      {v : real |
+         [(nxt (globally tmp_40));
+          (tmp_40 = (v = (integralk + (errork1 * dt))));
+          (v = (integralk + (errork1 * dt)))]}
+    
+    integralk1dev :
+      {v : real |
+         [(nxt (globally tmp_46));
+          (tmp_46 =
+             && [(v = integralk1);
+                 (v =
+                    (((dt * (1.0 - (kp * dt))) * errork) +
+                       ((1.0 - ((ki * dt) * dt)) * integralk)))]);
+          (v = integralk1);
+          (v =
+             (((dt * (1.0 - (kp * dt))) * errork) +
+                ((1.0 - ((ki * dt) * dt)) * integralk)))]}
+    
+    ki :
+      {v : real |
+         [(nxt (globally tmp_3));
+          (tmp_3 =
+             && [&& [(0.0 < v); ((v * (dt * dt)) < 1.0)];
+                 ((((kp * kp) + v) * dt) < (2.0 * kp))]);
+          (0.0 < v);
+          ((v * (dt * dt)) < 1.0);
+          ((((kp * kp) + v) * dt) < (2.0 * kp))]}
+    
+    kp :
+      {v : real |
+         [(nxt (globally tmp_2));
+          (tmp_2 = && [(0.0 < v); ((v * dt) < 2)]);
+          (0.0 < v);
+          ((v * dt) < 2)]}
+    
+    last_alpha : {v : real | [(v = (1.0 - ((ki * dt) * dt)))]}
+    
+    last_beta : {v : real | [(v = ki)]}
+    
+    last_energyk1 :
+      {v : real |
+         [(v =
+             (((last_alpha * last_errork1) * last_errork1) +
+                ((last_beta * last_integralk1) * last_integralk1)))]}
+    
+    last_energyk1bound :
+      {v : real | [(v = last_energyk1); (v <= last_alpha)]}
+    
+    last_errork : {v : real | [(v = last_last_errork1)]}
+    
+    last_errork1 : {v : real | [(v = (r - last_xk1))]}
+    
+    last_integralk : {v : real | [(v = last_last_integralk1)]}
+    
+    last_integralk1 :
+      {v : real | [(v = (last_integralk + (last_errork1 * dt)))]}
+    
+    last_last_errork1 : {v : real | []}
+    
+    last_last_integralk1 : {v : real | []}
+    
+    last_last_xk1 : {v : real | []}
+    
+    last_uk :
+      {v : real | [(v = ((kp * last_errork) + (ki * last_integralk)))]}
+    
+    last_xk : {v : real | [(v = last_last_xk1)]}
+    
+    last_xk1 : {v : real | [(v = (last_xk + (last_uk * dt)))]}
+    
+    nxt : {v : func(1 , [bool; bool]) | []}
+    
+    r : {v : real | [(nxt (globally true))]}
+    
+    tmp_1 : {v : bool | []}
+    
+    tmp_2 : {v : bool | []}
+    
+    tmp_3 : {v : bool | []}
+    
+    tmp_34 : {v : bool | []}
+    
+    tmp_35 : {v : bool | []}
+    
+    tmp_36 : {v : bool | []}
+    
+    tmp_37 : {v : bool | []}
+    
+    tmp_38 : {v : bool | []}
+    
+    tmp_39 : {v : bool | []}
+    
+    tmp_40 : {v : bool | []}
+    
+    tmp_41 : {v : bool | []}
+    
+    tmp_42 : {v : bool | []}
+    
+    tmp_43 : {v : bool | []}
+    
+    tmp_44 : {v : bool | []}
+    
+    tmp_45 : {v : bool | []}
+    
+    tmp_46 : {v : bool | []}
+    
+    tmp_47 : {v : bool | []}
+    
+    tmp_48 : {v : bool | []}
+    
+    tmp_49 : {v : bool | []}
+    
+    tmp_50 : {v : bool | []}
+    
+    uk :
+      {v : real |
+         [(nxt (globally tmp_37));
+          (tmp_37 = (v = ((kp * errork) + (ki * integralk))));
+          (v = ((kp * errork) + (ki * integralk)))]}
+    
+    xk :
+      {v : real |
+         [(nxt (globally tmp_34));
+          (tmp_34 = (v = last_xk1));
+          (v = last_xk1)]}
+    
+    xk1 :
+      {v : real |
+         [(nxt (globally tmp_38));
+          (tmp_38 = (v = (xk + (uk * dt))));
+          (v = (xk + (uk * dt)))]}
+    
+    _energyk :
+      {v : real |
+         [(nxt (globally tmp_43));
+          (tmp_43 = (v = last_energyk1bound));
+          (v = last_energyk1bound)]}
+    
+    _energyk1v2 :
+      {v : real |
+         [(nxt (globally tmp_47));
+          (tmp_47 =
+             && [(v = energyk1);
+                 (v =
+                    (((alpha * errork1dev) * errork1dev) +
+                       ((beta * integralk1dev) * integralk1dev)))]);
+          (v = energyk1);
+          (v =
+             (((alpha * errork1dev) * errork1dev) +
+                ((beta * integralk1dev) * integralk1dev)))]}
+    
+    _energyk1v2p1vf :
+      {v : real |
+         [(nxt (globally tmp_49));
+          (tmp_49 =
+             && [(v = energyk1v2p1);
+                 (v =
+                    (((1.0 - ((ki * dt) * dt)) *
+                        (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk))) *
+                       (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk))))]);
+          (v = energyk1v2p1);
+          (v =
+             (((1.0 - ((ki * dt) * dt)) *
+                 (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk))) *
+                (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk))))]}
+    
+    _energyk1v2p2 :
+      {v : real |
+         [(nxt (globally tmp_50));
+          (tmp_50 = (v = ((beta * integralk1dev) * integralk1dev)));
+          (v = ((beta * integralk1dev) * integralk1dev))]}

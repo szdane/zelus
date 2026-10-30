@@ -1,0 +1,12 @@
+(* ==== POS: "strictly greater than its own previous value" *)
+let node exec () : {(vz:int)|true} =
+  let rec init ex = 0
+  and (prev : {prev:int | prev = 0 && nxt(globally(prev >= 0))}) = last ex
+  and (ex : {ex:int | ex = 1 && nxt(globally(ex > prev))}) = prev + 1
+in ex
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_int x; print_newline ()))
+  else ()

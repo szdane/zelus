@@ -1,0 +1,16 @@
+let node simultaneous_reset () = 
+   let rec init x = 1.0 
+   (*and init y = 5.0*)
+   and x = 1.0 
+   and y = (last x) +. 1.0 in (x,y)
+
+
+
+let dt = 0.1
+let hybrid main () = let rec trigger = (period (0.1)) in present(trigger) -> 
+(let x, y = simultaneous_reset () in 
+      print_float x;
+       print_string " ";
+       print_float y;
+       print_newline ())
+else ()

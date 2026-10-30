@@ -543,17 +543,76 @@ let run_subtyping_pred ~cid ~(name:string) ~(binder:string) ~(base:string)
        | Zparsetree.Econst (Ebool true) -> true
        | _ -> run_fq name lhs rhs
 
-let nf_match_and_check ~cid ~(name:string) ~(binder:string) ~(base:string)
+(* [init x = e] equations seen so far.
+
+   In Zelus [init x = e] initializes the MEMORY of [x] — that is, [last x] at
+   the first instant — and never [x] itself; at t=0 [x] is whatever its own
+   equation computes.  (Typing records [EQinit] in the *initialized* set and
+   never in the *defined* set, and code generation emits a static [init] into
+   the machine's [reset] method only, never into [step].)  So this table is
+   exactly what a t=0 query must substitute for [last_x]. *)
+let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
+
+let nf_match_and_check ?(last_t0=false) ~cid ~(name:string) ~(binder:string) ~(base:string)
   (lhs_pred_nf:Zparsetree.exp) (rhs_pred_nf:Zparsetree.exp)
     : bool =
     (* 1. split into  && x  *)
     let (phi_lhs, psi_lhs) = split_nf lhs_pred_nf in
     let (phi_rhs, psi_rhs) = split_nf rhs_pred_nf in
 
-    (* 2. “now” part *)
-    
+    (* 2. “now” part.
+
+       [phi] is the t=0 obligation, but a [last_y] fact in the environment is a
+       t>=1 fact: at the first instant [last y] is [init y], which need not
+       satisfy [y]'s invariant.  So whenever the t=0 obligation mentions a
+       [last_*] symbol, discharge it the way the automaton head check does —
+       neutralize every [last_*] environment fact and replace [last_y] by
+       [init y] on both sides.  Self-triggering rather than opt-in, because
+       every arm that can read [last] (plain synthesis, ITE, calls, fby) funnels
+       through here, and wrapping them one at a time leaves holes: an ITE
+       reading [last s] used to be discharged against [s]'s invariant instead of
+       against [init s], which let an out-of-range [init] verify. *)
+    (* Opt-in: only an equation's own t=0 obligation gets this treatment.
+       [nf_match_and_check] is also reused for comparisons that are not
+       "first instant vs later" at all — the fby TAIL check compares a
+       shifted NF, whose [phi] slot is not a t=0 obligation and whose
+       [last_*] names must keep their facts. *)
+    let phi_mentions_last =
+      last_t0
+      && (collect_last_vars_zpt phi_lhs [] <> []
+          || collect_last_vars_zpt phi_rhs [] <> [])
+    in
     let ok_now =
-    run_subtyping_pred ~cid ~name ~binder ~base phi_lhs phi_rhs
+      if not phi_mentions_last then
+        run_subtyping_pred ~cid ~name ~binder ~base phi_lhs phi_rhs
+      else begin
+        let init_of_last nm =
+          if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
+            let y = String.sub nm 5 (String.length nm - 5) in
+            match Hashtbl.find_opt init_table y with
+            | Some e -> Some { Zparsetree.desc = vc_gen_expression e; loc = dummy_loc }
+            | None -> None
+          else None
+        in
+        let rec subst_last (e : Zparsetree.exp) : Zparsetree.exp =
+          match e.desc with
+          | Zparsetree.Evar (Name s) ->
+              (match init_of_last s with Some e' -> e' | None -> e)
+          | Zparsetree.Eapp (ai, fn, args) ->
+              { e with desc =
+                  Zparsetree.Eapp (ai, subst_last fn, List.map subst_last args) }
+          | Zparsetree.Etuple es ->
+              { e with desc = Zparsetree.Etuple (List.map subst_last es) }
+          | _ -> e
+        in
+        let saved_t0_gamma = neutralize_stream_facts_for_t0 [] in
+        let r =
+          run_subtyping_pred ~cid ~name:(name ^ ":t0") ~binder ~base
+            (subst_last phi_lhs) (subst_last phi_rhs)
+        in
+        gamma := saved_t0_gamma;
+        r
+      end
     in
     if not ok_now then (false )else
     (* 3. strip common x/g/m chain from the “later” part *)
@@ -1178,6 +1237,7 @@ let install_fby_binding ~(name:string)
    is the only one that still knows the source-declared binder), and [binder]
    must be [value_var] to match it. *)
 let ite_check_via_nf
+  ~(last_t0:bool)
   ~(name:string)
   ~(binder:string)
   ~(base:string)
@@ -1200,8 +1260,8 @@ let ite_check_via_nf
               (pp_nf_as_type ~binder ~base else_nf));
 
     (* Both branches must satisfy the annotation NF *)
-    let ok_then = nf_match_and_check ~cid:5 ~name:(name^":then") ~binder ~base then_nf ann_nf in
-    let ok_else = nf_match_and_check ~cid:5 ~name:(name^":else") ~binder ~base else_nf ann_nf in
+    let ok_then = nf_match_and_check ~last_t0 ~cid:5 ~name:(name^":then") ~binder ~base then_nf ann_nf in
+    let ok_else = nf_match_and_check ~last_t0 ~cid:5 ~name:(name^":else") ~binder ~base else_nf ann_nf in
     ok_then && ok_else
 
 (* v = e1  &&  X(G(M(v = e2)))  → normalize whole thing to NF *)
@@ -1290,13 +1350,25 @@ let process_let_rec_fby
     shifted_ghosts;
 
   let lhs_tail_nf = nf_eq_v_rhs_fby_tail ~shift:1 e2 in
+  (* Compare the tail against the annotation's INVARIANT, not the whole
+     annotation.  [ann_nf] is [phi && nxt(globally psi)], where [phi] is the
+     value at t=0 — and that is already discharged by the HEAD check above,
+     against [e1].  [lhs_tail_nf]'s own head is the tail's first value, i.e.
+     the value at t=1, so matching it against [phi] demands that t=1 satisfy a
+     t=0 fact: for [ex = 1 fby (ex+1) : {v | v = 1 && nxt(globally(v > last_ex))}]
+     it asked to prove [last_ex + 1 = 1].  That obligation is false, and used to
+     pass only because the [last_ex] ghost was installed as the self-
+     contradictory [last_ex > last_ex], making the whole environment
+     inconsistent and every query vacuously safe. *)
+  let (_phi_ann_tail, psi_ann_tail) = base_ind_of_nf ann_nf in
+  let ann_tail_nf = mk_and psi_ann_tail (mk_X (mk_G psi_ann_tail)) in
   let ok_tail =
     nf_match_and_check
       ~cid:5
       ~name:(x ^ ":rec-fby-tail")
       ~binder:ret_binder
       ~base:base_name
-      lhs_tail_nf ann_nf
+      lhs_tail_nf ann_tail_nf
   in
   if not ok_tail then begin
     (* rollback provisional binding *)
@@ -1828,15 +1900,6 @@ let preload_refenv_vars_aut (vars : (string * Zelus.type_expression) list) : uni
 
 (* ===================== [init] / [last] in a plain [let rec] ================ *)
 
-(* [init x = e] equations seen so far.
-
-   In Zelus [init x = e] initializes the MEMORY of [x] — that is, [last x] at
-   the first instant — and never [x] itself; at t=0 [x] is whatever its own
-   equation computes.  (Typing records [EQinit] in the *initialized* set and
-   never in the *defined* set, and code generation emits a static [init] into
-   the machine's [reset] method only, never into [step].)  So this table is
-   exactly what a t=0 query must substitute for [last_x]. *)
-let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
 
 (* The sound environment fact for the ghost [last_y] at every instant t>=1.
 
@@ -1993,6 +2056,31 @@ let preload_block_lasts (eqs : Zelus.eq list) : unit =
               "Liquid type error: 'last %s' is used in this block but there is no \
                'init %s = ...' to give its value at the first instant" y y))
     lasts;
+
+  (* 3b) An [x = e1 fby e2] tail ALSO needs [last_z] ghosts, for every plain
+        variable [z] of [e2] — [nf_fby_eq] builds the tail by shifting [e2] one
+        instant into the past, so [z] becomes [last_z] even though the source
+        contains no [last] node at all.  The existing
+        [ensure_last_of_bound_var (collect_plain_vars e2)] in the fby arm is a
+        gamma lookup, so it silently no-ops when [z]'s own equation comes later
+        in the block ([prev = 0 fby ex] with [ex] defined below it), leaving
+        [last_z] free and crashing the solver.  Seed those here as well.
+
+        No [init] is required for these: the fby's own head [e1] supplies the
+        first instant, so there is nothing to look up at t=0. *)
+  let fby_tail_lasts =
+    List.fold_left
+      (fun acc (eq : Zelus.eq) ->
+         match eq.eq_desc with
+         | EQeq (pat, rhs) ->
+             (match pat.p_desc, rhs.e_desc with
+              | Zelus.Etypeconstraintpat (_, _), Zelus.Eop (Zelus.Efby, [_e1; e2]) ->
+                  collect_plain_vars e2 @ acc
+              | _ -> acc)
+         | _ -> acc)
+      [] eqs
+    |> List.sort_uniq String.compare
+  in
   (* 4) Install a ghost ONLY for the variables actually read through [last],
         then close over whatever further [last_z] their facts name.
 
@@ -2027,59 +2115,7 @@ let preload_block_lasts (eqs : Zelus.eq list) : unit =
                  (collect_last_vars_zpt pred []))
     end
   in
-  List.iter install_needed lasts
-
-(* [nf_match_and_check] for an equation whose RHS reads [last y].
-
-   [nf_match_and_check] runs its t=0 and t>=1 sub-queries against the SAME
-   environment, but the [last_*] facts are t>=1 facts: at t=0 [last y] is
-   [init y], which need not satisfy [y]'s invariant.  Left in scope for the t=0
-   query they would let an out-of-range [init] be "proved" in range.  So the
-   t=0 query runs with every [last_*] fact neutralized and with [last_y]
-   substituted by [init y] on both sides, while the t>=1 query keeps the full
-   environment — the same discipline as the automaton head / globally-base
-   checks. *)
-let nf_match_and_check_with_last
-      ~(name:string) ~(binder:string) ~(base:string)
-      (lhs_nf:Zparsetree.exp) (rhs_nf:Zparsetree.exp) : bool =
-  let (phi_lhs, psi_lhs) = split_nf lhs_nf in
-  let (phi_rhs, psi_rhs) = split_nf rhs_nf in
-  let init_of_last nm =
-    if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
-      let y = String.sub nm 5 (String.length nm - 5) in
-      match Hashtbl.find_opt init_table y with
-      | Some e -> Some { Zparsetree.desc = vc_gen_expression e; loc = dummy_loc }
-      | None -> None
-    else None
-  in
-  let rec subst_last (e : Zparsetree.exp) : Zparsetree.exp =
-    match e.desc with
-    | Zparsetree.Evar (Name s) ->
-        (match init_of_last s with Some e' -> e' | None -> e)
-    | Zparsetree.Eapp (ai, fn, args) ->
-        { e with desc =
-            Zparsetree.Eapp (ai, subst_last fn, List.map subst_last args) }
-    | Zparsetree.Etuple es ->
-        { e with desc = Zparsetree.Etuple (List.map subst_last es) }
-    | _ -> e
-  in
-  (* t=0 *)
-  let saved_t0_gamma = neutralize_stream_facts_for_t0 [] in
-  let ok_now =
-    run_subtyping_pred ~cid:5 ~name:(name ^ ":t0") ~binder ~base
-      (subst_last phi_lhs) (subst_last phi_rhs)
-  in
-  gamma := saved_t0_gamma;
-  if not ok_now then false
-  else begin
-    (* t>=1, with the full environment restored *)
-    let psi_lhs', psi_rhs' = strip_matching_ltl psi_lhs psi_rhs in
-    if is_true psi_rhs' then true
-    else if is_ltl_free psi_lhs' && is_ltl_free psi_rhs' then
-      run_subtyping_pred ~cid:5 ~name:(name ^ ":tail") ~binder ~base
-        psi_lhs' psi_rhs'
-    else false
-  end
+  List.iter install_needed (List.sort_uniq String.compare (lasts @ fby_tail_lasts))
 
 let process_scalar_eq base_pat ty_ann_zelus rhs =
     debug "Processing let eq with annotation";
@@ -2129,18 +2165,10 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
        this covers every other shape (ITE, calls, plain synthesis). *)
     List.iter ensure_last_of_bound_var (collect_last_vars rhs);
 
-    (* When the RHS reads [last y], the t=0 and t>=1 obligations need different
-       environments (see [nf_match_and_check_with_last]); otherwise the ordinary
-       one-environment check applies. *)
+    (* Does this equation's own t=0 obligation involve a [last]? If so the
+       checks below must discharge it against [init y] rather than against
+       [y]'s invariant (see the "now" part of [nf_match_and_check]). *)
     let rhs_reads_last = collect_last_vars rhs <> [] in
-    let check_synth_nf ~(name:string) lhs_nf rhs_nf =
-      if rhs_reads_last then
-        nf_match_and_check_with_last
-          ~name ~binder:value_var ~base:base_name lhs_nf rhs_nf
-      else
-        nf_match_and_check
-          ~cid:5 ~name ~binder:value_var ~base:base_name lhs_nf rhs_nf
-    in
 
     (* {v | true} fast-path *)
     (match pred_zpt.desc with
@@ -2208,7 +2236,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
         
               let ok =
                 nf_match_and_check
-                  ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                  ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                   lhs_nf ann_nf
               in
         
@@ -2262,7 +2290,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                         (pp_nf_as_type ~binder:ret_binder ~base:base_name ann_nf));
                 let ok =
                   nf_match_and_check
-                    ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                    ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                     lhs_nf ann_nf
                 in
                 if ok then
@@ -2282,6 +2310,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
             | Zelus.Eop (Zelus.Eifthenelse, i :: t_then :: t_else :: []) ->
                 let ok =
                   ite_check_via_nf
+                    ~last_t0:rhs_reads_last
                     ~name:x ~binder:ret_binder ~base:base_name
                     ~ann_nf ~cond:i ~t_then ~t_else
                 in
@@ -2344,7 +2373,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
               (* 5) Subtyping: (callee_ret_nf  caller_ann_nf') in NF *)
               let ok =
                 nf_match_and_check
-                  ~cid:5 ~name:(fname ^ ":call-ret")
+                  ~last_t0:rhs_reads_last ~cid:5 ~name:(fname ^ ":call-ret")
                   ~binder:ret_binder ~base:ret_base_name
                   callee_ret_nf caller_ann_nf'
               in
@@ -2394,7 +2423,11 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                       (* Not found in  -> fall back to synthesizing v=rhs && X(G(v=rhs)) *)
                       let v_eq_rhs = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc = dummy_loc } in
                       let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
-                      let ok_nf = check_synth_nf ~name:x lhs_nf ann_nf in
+                      let ok_nf =
+                        nf_match_and_check
+                          ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                          lhs_nf ann_nf
+                      in
                       let rhs_ty_zpt =
                         { desc = Zparsetree.Erefinement ((ret_binder, base_ty), ann_nf)
                         ; loc  = dummy_loc }
@@ -2408,7 +2441,11 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                      [Elast] node and not a plain variable reference. *)
                   let v_eq_rhs = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc = dummy_loc } in
                   let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
-                  let ok_nf = check_synth_nf ~name:x lhs_nf ann_nf in
+                  let ok_nf =
+                        nf_match_and_check
+                          ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                          lhs_nf ann_nf
+                      in
                   let rhs_ty_zpt =
                     { desc = Zparsetree.Erefinement ((ret_binder, base_ty), ann_nf)
                     ; loc  = dummy_loc }
@@ -3509,6 +3546,8 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                  [ann_nf] is canonicalized to [value_var] by [zls_pred_to_nf]. *)
               let ann_nf = zls_pred_to_nf ~binder:v ann_pred in
               let ok = ite_check_via_nf
+                          (* top-level constant: no equation, so no [last] *)
+                          ~last_t0:false
                           ~name:id
                           ~binder:value_var
                           ~base:base_name
@@ -3557,8 +3596,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                 loc = dummy_loc }
             in
             add_binding id rhs_ty_zpt
-          ) else (
-          (
+          ) else ((
           match base_ty.desc with 
             | Zelus.Etypefun(a, b, arg, out) -> (
               match arg.desc with

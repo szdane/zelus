@@ -1,0 +1,13 @@
+(* ==== NEG: precision gate for [pos/monotonic_no_ghost.zls] ====
+   [ex = prev] is not strictly increasing, so [globally(ex > prev)] must fail. *)
+let node exec () : {(vz:int)|true} =
+  let rec init ex = 0
+  and (prev : {prev:int | prev = 0 && nxt(globally(prev >= 0))}) = last ex
+  and (ex : {ex:int | ex = 1 && nxt(globally(ex > prev))}) = prev
+in ex
+
+let dt = 0.1
+let hybrid main () =
+  let rec trigger = (period (dt)) in
+  present (trigger) -> (let x = exec () in (print_int x; print_newline ()))
+  else ()
