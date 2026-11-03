@@ -40,6 +40,64 @@ open Utilities
 open ResetUtils
 
 
+(* new code for ** *)
+let rec const_value_of_pred (p : Zparsetree.exp) : Zparsetree.exp option =
+  match p.Zparsetree.desc with
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "="); _ },
+                     [ { Zparsetree.desc = Zparsetree.Evar (Name "v"); _ };
+                       ({ Zparsetree.desc = Zparsetree.Econst _; _ } as c) ]) -> Some c
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "&&"); _ }, [a; b]) ->
+      (match const_value_of_pred a with
+       | Some c -> Some c
+       | None -> const_value_of_pred b)
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name ""); _ }, [inner]) ->
+      const_value_of_pred inner
+  | _ -> None
+
+let int_of_const (c : Zparsetree.exp) : int option =
+  match c.Zparsetree.desc with
+  | Zparsetree.Econst (Eint n) -> Some n
+  | Zparsetree.Econst (Efloat f) when Float.is_integer f -> Some (int_of_float f)
+  | _ -> None
+
+let exponent_value (ex : Zparsetree.exp) : int option =
+  match ex.Zparsetree.desc with
+  | Zparsetree.Evar (Name p) ->
+      (match find_binding p with
+       | Some { Zparsetree.desc = Zparsetree.Erefinement (_, pred); _ } ->
+           Option.bind (const_value_of_pred pred) int_of_const
+       | _ -> None)
+  | _ -> int_of_const ex
+
+let rec expand_pow (e : Zparsetree.exp) : Zparsetree.exp =
+  match e.Zparsetree.desc with
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "**"); _ }, [b; ex]) ->
+      let b' = expand_pow b in
+      (match exponent_value ex with
+       | Some n when n >= 1 ->
+           let rec prod k =
+             if k = 1 then b' else mk_app (mk_var "*") [b'; prod (k - 1)]
+           in
+           mk_paren (prod n)
+       | _ ->
+           failwith "Liquid type error: '**' needs an exponent that is a literal \
+                     or a constant variable with a known integer value >= 1")
+  | Zparsetree.Eapp (ai, f, args) ->
+      { e with Zparsetree.desc = Zparsetree.Eapp (ai, f, List.map expand_pow args) }
+  | Zparsetree.Etuple es ->
+      { e with Zparsetree.desc = Zparsetree.Etuple (List.map expand_pow es) }
+  | _ -> e
+
+let vc_gen_expression_orig = vc_gen_expression
+let vc_gen_expression_shifted_orig = vc_gen_expression_shifted
+
+let vc_gen_expression e =
+  (expand_pow { Zparsetree.desc = vc_gen_expression_orig e; loc = dummy_loc }).Zparsetree.desc
+
+let vc_gen_expression_shifted ~shift e =
+  (expand_pow { Zparsetree.desc = vc_gen_expression_shifted_orig ~shift e; loc = dummy_loc }).Zparsetree.desc
+  (* end new code *)
+
 let build_fby_pred_with_ghosts ~(binder:string)
                                ~(base:string) rhs1 rhs2
   : Zparsetree.exp =
@@ -135,13 +193,36 @@ let save_failing_fq ~(label : string) (fq_txt : string) : string option =
    and the message that points at it. *)
 let fixpoint_is_safe ?(label = "check") (fq_txt : string) : bool =
   ensure_fixpoint_installed ();
-  debug (Printf.sprintf "%s" fq_txt);
+(* debug (Printf.sprintf "%s" fq_txt); *)
+(* new code display for name of variable rhs & lhs *)
+  Printf.printf "\n\n\027[1;36m>>> [CHECKING] %s\027[0m%!" label;
+  fq_txt
+  |> String.split_on_char '\n'
+  |> List.map String.trim
+  |> List.filter (fun l ->
+      let starts p =
+        String.length l >= String.length p
+        && String.sub l 0 (String.length p) = p
+      in
+      starts "lhs" || starts "rhs")
+  |> List.iter debug;
+(* end new code *)
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in
   let oc = open_out tmp in
   output_string oc fq_txt;
   close_out oc;
+  (* let status = Sys.command (Printf.sprintf "fixpoint %s" (Filename.quote tmp)) in *)
+  (* new code display *)
+  let t0 = Unix.gettimeofday () in
   let status = Sys.command (Printf.sprintf "fixpoint %s" (Filename.quote tmp)) in
+  let dt = Unix.gettimeofday () -. t0 in
+  if status = 0 then begin
+    let color = if dt > 10.0 then "\027[1;38;5;208m" else "\027[1;32m" in
+    Printf.printf "%s>>> [DONE]  %s (%.2fs)\027[0m\n\n%!" color label dt
+  end else
+  Printf.printf "\027[1;31m>>> [FAILED] %s (%.2fs)\027[0m\n\n%!" label dt;
+(* end new code *)
   (try Sys.remove tmp with Sys_error _ -> ());
   if status <> 0 then begin
     match save_failing_fq ~label fq_txt with
@@ -418,12 +499,15 @@ let debug_nf (tag:string) ~(binder:string) (pred_zls:Zelus.exp) : unit =
       (* [nf] is canonicalized, so the value variable shown is [value_var]; name
          the source binder alongside it when it differed. *)
       if binder = value_var then
-        Printf.sprintf "{%s | %s}" value_var (Pprint.string_of_expr nf)
+        (* Printf.sprintf "{%s | %s}" value_var (Pprint.string_of_expr nf) *)
+        ()
       else
-        Printf.sprintf "{%s | %s}  (declared binder %s)"
-          value_var (Pprint.string_of_expr nf) binder
+        (* Printf.sprintf "{%s | %s}  (declared binder %s)"
+          value_var (Pprint.string_of_expr nf) binder *)
+          ()
     in
-    debug (Printf.sprintf "[NF:%s] %s" tag s_now)
+    (* debug (Printf.sprintf "[NF:%s] %s" tag s_now) *)
+    ()
 
 (* As [debug_nf], but for predicates that are NOT canonicalized to [value_var]
    (labeled-tuple returns, which keep their per-component binders). *)
@@ -558,8 +642,8 @@ let nf_match_and_check ~cid ~(name:string) ~(binder:string) ~(base:string)
     if not ok_now then (false )else
     (* 3. strip common x/g/m chain from the “later” part *)
     let psi_lhs', psi_rhs' = strip_matching_ltl psi_lhs psi_rhs in
-    debug (Printf.sprintf "[NF:later stripped] LHS: %s" (Pprint.string_of_expr psi_lhs'));
-    debug (Printf.sprintf "[NF:later stripped] RHS: %s" (Pprint.string_of_expr psi_rhs'));
+    (* debug (Printf.sprintf "[NF:later stripped] LHS: %s" (Pprint.string_of_expr psi_lhs'));
+    debug (Printf.sprintf "[NF:later stripped] RHS: %s" (Pprint.string_of_expr psi_rhs')); *)
 
     (* 4. only check the “later” part when residuals are LTL-free *)
     if is_true psi_rhs' then true
@@ -1115,12 +1199,12 @@ let install_fby_binding ~(name:string)
   (i:Zelus.exp) (t_then:Zelus.exp) (t_else:Zelus.exp)
   : unit =
   (* 1) Synthesized NFs for each branch: v = <rhs> && X(G(v = <rhs>)) *)
-  let nf_then = nf_eq_v_rhs t_then "v" in
+  (* let nf_then = nf_eq_v_rhs t_then "v" in
   let nf_else = nf_eq_v_rhs t_else "v" in
   debug (Printf.sprintf "[NF:let LHS then] %s"
            (pp_nf_as_type ~binder:ret_binder ~base:base_name nf_then));
   debug (Printf.sprintf "[NF:let LHS else] %s"
-           (pp_nf_as_type ~binder:ret_binder ~base:base_name nf_else));
+           (pp_nf_as_type ~binder:ret_binder ~base:base_name nf_else)); *)
 
   (* 2) Normalize the declared annotation once *)
   let ann_nf = zls_pred_to_nf ~binder:ret_binder ann_pred in
@@ -2098,12 +2182,12 @@ let nf_match_and_check_with_last
   end
 
 let process_scalar_eq base_pat ty_ann_zelus rhs =
-    debug "Processing let eq with annotation";
+    (* debug "Processing let eq with annotation";
     (match as_desugared_reset rhs with
     | Some _ ->
         debug "[NF:synth lhs] skipping direct debug_nf_synth_lhs for reset-desugared Eblock"
     | None ->
-        debug_nf_synth_lhs rhs);
+        debug_nf_synth_lhs rhs); *)
       
     (* Bound variable name *)
     let x =
@@ -2217,10 +2301,10 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
               let lasts_in_cond = collect_last_vars cond in
               List.iter (fun nm -> ensure_last_ghost ~x_name:nm ~base_name:base_name) lasts_in_cond;
         
-              debug (Printf.sprintf "[NF:let LHS reset] %s"
+              (* debug (Printf.sprintf "[NF:let LHS reset] %s"
                        (pp_nf_as_type ~binder:ret_binder ~base:base_name lhs_nf));
               debug (Printf.sprintf "[NF:let RHS ann NF] %s"
-                       (pp_nf_as_type ~binder:ret_binder ~base:base_name ann_nf));
+                       (pp_nf_as_type ~binder:ret_binder ~base:base_name ann_nf)); *)
         
               let ok =
                 nf_match_and_check
@@ -2272,10 +2356,10 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
           
                 List.iter ensure_last_of_bound_var (collect_plain_vars e2);
                 let lhs_nf = nf_fby_eq ~binder:ret_binder ~e1 ~e2 in
-                debug (Printf.sprintf "[NF:let LHS fby] %s"
+                (* debug (Printf.sprintf "[NF:let LHS fby] %s"
                         (pp_nf_as_type ~binder:ret_binder ~base:base_name lhs_nf));
                 debug (Printf.sprintf "[NF:let RHS ann NF] %s"
-                        (pp_nf_as_type ~binder:ret_binder ~base:base_name ann_nf));
+                        (pp_nf_as_type ~binder:ret_binder ~base:base_name ann_nf)); *)
                 let ok =
                   nf_match_and_check
                     ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
@@ -3135,14 +3219,14 @@ let process_unannotated_scalar_eq (x : string) (rhs : Zelus.exp) : unit =
      refinement and its own base, so it needs neither of the above. *)
   match call_ret_nf_of_rhs rhs with
   | Some (call_nf, ret_base) ->
-      debug (Printf.sprintf "[NF:let-noann call] %s"
-               (pp_nf_as_type ~binder:value_var ~base:ret_base call_nf));
+      (* debug (Printf.sprintf "[NF:let-noann call] %s"
+               (pp_nf_as_type ~binder:value_var ~base:ret_base call_nf)); *)
       add_binding x (mk_refine value_var (String.lowercase_ascii ret_base) call_nf)
   | None ->
   match base_opt with
-  | None ->
-      debug (Printf.sprintf
-               "[NF:let-noann] %s: base sort undetermined, no binding installed" x)
+  | None -> ()
+      (* debug (Printf.sprintf
+               "[NF:let-noann] %s: base sort undetermined, no binding installed" x) *)
   | Some base_name ->
       let opaque =
         match rhs.e_desc with
@@ -3162,8 +3246,8 @@ let process_unannotated_scalar_eq (x : string) (rhs : Zelus.exp) : unit =
         else synth_nf_of_rhs ~binder:value_var base_name rhs
       in
       let pred = match nf_opt with Some nf -> nf | None -> mk_and mk_true (mk_X mk_true) in
-      debug (Printf.sprintf "[NF:let-noann] %s"
-               (pp_nf_as_type ~binder:value_var ~base:base_name pred));
+      (* debug (Printf.sprintf "[NF:let-noann] %s"
+               (pp_nf_as_type ~binder:value_var ~base:base_name pred)); *)
       add_binding x (mk_refine value_var (String.lowercase_ascii base_name) pred)
 
 let process_let_eq (eq : Zelus.eq) : unit =

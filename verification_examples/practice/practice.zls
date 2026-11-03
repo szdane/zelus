@@ -574,3 +574,36 @@ let hybrid main () =
 in present trigger -> (let x = 1. in print_newline () ) else () *)
 
 
+
+
+
+
+
+let r : {r : float|globally(r = 1.)} = 1.
+
+let dt : {dt : float|globally(dt = 0.1)} = 0.1
+
+let kp : {kp : float|globally(kp = 2.)} = 2.
+
+let x0 : {x0 : float|globally(x0 = 0.)} = 0.
+let error0 : {error0 : float|globally(error0 = r -. x0)} = r -. x0
+
+let kmin : {kmin : float|globally(kmin = 10.)} = 10.
+
+
+let node exec () : {(vx:float)*(ve:float)|globally(vx = last_xk1 && ve = errork)} =
+  let rec init xk1 = x0
+  and (xk : {xk:float|globally((xk = last_xk1) && (0. <= xk))}) = last xk1
+
+
+  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+  and (errorbound : {errorbound:float|globally(errorbound <= 0.64)}) = (1. -. kp *. dt) *. errork
+in xk, errork
+
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) 
+in present trigger -> (let x = 1. in print_newline () ) else ()

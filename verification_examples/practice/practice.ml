@@ -1,50 +1,68 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-09-18-15:3) *)
+  (2026-11-3-21:30) *)
 open Ztypes
-type _exec = unit
+let r = 1.
+
+let dt = 0.1
+
+let kp = 2.
+
+let x0 = 0.
+
+let error0 = (-.) r  x0
+
+let kmin = 10.
+
+type ('b , 'a) _exec =
+  { mutable i_41 : 'b ; mutable xk1_39 : 'a }
 
 let exec  = 
-   let exec_alloc _ = () in
+   let exec_alloc _ =
+     ();{ i_41 = (false:bool) ; xk1_39 = (42.:float) } in
   let exec_reset self  =
-    ((()):unit) in 
+    (self.i_41 <- true:unit) in 
   let exec_step self () =
-    ((let ((xk_21:float): float) = 1. in
-      xk_21):float) in
+    (((if self.i_41 then self.xk1_39 <- x0) ;
+      (let (l_40:float) = self.xk1_39 in
+       let ((xk_38:float): float) = l_40 in
+       let ((errork_36:float): float) = (-.) r  xk_38 in
+       let ((uk_37:float): float) = ( *. ) kp  errork_36 in
+       let ((copy_52:float): float) = (+.) xk_38  (( *. ) uk_37  dt) in
+       self.xk1_39 <- copy_52 ;
+       self.i_41 <- false ;
+       (let ((errorbound_35:float): float) =
+            ( *. ) ((-.) 1.  (( *. ) kp  dt))  errork_36 in
+        (xk_38 , errork_36)))):float * float) in
   Node { alloc = exec_alloc; reset = exec_reset ; step = exec_step }
-type ('f , 'e , 'd , 'c , 'b , 'a) _main =
-  { mutable i_32 : 'f ;
-    mutable major_23 : 'e ;
-    mutable h_30 : 'd ;
-    mutable i_28 : 'c ; mutable h_26 : 'b ; mutable result_25 : 'a }
+type ('e , 'd , 'c , 'b , 'a) _main =
+  { mutable major_43 : 'e ;
+    mutable h_50 : 'd ;
+    mutable i_48 : 'c ; mutable h_46 : 'b ; mutable result_45 : 'a }
 
-let main (cstate_33:Ztypes.cstate) = 
-  let Node { alloc = i_32_alloc; step = i_32_step ; reset = i_32_reset } = exec 
-   in
+let main (cstate_53:Ztypes.cstate) = 
+  
   let main_alloc _ =
     ();
-    { major_23 = false ;
-      h_30 = 42. ;
-      i_28 = (false:bool) ; h_26 = (42.:float) ; result_25 = (():unit);
-      i_32 = i_32_alloc () (* discrete *)  } in
-  let main_step self ((time_22:float) , ()) =
-    ((self.major_23 <- cstate_33.major ;
-      (let (result_38:unit) =
-           let h_29 = ref (infinity:float) in
-           (if self.i_28 then self.h_26 <- (+.) time_22  0.) ;
-           (let (z_27:bool) = (&&) self.major_23  ((>=) time_22  self.h_26) in
-            self.h_26 <- (if z_27 then (+.) self.h_26  0.1 else self.h_26) ;
-            h_29 := min !h_29  self.h_26 ;
-            self.h_30 <- !h_29 ;
-            self.i_28 <- false ;
-            (let (trigger_24:zero) = z_27 in
-             (begin match trigger_24 with
+    { major_43 = false ;
+      h_50 = 42. ;
+      i_48 = (false:bool) ; h_46 = (42.:float) ; result_45 = (():unit) } in
+  let main_step self ((time_42:float) , ()) =
+    ((self.major_43 <- cstate_53.major ;
+      (let (result_58:unit) =
+           let h_49 = ref (infinity:float) in
+           (if self.i_48 then self.h_46 <- (+.) time_42  0.) ;
+           (let (z_47:bool) = (&&) self.major_43  ((>=) time_42  self.h_46) in
+            self.h_46 <- (if z_47 then (+.) self.h_46  0.1 else self.h_46) ;
+            h_49 := min !h_49  self.h_46 ;
+            self.h_50 <- !h_49 ;
+            self.i_48 <- false ;
+            (let (trigger_44:zero) = z_47 in
+             (begin match trigger_44 with
                     | true ->
-                        let (x_31:float) = i_32_step self.i_32 () in
-                        let _ = print_int 1 in
-                        self.result_25 <- print_newline ()
-                    | _ -> self.result_25 <- ()  end) ; self.result_25)) in
-       cstate_33.horizon <- min cstate_33.horizon  self.h_30 ; result_38)):
-    unit) in 
-  let main_reset self  =
-    ((self.i_28 <- true ; i_32_reset self.i_32 ):unit) in
+                        let (x_51:float) = 1. in
+                        self.result_45 <- print_newline ()
+                    | _ -> self.result_45 <- ()  end) ; self.result_45)) in
+       cstate_53.horizon <- min cstate_53.horizon  self.h_50 ; result_58)):
+    unit) in  let main_reset self  =
+                (self.i_48 <- true:unit) in
   Node { alloc = main_alloc; step = main_step ; reset = main_reset }

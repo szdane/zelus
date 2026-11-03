@@ -31,7 +31,7 @@ let rec string_of_basic_type (t : type_expression) =
   | _ -> "<complex-type>"
 
 let is_infix op =
-  List.mem op ["<"; "<="; ">"; ">="; "="; "!="; "&&"; "||"; "+"; "-"; "*"; "/"; "=>"; "-."; "+."; "*."; "/."; "==>"; "<=>"]
+  List.mem op ["<"; "<="; ">"; ">="; "="; "!="; "<>"; "&&"; "||"; "+"; "-"; "*"; "/"; "=>"; "-."; "+."; "*."; "/."; "**" ;"==>"; "<=>"]
 
 let rec string_of_expr (e : exp) =
   match e.desc with
@@ -44,11 +44,14 @@ let rec string_of_expr (e : exp) =
 
   | Eapp (_, { desc = Evar (Name "not"); _ }, [e1]) ->
       "not (" ^ string_of_expr e1 ^ ")"
-
+  
   (* Infix ops (binary) *)
   | Eapp (_, { desc = Evar (Name op); _ }, [e1; e2]) when is_infix op ->
     (match op with
     | "-." | "+." | "*." | "/." -> Printf.sprintf "(%s %s %s)" (string_of_expr e1) (String.sub op 0 1) (string_of_expr e2)
+    (* new code for <> *)
+    | "<>" -> Printf.sprintf "(%s != %s)" (string_of_expr e1) (string_of_expr e2)
+    (* end new code *)
     | _ ->  Printf.sprintf "(%s %s %s)" (string_of_expr e1) op (string_of_expr e2) )
 
   (* Generic function application: f(a,b,...) *)
