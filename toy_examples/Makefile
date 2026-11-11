@@ -6,7 +6,7 @@ INCLUDE=-I /usr/local/include
 CCLIB="-g `pkg-config --libs --cflags lcm`"
 MLFLAGS=-linkpkg -package zelus
 
-EXAMPLES=casc parallel parallel_v2
+EXAMPLES=casc parallel parallel_v2 buggy
 
 .PHONY: sim all clean $(EXAMPLES)
 

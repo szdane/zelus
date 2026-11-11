@@ -43,5 +43,16 @@ let bad =
     (files "bad" ".zls")
 
 
+(* Check parsing and typing without running the code generation passes. *)
+let typing_good =
+  List.map
+    (fun file -> (file, `Quick, fun () ->
+      let saved = !typeonly in
+      typeonly := true;
+      Fun.protect ~finally:(fun () -> typeonly := saved)
+        (fun () -> good_one file)))
+    (files "typing_good" ".zls")
+
 (* Main test runner. *)
-let () = Alcotest.run  "zelus_tests" [("good", good); ("bad", bad)]
+let () = Alcotest.run "zelus_tests"
+  [("good", good); ("bad", bad); ("typing_good", typing_good)]

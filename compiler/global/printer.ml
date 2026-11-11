@@ -118,7 +118,8 @@ and ptype ff ty =
 	if prio > prio_op then fprintf ff ")" in
   match ty.desc with
     | Etypevar(s) -> fprintf ff "'%s" s
-    | Erefinement(s,_) -> ptype ff ty
+    | Erefinement((binder, base), pred) ->
+        fprintf ff "@[{%s: %a | %a}@]" binder ptype base expression pred
     (*added here
     | Eipoptype(_) -> ptype ff ty*)
     | Etypeconstr(ln, ty_list) ->
@@ -138,13 +139,13 @@ and ptype ff ty =
     | Etypevec(ty_arg, size) ->
        fprintf ff "@[%a[%a]@]" ptype ty_arg (psize 0) size
 
-let default ff = function
+and default ff = function
   | Init(v) -> fprintf ff " init %a" constant v
   | Default(v) -> fprintf ff " default %a" constant v
 
-let combine ff v = fprintf ff " with %a" longname v
+and combine ff v = fprintf ff " with %a" longname v
 
-let print_vardec_list ff vardec_list =
+and print_vardec_list ff vardec_list =
   let vardec ff
       { vardec_name = n; vardec_default = d_opt; vardec_combine = c_opt } =
     fprintf ff "@[%a%a%a@]" name n
@@ -153,13 +154,13 @@ let print_vardec_list ff vardec_list =
   then fprintf ff "@[<v 2>%a@ @]"
     (print_list_r vardec "local " "," "") vardec_list
 
-let kind k =
+and kind k =
   match k with
   | Cont -> "cont" | Zero -> "zero"
   | Period -> "period" | Horizon -> "horizon"
   | Encore -> "encore" | Major -> "major"
 
-let print_binding ff (n, { t_sort = sort; t_typ = typ }) =
+and print_binding ff (n, { t_sort = sort; t_typ = typ }) =
   let default ff v = fprintf ff " default %a" constant v in
   let combine ff v = fprintf ff " with %a" longname v in
   let init ff i_opt =
@@ -185,14 +186,14 @@ let print_binding ff (n, { t_sort = sort; t_typ = typ }) =
 	     init i_opt
 	     (Zmisc.optional_unit combine) c_opt
 
-let print_env ff env =
+and print_env ff env =
   if !vverbose then begin
     let env = Zident.Env.bindings env in
     if env <> [] then
       fprintf ff "@[<v 0>(* defs: %a *)@,@]"
         (print_list_r print_binding """;""") env
   end
-let print_writes ff { dv = dv; di = di; der = der; nv = nv; mv = mv } =
+and print_writes ff { dv = dv; di = di; der = der; nv = nv; mv = mv } =
   if !vverbose then begin
     let dv = Zident.S.elements dv in
     let di = Zident.S.elements di in
@@ -218,11 +219,11 @@ let print_writes ff { dv = dv; di = di; der = der; nv = nv; mv = mv } =
     close_box ()
   end
 
-let print_eq_info ff { eq_write = w; eq_safe = s; eq_index = i } =
+and print_eq_info ff { eq_write = w; eq_safe = s; eq_index = i } =
   print_writes ff w
 
 (* print a block surrounded by two braces [po] and [pf] *)
-let block locals body po pf ff
+and block locals body po pf ff
 	  { b_vars = vardec_list; b_locals = l; b_body = b;
 	    b_write = w; b_env = n_env } =
   fprintf ff "@[<hov 0>@[%a@]@[%a@]@[%a@]@[%a@]@[%a@]@]"
@@ -232,23 +233,27 @@ let block locals body po pf ff
     locals l
     (body po pf) b
 
-let match_handler body ff { m_pat = pat; m_body = b; m_env = env;
-			    m_reset = r; m_zero = z } =
+and match_handler : 'a. (formatter -> 'a -> unit) -> formatter -> 'a match_handler -> unit =
+  fun body ff { m_pat = pat; m_body = b; m_env = env;
+			    m_reset = r; m_zero = z } ->
   fprintf ff "@[<hov 4>| %a -> %s%s@,%a%a@]"
     pattern pat (if r then "(* reset *)" else "")
                 (if z then "(* zero *)" else "")
     print_env env body b
 
-let present_handler scondpat body ff { p_cond = scpat; p_body = b; p_env = env } =
+and present_handler : 'a. (formatter -> scondpat -> unit) ->
+  (formatter -> 'a -> unit) -> formatter -> 'a present_handler -> unit =
+  fun scondpat body ff { p_cond = scpat; p_body = b; p_env = env } ->
   fprintf ff "@[<hov4>| (%a) ->@ @[<v 0>%a%a@]@]"
     scondpat scpat print_env env body b
 
-let period expression ff { p_phase = opt_phase; p_period = p } =
+and period : 'a. (formatter -> 'a -> unit) -> formatter -> 'a period -> unit =
+  fun expression ff { p_phase = opt_phase; p_period = p } ->
   match opt_phase with
     | None -> fprintf ff "@[(%a)@]" expression p
     | Some(phase) -> fprintf ff "@[(%a|%a)@]" expression phase expression p
 
-let rec expression ff e =
+and expression ff e =
   if Deftypes.is_no_typ e.e_typ && !vverbose then
     fprintf ff "@[(* %a *)@]" Ptypes.output e.e_typ;
   match e.e_desc with
@@ -336,17 +341,24 @@ and operator ff op e_list =
 
 and equation ff ({ eq_desc = desc } as eq) =
   print_eq_info ff eq;
+  let der_binding ff n =
+    match eq.eq_der_type with
+    | None -> name ff n
+    | Some ty -> fprintf ff "(%a : %a)" name n ptype ty
+  in
   match desc with
     | EQeq(p, e) ->
       fprintf ff "@[<hov 2>%a =@ %a@]" pattern p expression e
     | EQder(n, e, e0_opt, []) ->
       fprintf ff "@[<hov 2>der %a =@ %a %a@]"
-        name n expression e
+        der_binding n
+        expression e
         (optional_unit
            (fun ff e -> fprintf ff "init %a " expression e)) e0_opt
     | EQder(n, e, e0_opt, present_handler_list) ->
       fprintf ff "@[<hov 2>der %a =@ %a %a@ @[<hov 2>reset@ @[%a@]@]@]"
-        name n expression e
+        der_binding n
+        expression e
         (optional_unit
            (fun ff e -> fprintf ff "init %a " expression e)) e0_opt
         (print_list_l (present_handler scondpat expression) """""")

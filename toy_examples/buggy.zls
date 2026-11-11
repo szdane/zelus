@@ -1,0 +1,16 @@
+let node exec () : {(vx:float)*(ve:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|(xk = 0. && nxt(globally(xk = last_xk1 && xk >= 1.)))}) = last xk1
+  and (xk1 : {xk1:float|(xk1 = 1. && nxt(globally((xk1 = xk +. 1.) && (xk1 >= 2.))))}) = xk +. 1.
+
+in xk, xk1
+
+
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) in
+  present (trigger) -> (let x, x1 = exec () in
+  print_float x;
+  print_string " ";
+  print_float x1;
+  print_newline ()) else ()

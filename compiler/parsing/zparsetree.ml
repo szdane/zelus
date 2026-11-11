@@ -220,7 +220,7 @@ and state_handler_ann = {
 and eqdesc =
   | EQeq of pattern * exp
     (* [p = e] *)
-  | EQder of name * exp * exp option * exp present_handler list
+  | EQder of name * type_expression option * exp * exp option * exp present_handler list
     (* [der n = e [init e0] [reset p1 -> e1 | ... | pn -> en]] *)
   | EQinit of name * exp
     (* [init n = e0] *)

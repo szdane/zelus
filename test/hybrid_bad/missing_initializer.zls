@@ -1,0 +1,7 @@
+(* an explicitly annotated initializer is required *)
+let hybrid previous () = x where
+  rec init x = (0.0 : {v:float | 0.0 <= v})
+  and der x = 1.0
+
+let hybrid bad () = x where
+  rec der (x : {v:float | globally (0.0 <= v)}) = 1.0

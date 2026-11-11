@@ -181,6 +181,15 @@ let last loc h n =
      entry.t_sort <- Smem { m with m_previous = true }
   end; typ
 
+(* Derivative states contain only floats. Unconstrained leaves default to float,
+   after the RHS, initializer and resets have established the product shape. *)
+let rec derivative_type loc ty =
+  let ty = Ztypes.typ_repr ty in
+  match ty.t_desc with
+  | Tproduct (_ :: _ :: _ as ty_list) ->
+      List.iter (derivative_type loc) ty_list
+  | _ -> unify loc Initial.typ_float ty
+
 (* Typing [der n = ...] *)
 let derivative loc h n =
   let { t_typ = typ; t_sort = sort } as entry = var loc h n in
@@ -960,16 +969,21 @@ and equation expected_k h ({ eq_desc = desc; eq_loc = loc } as eq) =
         (* integration is only valid in a continuous context *)
         less_than loc Tcont expected_k;
         let actual_ty = derivative loc h n in
-        unify loc Initial.typ_float actual_ty;
+        (match eq.eq_der_type with
+         | None -> ()
+         | Some ty ->
+             unify loc actual_ty
+               (Ztypes.instance_of_type (Interface.scheme_of_type ty)));
         expect expected_k h e actual_ty;
         let di =
           match e0_opt with
           | None -> S.empty
           | Some(e) ->
-             expect (Ztypes.lift_to_discrete expected_k) h e Initial.typ_float;
+             expect (Ztypes.lift_to_discrete expected_k) h e actual_ty;
              ignore (init loc h n); S.singleton n in
         ignore (present_handler_exp_list
-                  loc expected_k h p_h_e_list None Initial.typ_float);
+                  loc expected_k h p_h_e_list None actual_ty);
+        derivative_type loc actual_ty;
         { Deftypes.empty with di = di; der = S.singleton n }
     | EQautomaton(is_weak, s_h_list, se_opt) ->
         (* automata are only valid in continuous or discrete context *)

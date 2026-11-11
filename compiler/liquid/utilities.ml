@@ -335,7 +335,6 @@ let add_binding_sim name ty =
     gamma := Env.add name ({desc = Erefinement((name, base_ty), lpred); loc = dummy_loc}) !gamma;
     gamma1 := Env.add name ({desc = Erefinement((name, base_ty), lpred); loc = dummy_loc}) !gamma1;
     | _ -> failwith(Printf.sprintf "It's not a refinement type")
-let current_env ()      = !gamma |> Env.bindings |> List.map snd
 
 
 let gensym =
@@ -476,69 +475,52 @@ let mk_refine (binder:string) (base:string) (pred:Zparsetree.exp)
   mk_type (Zparsetree.Erefinement ((binder, base_ty), pred))
 
 
-(* --- HOIST NON-VAR BOOLEANS FROM UNDER TEMPORAL OPS INTO GHOSTS --- *)
+(* --- Project stream refinements to one Fixpoint instant --- *)
 
 let is_temporal_op (s:string) = (s = "nxt" || s =  "globally" || s = "m" || s = "hd")
 
-(* Replace any non-variable arg under x/g/m/hd with a fresh bool ghost.
-   Accumulates (ghost_name, original_arg_expr) pairs. *)
-let normalize_pred_for_fixpoint ~(binder:string) (p:Zparsetree.exp)
-: Zparsetree.exp =
-    let ghosts : (string * Zparsetree.exp) list ref = ref [] in
+(* Gamma stores stream refinements, whereas Fixpoint reasons about one instant.
+   Select the head for initial queries and the invariant for later queries.
+   A non-temporal gamma fact (constants, guards, last ghosts, or an invariant
+   already extracted by a caller) is valid in the caller's current context.
+   Unsupported temporal residuals contribute no fact: treating them as
+   uninterpreted Boolean functions would silently lose their time semantics. *)
+let rec contains_temporal (p : Zparsetree.exp) =
+  match p.desc with
+  | Eapp (_, { desc = Evar (Name op); _ }, _) when is_temporal_op op -> true
+  | Eapp (_, f, args) -> contains_temporal f || List.exists contains_temporal args
+  | Etuple es -> List.exists contains_temporal es
+  | _ -> false
 
-    (* Insert a ghost for [a] if it's not a var or bare bool. *)
-    let hoist_arg_if_needed (a:Zparsetree.exp) : Zparsetree.exp =
-      match a.desc with
-      | Zparsetree.Evar (Name _) -> a
-      | Zparsetree.Econst (Ebool _) -> a
+let rec environment_pred ~later (p : Zparsetree.exp) =
+  match p.desc with
+  | Eapp (_, { desc = Evar (Name ""); _ }, [arg]) ->
+      environment_pred ~later arg
+  | _ ->
+      match view_and p with
+      | Some (phi, tail) when contains_temporal p ->
+          (match view_ltl tail with
+           | Some (OP_X, rest) ->
+               if not later then environment_pred ~later:false phi
+               else (match view_ltl rest with
+                     | Some (OP_G, psi) -> environment_pred ~later:false psi
+                     | _ -> mk_true)
+           | _ -> mk_and (environment_pred ~later phi) (environment_pred ~later tail))
       | _ ->
-          let g = gensym "tmp" in
-          ghosts := (g, a) :: !ghosts;
-          (* Register ghost as {g:bool | g = a} *)
-          let ty1 = add_bool_ghost g a in 
-          mk_var g
-    in
- 
-   (* Recurse, preserving temporal structure; only hoist the *argument* of temporal ops. *)
-  let rec norm (e:Zparsetree.exp) : Zparsetree.exp =
-    match e.desc with
-    (* Temporal head with one argument: normalize the argument; then hoist if needed. *)
-    | Zparsetree.Eapp (cfg, { desc = Zparsetree.Evar (Name op); _ }, [arg])
-        when is_temporal_op op ->
-        let arg_norm = norm arg in
-        let arg_final =
-          match arg_norm.desc with
-          | Zparsetree.Eapp (_, { desc = Zparsetree.Evar (Name op2); _ }, _)
-              when is_temporal_op op2 ->
-              (* Argument is itself temporal — keep it; do NOT hoist the temporal node. *)
-              arg_norm
-          | _ ->
-              (* Argument is non-temporal: hoist to a ghost if not var/bool. *)
-              hoist_arg_if_needed arg_norm
-        in
-        { desc = Zparsetree.Eapp (cfg, { desc = Zparsetree.Evar (Name op); loc = dummy_loc }, [arg_final]);
-          loc  = dummy_loc }
+          match view_ltl p with
+          | Some (OP_G, psi) -> environment_pred ~later:false psi
+          | Some (OP_X, rest) when later ->
+              (match view_ltl rest with
+               | Some (OP_G, psi) -> environment_pred ~later:false psi
+               | _ -> mk_true)
+          | _ -> if contains_temporal p then mk_true else p
 
-    (* General application: normalize subexpressions. *)
-    | Zparsetree.Eapp (cfg, f, args) ->
-        { desc = Zparsetree.Eapp (cfg, f, List.map norm args);
-          loc  = dummy_loc }
-
-    (* Tuples: normalize components. *)
-    | Zparsetree.Etuple es ->
-        { desc = Zparsetree.Etuple (List.map norm es);
-          loc  = dummy_loc }
-    | _ -> e
-  in
- 
-   let p' = norm p in
- 
-   (* Conjoin ghost definitions up front: (g1 = e1) && (g2 = e2) && ... && p' *)
-  let defs =
-    List.map (fun (g, e) -> mk_paren(mk_eq (mk_var g) (mk_paren e))) !ghosts
-  in
-  List.fold_left (fun acc d -> mk_and d acc) p' defs
-
+let current_env ?(later=false) () =
+  !gamma |> Env.bindings |> List.map (fun (_, ty) ->
+    match ty.desc with
+    | Erefinement (binding, pred) ->
+        { ty with desc = Erefinement (binding, environment_pred ~later pred) }
+    | _ -> ty)
 
 let add_binding (name:string) (ty:Zparsetree.type_expression) =
   (* "v" is the refinement value variable everywhere in the encoding (see
@@ -551,34 +533,19 @@ let add_binding (name:string) (ty:Zparsetree.type_expression) =
       "`v` is reserved as the refinement value variable and cannot be used as a \
        program variable name; rename it";
   match ty.desc with
-  | Erefinement ((var, base_ty), lpred) ->
-      (* Normalize predicate so LF sees only vars under temporal ops *)
-      let lpred_norm = normalize_pred_for_fixpoint ~binder:name lpred in
-      let ty' =
-        { desc = Erefinement ((name, base_ty), lpred_norm);
-          loc  = dummy_loc }
-      in
+  | Erefinement ((_var, base_ty), lpred) ->
+      (* Keep temporal structure until the query selects its time context. *)
       let ty =
         { desc = Erefinement ((name, base_ty), lpred);
           loc  = dummy_loc }
       in
-      gamma := Env.add name ty' !gamma;
+      gamma := Env.add name ty !gamma;
       gamma1 := Env.add name ty !gamma1;
   | _ ->
       failwith "add_binding: expected a refinement type"
 
 let add_binding_for_tuples (name:string) (ty:Zparsetree.type_expression) =
-    match ty.desc with
-    | Zparsetree.Erefinement ((var, base_ty), lpred) ->
-    let lpred_norm = normalize_pred_for_fixpoint ~binder:var lpred in
-    let ty' =
-    { desc = Zparsetree.Erefinement ((var, base_ty), lpred_norm)
-    ; loc  = ty.loc
-    }
-    in
-    gamma := Env.add name ty' !gamma
-    | _ ->
-    gamma := Env.add name ty !gamma
+  gamma := Env.add name ty !gamma
 
 
 let pp_nf_as_type ~(binder:string) ~(base:string) (nf:Zparsetree.exp) : string =

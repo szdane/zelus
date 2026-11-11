@@ -1,0 +1,5 @@
+(* T2-1 requires an expression refinement *)
+let hybrid bad () = x where
+  rec der (x : {v:float | globally (0.0 <= v && v <= 1.0)}) = 1.0
+    init (0.0 : {v:float | 0.0 <= v})
+    reset up (x -. 1.0) -> 0.0

@@ -1,0 +1,3 @@
+let hybrid equilibrium () = x where
+  rec der (x : {v:float | globally (v = 0.0)}) = 0.0
+    init (0.0 : {v:float | v = 0.0})

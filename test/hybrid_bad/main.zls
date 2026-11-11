@@ -1,0 +1,4 @@
+(* T1-establish *)
+let hybrid main () = x where
+  rec der (x : {v:float | globally (0.0 <= v)}) = 1.0
+    init ((-1.0) : {v:float | true})
