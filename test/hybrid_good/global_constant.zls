@@ -1,0 +1,5 @@
+let rate : {r:float | globally (r = 1.0)} = 1.0
+
+let hybrid constant_rate () = x where
+  rec der (x : {w:float | globally (0.0 <= w)}) = rate
+    init (0.0 : {initial:float | globally (0.0 <= initial)})

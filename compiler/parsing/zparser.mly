@@ -83,6 +83,32 @@ let constr c p =
 let block l lo eq_list startpos endpos =
   make { b_locals = l; b_vars = lo; b_body = eq_list } startpos endpos
 
+(* Keep product expressions intact until typing and A-normalization can split
+   their continuous memories. In particular, reset guards and stateful RHS
+   expressions must be evaluated once for the whole tuple. *)
+let tuple_derivative_counter = ref 0
+
+let tuple_derivative p e init resets startpos endpos =
+  let rec check names p =
+    match p.desc with
+    | Evarpat n ->
+        if Zmisc.S.mem n names then begin
+          Format.eprintf "%aDerivative tuple binds %s more than once.@."
+            Zlocation.output_location p.loc n;
+          raise Zmisc.Error
+        end;
+        Zmisc.S.add n names
+    | Etuplepat ps -> List.fold_left check names ps
+    | _ -> assert false in
+  ignore (check Zmisc.S.empty p);
+  incr tuple_derivative_counter;
+  (* An unlexable name cannot capture a source identifier. Aform gives its
+     scalar memories ordinary, fresh identifiers before code generation. *)
+  let n = "#derivative_tuple" ^ string_of_int !tuple_derivative_counter in
+  let eq desc = make desc startpos endpos in
+  EQand [eq (EQder(n, None, e, init, resets));
+         eq (EQeq(p, eq (Evar(Name n))))]
+
 %}
 
 %token EQUAL          /* "=" */
@@ -649,11 +675,19 @@ equation_desc:
     (*added here*)
   | R_GET p = pattern EQUAL rob = rbt_expression
     { EQeq(p, make (Eget(rob.cm)) $startpos(rob) $endpos(rob)) }
-  | DER i = ide EQUAL e = seq_expression opt = optional_init
-      { EQder(i, e, opt, []) }
-  | DER i = ide EQUAL e = seq_expression opt = optional_init
+  | DER binding = der_binding EQUAL e = seq_expression opt = optional_init
+      { let (i, ty) = binding in EQder(i, ty, e, opt, []) }
+  | DER binding = der_binding EQUAL e = seq_expression opt = optional_init
     RESET opt_bar pe = present_handlers(expression)
-      { EQder(i, e, opt, List.rev pe) }
+      { let (i, ty) = binding in EQder(i, ty, e, opt, List.rev pe) }
+  | DER LPAREN ps = derivative_comma_list RPAREN EQUAL e = seq_expression
+    opt = optional_init
+      { tuple_derivative (make (Etuplepat(List.rev ps)) $startpos(ps) $endpos(ps))
+          e opt [] $startpos $endpos }
+  | DER LPAREN ps = derivative_comma_list RPAREN EQUAL e = seq_expression
+    opt = optional_init RESET opt_bar pe = present_handlers(expression)
+      { tuple_derivative (make (Etuplepat(List.rev ps)) $startpos(ps) $endpos(ps))
+          e opt (List.rev pe) $startpos $endpos }
   | NEXT i = ide EQUAL e = seq_expression
       { EQnext(i, e, None) }
   | NEXT i = ide EQUAL e = seq_expression INIT e0 = seq_expression
@@ -669,6 +703,22 @@ equation_desc:
       { EQemit(i, Some(e)) }
   | eq1 = equation BEFORE eq2 = equation
       { EQbefore [eq1; eq2] }
+;
+
+der_binding:
+  | i = ide { (i, None) }
+  | LPAREN i = ide COLON ty = type_expression RPAREN { (i, Some ty) }
+;
+
+derivative_pattern:
+  | i = ide { make (Evarpat i) $startpos $endpos }
+  | LPAREN ps = derivative_comma_list RPAREN
+      { make (Etuplepat(List.rev ps)) $startpos $endpos }
+;
+
+derivative_comma_list:
+  | p1 = derivative_pattern COMMA p2 = derivative_pattern { [p2; p1] }
+  | ps = derivative_comma_list COMMA p = derivative_pattern { p :: ps }
 ;
 
 opt_end:

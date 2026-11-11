@@ -1,0 +1,22 @@
+(* Explicit and inferred products, including nested products and resets. *)
+let hybrid annotated () = x where
+  rec der (x : (float * float)) = (1.0, 2.0)
+    init (0.0, 0.0)
+    reset up (1.0) -> (0.0, 0.0)
+
+let hybrid inferred () = x where
+  rec der x = (1.0, 2.0, 3.0) init (0.0, 0.0, 0.0)
+
+let hybrid nested () = x where
+  rec der (x : float * (float * float)) = (1.0, (2.0, 3.0))
+    init (0.0, (0.0, 0.0))
+
+let hybrid scalar () = x where
+  rec der x = 1.0 init 0.0
+
+let hybrid from_init (dx) = x where
+  rec der x = dx init (0.0, 0.0)
+
+let hybrid from_reset (dx) = x where
+  rec init x = (0.0, 0.0)
+  and der x = dx reset up (1.0) -> (0.0, 0.0)

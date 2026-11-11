@@ -119,7 +119,11 @@ and add_pattern bv pat =
 and add_eq bv eq =
   match eq.desc with
   | EQeq (p,e) -> add_pattern bv p; add_exp bv e
-  | EQder (_, e, eo, phl) -> add_exp bv e; add_opt add_exp bv eo; List.iter (add_present_handler add_exp bv) phl
+  | EQder (_, ty, e, eo, phl) ->
+      add_opt add_type_expr bv ty;
+      add_exp bv e;
+      add_opt add_exp bv eo;
+      List.iter (add_present_handler add_exp bv) phl
   | EQinit (_, e) | EQpluseq (_, e) -> add_exp bv e
   | EQnext (_, e, eo) -> add_exp bv e; add_opt add_exp bv eo
   | EQemit (_, eo) -> add_opt add_exp bv eo

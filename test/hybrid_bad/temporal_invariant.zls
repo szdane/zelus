@@ -1,0 +1,4 @@
+(* unsupported hybrid expression: nxt *)
+let hybrid bad () = x where
+  rec der (x : {v:float | globally (0.0 <= v)}) = 1.0
+    init (0.0 : {v:float | nxt (globally (0.0 <= v))})

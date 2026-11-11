@@ -1,0 +1,7 @@
+(* top-level let/where equation group *)
+let hybrid bad () =
+  if true then
+    (let rec der (x : {v:float | globally (0.0 <= v)}) = 1.0
+       init (0.0 : {v:float | 0.0 <= v})
+     in x)
+  else 0.0

@@ -1,0 +1,4 @@
+(* initializer cannot read the current state *)
+let hybrid bad () = x where
+  rec der (x : {v:float | globally (0.0 <= v)}) = 1.0
+    init ((x) : {v:float | 0.0 <= v})

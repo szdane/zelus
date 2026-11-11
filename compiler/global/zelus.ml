@@ -204,6 +204,7 @@ and pdesc =
 
 and eq = 
   { eq_desc: eqdesc; (* its descriptor *)
+    eq_der_type: type_expression option; (* derivative safety annotation *)
     eq_loc: location; (* its location in the source file *)
     eq_index: int; (* a unique index; used to build a partial order *)
     eq_safe: bool; (* does it have a side effect *)

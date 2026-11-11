@@ -1,0 +1,3 @@
+let hybrid separate () = x where
+  rec init x = (0.0 : {v:float | globally (0.0 <= v)})
+  and der (x : {v:float | globally (0.0 <= v)}) = 1.0

@@ -1,0 +1,7 @@
+(* At x=0, up(-x) starts at zero and moves inward, so it protects x>=0.
+   Different segments may use different user-supplied invariants. *)
+let hybrid boundary () = x where
+  rec der (x : {v:float | globally (0.0 <= v && v <= 1.0)}) = 1.0
+    init (0.0 : {v:float | 0.0 <= v})
+    reset up (x -. 1.0) -> (0.0 : {v:float | true})
+        | up (-. x) -> (0.0 : {v:float | true})

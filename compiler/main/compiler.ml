@@ -224,6 +224,9 @@ let compile modname filename =
        step "Translation into A-normal form. See below:"
 	    Aform.implementation_list impl_list in
      let impl_list =
+       step "Flatten tuple derivative temporaries. See below:"
+            Letin.implementation_list impl_list in
+     let impl_list =
 	step "Actualize write variables in blocks. See below:"
 	     Write.implementation_list impl_list in
      let impl_list =

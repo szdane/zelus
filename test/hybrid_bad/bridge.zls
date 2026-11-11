@@ -1,0 +1,4 @@
+(* T1-bridge *)
+let hybrid bad () = x where
+  rec der (x : {v:float | globally (0.0 <= v)}) = 0.0
+    init (1.0 : {v:float | true})

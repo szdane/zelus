@@ -35,7 +35,7 @@ let pmake desc ty =
   { p_desc = desc; p_loc = no_location;
     p_typ = ty; p_caus = Defcaus.no_typ; p_init = Definit.no_typ }
 let eqmake desc =
-  { eq_desc = desc; eq_loc = no_location; eq_write = Deftypes.empty;
+  { eq_desc = desc; eq_der_type = None; eq_loc = no_location; eq_write = Deftypes.empty;
     eq_safe = false; eq_index = -1 }
 
 let global lname =

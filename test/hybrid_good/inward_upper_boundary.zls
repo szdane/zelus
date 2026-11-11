@@ -1,0 +1,5 @@
+let hybrid inward () = x where
+  rec der (x : {v:float | globally (0.0 <= v && v <= 1.0)}) = -1.0
+    init (1.0 : {v:float | true})
+    reset up (-. x) -> (1.0 : {v:float | true})
+        | up (x -. 1.0) -> (1.0 : {v:float | true})

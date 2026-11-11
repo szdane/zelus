@@ -1,0 +1,5 @@
+let hybrid old_state () = x where
+  rec der (x : {v:float | globally (0.0 <= v && v <= 2.0)}) = 1.0
+    init (0.0 : {v:float | globally (0.0 <= v)})
+    reset up (last x -. 2.0) ->
+      ((last x -. 2.0) : {v:float | globally (0.0 <= v)})

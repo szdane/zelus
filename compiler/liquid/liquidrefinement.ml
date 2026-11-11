@@ -39,6 +39,99 @@ open Zparsetree
 open Utilities
 open ResetUtils
 
+exception Predicate_derivative_error of Zlocation.location * string
+
+(* Syntactic total derivative of a real-arithmetic predicate. [derivatives]
+   explicitly maps each variable to its time derivative: it may contain fresh
+   derivative symbols or the RHSs of the ODEs. Constant parameters must map to
+   zero; an absent variable is an error, rather than an implicit constant.
+
+   This is the differential-induction derivative, not differentiation of a
+   Boolean-valued function. Comparisons retain their relation, and both AND
+   and OR differentiate to AND. See Definition 3.2 (3.2--3.3) of
+   https://symbolaris.com/pub/diffcut.pdf. Negations are pushed into comparisons
+   first. The initial fragment is polynomial real arithmetic; temporal
+   operators, division, disequality and arbitrary calls are rejected.
+
+   This helper does not establish initial conditions, reset preservation or
+   the evolution-domain implication needed for a complete typing rule. *)
+let differentiate_predicate
+    ~(derivatives : (Zparsetree.longname * Zparsetree.exp) list)
+    (predicate : Zparsetree.exp) : Zparsetree.exp =
+  let error e message =
+    raise (Predicate_derivative_error (e.loc, message)) in
+  let real loc n = { desc = Econst (Efloat n); loc } in
+  let number n e =
+    match e.desc with
+    | Econst (Efloat f) -> f = n
+    | Econst (Eint i) -> float_of_int i = n
+    | _ -> false in
+  let app loc op args =
+    { desc = Eapp ({ app_inline = false; app_statefull = false },
+                   { desc = Evar (Name op); loc }, args); loc } in
+  let add loc a b =
+    if number 0.0 a then b else if number 0.0 b then a
+    else app loc "+." [a; b] in
+  let mul loc a b =
+    if number 0.0 a || number 0.0 b then real loc 0.0
+    else if number 1.0 a then b else if number 1.0 b then a
+    else app loc "*." [a; b] in
+  let neg loc a =
+    if number 0.0 a then real loc 0.0 else app loc "-." [real loc 0.0; a] in
+  let sub loc a b =
+    if number 0.0 b then a else if number 0.0 a then neg loc b
+    else app loc "-." [a; b] in
+  let operator f =
+    match f.desc with
+    | Evar (Name op) -> Some op
+    | Evar (Modname { qual; id }) when qual = Initial.stdlib_module -> Some id
+    | _ -> None in
+  let rec term e =
+    match e.desc with
+    | Econst (Eint _ | Efloat _) -> e, real e.loc 0.0
+    | Evar name ->
+        (match List.assoc_opt name derivatives with
+         | Some derivative -> e, derivative
+         | None -> error e ("Missing time derivative for " ^ Pprint.string_of_longname name))
+    | Etypeconstraint (inner, _) -> term inner
+    | Eapp (_, f, args) ->
+        (match operator f, args with
+         | Some "", [a] -> term a (* Utilities.mk_paren *)
+         | Some ("~+" | "~+."), [a] -> term a
+         | Some ("~-" | "~-.") , [a] ->
+             let a, da = term a in neg e.loc a, neg e.loc da
+         | Some ("+" | "+."), [a; b] ->
+             let a, da = term a and b, db = term b in
+             app e.loc "+." [a; b], add e.loc da db
+         | Some ("-" | "-."), [a; b] ->
+             let a, da = term a and b, db = term b in
+             app e.loc "-." [a; b], sub e.loc da db
+         | Some ("*" | "*."), [a; b] ->
+             let a, da = term a and b, db = term b in
+             app e.loc "*." [a; b], add e.loc (mul e.loc da b) (mul e.loc a db)
+         | _ -> error e "Unsupported arithmetic in predicate derivative (expected a polynomial)")
+    | _ -> error e "Unsupported arithmetic in predicate derivative (expected a polynomial)"
+  and formula negated e =
+    match e.desc with
+    | Econst (Ebool b) -> { e with desc = Econst (Ebool (b <> negated)) }
+    | Etypeconstraint (inner, _) -> formula negated inner
+    | Eapp (_, f, args) ->
+        (match operator f, args with
+         | Some "", [p] -> formula negated p
+         | Some "not", [p] -> formula (not negated) p
+         | Some ("&&" | "||"), [p; q] ->
+             app e.loc "&&" [formula negated p; formula negated q]
+         | Some ("=" | "<" | "<=" | ">" | ">=" as relation), [a; b] ->
+             let relation =
+               if not negated then relation
+               else match relation with
+                 | "<" -> ">=" | "<=" -> ">" | ">" -> "<=" | ">=" -> "<"
+                 | _ -> error e "Disequality is not supported in predicate derivatives" in
+             app e.loc relation [snd (term a); snd (term b)]
+         | _ -> error e "Unsupported predicate derivative (expected comparisons and Boolean connectives)")
+    | _ -> error e "Unsupported predicate derivative (expected comparisons and Boolean connectives)" in
+  formula false predicate
+
 
 let build_fby_pred_with_ghosts ~(binder:string)
                                ~(base:string) rhs1 rhs2
@@ -552,6 +645,10 @@ let run_subtyping_pred ~cid ~(name:string) ~(binder:string) ~(base:string)
    the machine's [reset] method only, never into [step].)  So this table is
    exactly what a t=0 query must substitute for [last_x]. *)
 let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
+
+(* Hybrid initializers are keyed by scoped identity, so a same-named state
+   in another function or an enclosing scope cannot initialize this state. *)
+let hybrid_init_table : (int, Zelus.exp) Hashtbl.t = Hashtbl.create 16
 
 let nf_match_and_check ?(last_t0=false) ~cid ~(name:string) ~(binder:string) ~(base:string)
   (lhs_pred_nf:Zparsetree.exp) (rhs_pred_nf:Zparsetree.exp)
@@ -1990,7 +2087,9 @@ let preload_block_lasts (eqs : Zelus.eq list) : unit =
   List.iter
     (fun (eq : Zelus.eq) ->
        match eq.eq_desc with
-       | EQinit (id, e) -> Hashtbl.replace init_table (zident_pretty id) e
+       | EQinit (id, e) ->
+           Hashtbl.replace init_table (zident_pretty id) e;
+           Hashtbl.replace hybrid_init_table id.Zident.num e
        | _ -> ())
     eqs;
   (* 2) Declared annotations of the block's annotated locals. *)
@@ -3185,8 +3284,175 @@ let process_unannotated_scalar_eq (x : string) (rhs : Zelus.exp) : unit =
                (pp_nf_as_type ~binder:value_var ~base:base_name pred));
       add_binding x (mk_refine value_var (String.lowercase_ascii base_name) pred)
 
-let process_let_eq (eq : Zelus.eq) : unit =
+(* Scalar T-DER-FIN (NFM manuscript, Fig. 5, pp. 14--15).
+   The derivative annotation supplies safety phi; the refinement on each
+   initializer/reset expression supplies its user-chosen differential invariant.
+   Segment entry, pre-reset state and arbitrary flow state are DISTINCT symbols.
+   In particular, neither safety nor the candidate invariant at the arbitrary
+   flow state may be assumed while proving the differential obligation. *)
+let process_scalar_derivative (eq : Zelus.eq) : unit =
+  match eq.eq_desc, eq.eq_der_type with
+  | EQder (id, rhs, init, handlers), Some safety_type ->
+      let name = zident_pretty id in
+      let fail message =
+        Format.eprintf "%aT-DER-FIN (%s): %s@."
+          Zlocation.output_location eq.eq_loc name message;
+        failwith ("T-DER-FIN: " ^ message) in
+      let state = "#hybrid_state" in
+      let constants = ref Zmisc.S.empty in
+      let zero = { desc = Econst (Efloat 0.0); loc = dummy_loc } in
+      let binary op a b = mk_app (mk_var op) [a; b] in
+      let implies = binary "=>" in
+      let global n =
+        match find_binding n with
+        | Some ty ->
+            let _, base, _ = refine_parts_of_gamma_ty ty in
+            if not (List.mem (String.lowercase_ascii base) ["float"; "real"; "int"])
+            then fail ("expected a numeric constant: " ^ n);
+            constants := Zmisc.S.add n !constants;
+            mk_var n
+        | None -> fail ("no verified constant binding for " ^ n) in
+      let rec convert ?binder ?(last=false) ?(self=true) (e : Zelus.exp) =
+        let recur = convert ?binder ~last ~self in
+        match e.e_desc with
+        | Zelus.Econst (Efloat _ | Eint _ | Ebool _ as c) ->
+            { desc = Econst (fst (literal_and_base c)); loc = e.e_loc }
+        | Zelus.Elocal x when Zident.compare x id = 0 ->
+            if not self then fail "initializer cannot read the current state";
+            mk_var state
+        | Zelus.Elast x when last && Zident.compare x id = 0 -> mk_var state
+        | Zelus.Eglobal { lname = Name n } when Some n = binder -> mk_var state
+        | Zelus.Eglobal { lname = Name n } -> global n
+        | Zelus.Eglobal { lname = Modname {qual; id = n} }
+            when qual = Modules.current.name -> global n
+        | Zelus.Etypeconstraint (inner, _) -> recur inner
+        | Zelus.Eapp (ai, f, args) when not ai.app_statefull ->
+            let op = match f.e_desc with
+              | Zelus.Eglobal { lname = Name op } -> op
+              | Zelus.Eglobal { lname = Modname {qual; id = op} }
+                  when qual = Initial.stdlib_module -> op
+              | _ -> fail "only standard polynomial operators are supported" in
+            let args = List.map recur args in
+            (match op, args with
+             | ("~-" | "~-."), [a] -> binary "-." zero a
+             | ("~+" | "~+."), [a] -> a
+             | ("+" | "+." | "-" | "-." | "*" | "*."
+               | "<" | "<=" | ">" | ">=" | "=" | "&&" | "||"), [_; _]
+             | "not", [_] | "globally", [_] -> mk_app (mk_var op) args
+             | _ -> fail ("unsupported hybrid expression: " ^ op))
+        | _ -> fail "this scalar rule supports polynomial expressions in the derivative state and verified global constants" in
+      let predicate annotation =
+        match annotation.Zelus.desc with
+        | Zelus.Erefinement ((binder, base), pred) ->
+            (match base.desc with
+             | Zelus.Etypeconstr (Name ("float" | "real"), []) -> ()
+             | _ -> fail "a scalar float refinement is required");
+            let pred = convert ~binder pred in
+            (* A derivative annotation denotes a continuous invariant. Accept
+               either a plain predicate or one outer globally wrapper only. *)
+            (match pred.desc with
+             | Eapp (_, {desc = Evar (Name "globally")}, [p]) -> p
+             | _ -> pred)
+        | _ -> fail "a user-supplied scalar refinement is required" in
+      let safety = predicate safety_type in
+      let rhs = convert rhs in
+      let guards = List.map (fun (h : Zelus.exp Zelus.present_handler) ->
+        match h.p_cond.desc with
+        | Zelus.Econdexp {e_desc = Zelus.Eop (Zelus.Eup, [u])} ->
+            convert ~last:true u
+        | _ -> fail "each reset must have a single up(polynomial) guard") handlers in
+      let init = match init with
+        | Some e -> e
+        | None ->
+            (match Hashtbl.find_opt hybrid_init_table id.Zident.num with
+             | Some e -> e
+             | None -> fail "an explicitly annotated initializer is required") in
+      let segment label precondition ~initial expression =
+        match expression.Zelus.e_desc with
+        | Zelus.Etypeconstraint (value, annotation) ->
+            let invariant = predicate annotation in
+            let value = convert ~self:(not initial) ~last:(not initial) value in
+            label, precondition, value, invariant
+        | _ -> fail (label ^ " requires an expression refinement specifying its inductive invariant") in
+      let segments =
+        segment "T1" mk_true ~initial:true init ::
+        List.mapi (fun i (h : Zelus.exp Zelus.present_handler) ->
+          segment (Printf.sprintf "T2-%d" (i + 1))
+            (mk_and safety (mk_eq (List.nth guards i) zero))
+            ~initial:false h.p_body) handlers in
+      let derivatives = (Name state, rhs) ::
+        List.map (fun n -> Name n, zero) (Zmisc.S.elements !constants) in
+      let derivative p =
+        try differentiate_predicate ~derivatives p with
+        | Predicate_derivative_error (_, message) -> fail message in
+      (* Validate arithmetic without assigning a separate semantics to terms. *)
+      let term_derivative term =
+        match (derivative (mk_eq term zero)).desc with
+        | Eapp (_, _, [dt; _]) -> dt
+        | _ -> assert false in
+      ignore (derivative safety);
+      ignore (term_derivative rhs);
+      List.iter (fun (_, pre, value, invariant) ->
+        ignore (derivative pre); ignore (term_derivative value);
+        ignore (derivative invariant)) segments;
+      let guard_derivatives = List.map term_derivative guards in
+      let fresh prefix =
+        let rec next () =
+          let n = gensym prefix in
+          if Zmisc.S.mem n !constants || n = name then next () else n in
+        next () in
+      let pre_name = fresh "hybrid_pre" and start_name = fresh "hybrid_start"
+      and flow_name = fresh "hybrid_flow" in
+      let pre = mk_var pre_name and start = mk_var start_name
+      and flow = mk_var flow_name in
+      let at value p = subst_var state value p in
+      (* Conditional domain facts retain uncertainty about activity at entry.
+         Never infer activation from safety or from u <= 0 alone. The prose
+         on p. 14 requires u=0 AND du<0 (the displayed implication is a typo). *)
+      let domain = mk_big_and (List.map2 (fun u du ->
+        let active = mk_or (binary "<" (at start u) zero)
+          (mk_and (mk_eq (at start u) zero) (binary "<" (at start du) zero)) in
+        implies active (binary "<=" (at flow u) zero)) guards guard_derivatives) in
+      (* Build an isolated solver environment. In particular, existing local
+         aliases or last_* ghosts must not pin the arbitrary flow state. *)
+      let env = List.map (fun n -> mk_refine n "float" mk_true)
+          [pre_name; start_name; flow_name] @
+        List.map (fun n -> match find_binding n with
+          | Some ty -> invariant_only_type ty
+          | None -> assert false) (Zmisc.S.elements !constants) in
+      List.iter (fun (label, source, value, invariant) ->
+        let assumptions = mk_and (at pre source) (mk_eq start (at pre value)) in
+        let check suffix lhs goal =
+          match goal.desc with
+          | Econst (Ebool true) -> ()
+          | _ ->
+              let label = name ^ ":" ^ label ^ "-" ^ suffix in
+              (* Fixpoint rejects a RHS that simplifies to an empty conjunction
+                 (e.g. D(x=0) for x'=0). Name the goal in the environment so
+                 these valid constant obligations still have an atomic RHS. *)
+              let goal_name = fresh "hybrid_goal" in
+              let env = mk_refine goal_name "bool" (mk_eq (mk_v ()) goal) :: env in
+              let query = Gen.to_fq value_var ~cid:5
+                ~lhs:(mk_refine value_var "float" lhs)
+                ~rhs:(mk_refine value_var "float" (mk_eq (mk_var goal_name) mk_true))
+                ~env () in
+              if not (fixpoint_is_safe ~label query) then fail (label ^ " obligation failed") in
+        check "establish" assumptions
+          (mk_and (at start safety) (at start invariant));
+        check "flow" (mk_big_and [assumptions; at start invariant; domain])
+          (at flow (derivative invariant));
+        check "bridge" (mk_big_and [assumptions; domain; at flow invariant])
+          (at flow safety)) segments;
+      (* T3: only the verified safety invariant is exported to the body. *)
+      add_binding name (mk_refine value_var "float"
+        (mk_G (at (mk_v ()) safety)))
+  | _ -> invalid_arg "process_scalar_derivative: expected an annotated derivative"
+
+let rec process_let_eq (eq : Zelus.eq) : unit =
       match eq.eq_desc with
+      | EQder _ when eq.eq_der_type <> None ->
+          process_scalar_derivative eq
+      | EQand eqs | EQbefore eqs -> List.iter process_let_eq eqs
       | EQeq (pat, rhs) -> begin
           match pat.p_desc with
           | Etypeconstraintpat (bp, ty_ann_zelus) -> begin
@@ -3237,6 +3503,90 @@ let process_let_eq (eq : Zelus.eq) : unit =
       | EQautomaton(_,_,_) -> ()
       | _ -> ()
     ;;
+
+(* Inventory derivatives even under syntax this first implementation cannot
+   verify. This prevents unsupported placements (and the main fast path) from
+   silently accepting an annotated equation without discharging its premises. *)
+let rec hybrid_equations_exp (e : Zelus.exp) =
+  let expressions es = List.concat_map hybrid_equations_exp es in
+  match e.e_desc with
+  | Zelus.Elet (l, body) -> hybrid_equations_list l.l_eq @ hybrid_equations_exp body
+  | Zelus.Eblock (b, body) -> hybrid_equations_block b @ hybrid_equations_exp body
+  | Zelus.Eapp (_, f, es) -> expressions (f :: es)
+  | Zelus.Eop (_, es) | Zelus.Etuple es | Zelus.Econstr1 (_, es) -> expressions es
+  | Zelus.Eseq (a, b) -> expressions [a; b]
+  | Zelus.Etypeconstraint (e, _) | Zelus.Eassume e | Zelus.Erecord_access (e, _) ->
+      hybrid_equations_exp e
+  | Zelus.Erecord fields -> expressions (List.map snd fields)
+  | Zelus.Erecord_with (e, fields) -> expressions (e :: List.map snd fields)
+  | Zelus.Ematch (_, e, hs) -> expressions (e :: List.map (fun h -> h.Zelus.m_body) hs)
+  | Zelus.Epresent (hs, other) ->
+      List.concat_map (fun h -> hybrid_equations_condition h.Zelus.p_cond) hs @
+      expressions (List.map (fun h -> h.Zelus.p_body) hs @ Option.to_list other)
+  | Zelus.Eperiod p -> expressions (p.p_period :: Option.to_list p.p_phase)
+  | _ -> []
+and hybrid_equations_list eqs =
+  List.concat_map (fun (eq : Zelus.eq) -> match eq.eq_desc with
+    | EQder _ -> [eq]
+    | EQand eqs | EQbefore eqs -> hybrid_equations_list eqs
+    | EQreset (eqs, e) -> hybrid_equations_list eqs @ hybrid_equations_exp e
+    | EQblock b -> hybrid_equations_block b
+    | EQeq (_, e) | EQinit (_, e) | EQpluseq (_, e) -> hybrid_equations_exp e
+    | EQnext (_, e, init) ->
+        hybrid_equations_exp e @ List.concat_map hybrid_equations_exp (Option.to_list init)
+    | EQemit (_, e) -> List.concat_map hybrid_equations_exp (Option.to_list e)
+    | EQpresent (hs, other) ->
+        List.concat_map (fun h -> hybrid_equations_condition h.Zelus.p_cond @
+          hybrid_equations_block h.p_body) hs @
+        List.concat_map hybrid_equations_block (Option.to_list other)
+    | EQmatch (_, e, hs) -> hybrid_equations_exp e @
+        List.concat_map (fun h -> hybrid_equations_block h.Zelus.m_body) hs
+    | EQautomaton (_, hs, initial) ->
+        List.concat_map hybrid_equations_state hs @
+        List.concat_map hybrid_equations_state_exp (Option.to_list initial)
+    | EQautomatonRef (_, _, hs, initial, _) ->
+        List.concat_map (fun h -> hybrid_equations_state h.Zelus.sha_handler) hs @
+        List.concat_map hybrid_equations_state_exp (Option.to_list initial)
+    | EQforall h -> hybrid_equations_block h.for_body) eqs
+and hybrid_equations_block (b : Zelus.eq list Zelus.block) =
+  List.concat_map (fun l -> hybrid_equations_list l.Zelus.l_eq) b.b_locals @
+  hybrid_equations_list b.b_body
+and hybrid_equations_condition (c : Zelus.scondpat) =
+  match c.desc with
+  | Zelus.Econdand (a, b) | Zelus.Econdor (a, b) ->
+      hybrid_equations_condition a @ hybrid_equations_condition b
+  | Zelus.Econdexp e | Zelus.Econdpat (e, _) -> hybrid_equations_exp e
+  | Zelus.Econdon (c, e) -> hybrid_equations_condition c @ hybrid_equations_exp e
+and hybrid_equations_state (s : Zelus.state_handler) =
+  hybrid_equations_block s.s_body @ List.concat_map (fun (e : Zelus.escape) ->
+    hybrid_equations_condition e.e_cond @
+    List.concat_map hybrid_equations_block (Option.to_list e.e_block) @
+    hybrid_equations_state_exp e.e_next_state) s.s_trans
+and hybrid_equations_state_exp (s : Zelus.state_exp) =
+  match s.desc with
+  | Zelus.Estate0 _ -> []
+  | Zelus.Estate1 (_, es) -> List.concat_map hybrid_equations_exp es
+
+let has_annotated_hybrid eqs = List.exists (fun eq -> eq.Zelus.eq_der_type <> None) eqs
+
+let rec flatten_equation_group eqs =
+  List.concat_map (fun (eq : Zelus.eq) -> match eq.eq_desc with
+    | EQand es | EQbefore es -> flatten_equation_group es
+    | _ -> [eq]) eqs
+
+let rec validate_hybrid_placement (e : Zelus.exp) =
+  let unsupported eqs =
+    if has_annotated_hybrid eqs then
+      failwith "T-DER-FIN: annotated derivatives must occur in a top-level let/where equation group" in
+  match e.e_desc with
+  | Zelus.Elet (l, body) ->
+      List.iter (fun (eq : Zelus.eq) -> match eq.eq_desc with
+        | EQder _ -> ()
+        | _ -> unsupported (hybrid_equations_list [eq]))
+        (flatten_equation_group l.l_eq);
+      validate_hybrid_placement body
+  | Zelus.Eseq (a, b) -> validate_hybrid_placement a; validate_hybrid_placement b
+  | _ -> unsupported (hybrid_equations_exp e)
     
     
 
@@ -3288,9 +3638,10 @@ let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
 
   let with_env_snapshot (f : unit -> unit) : unit =
     let saved = !gamma in
+    let saved1 = !gamma1 in
     match f () with
-    | () -> gamma := saved
-    | exception ex -> gamma := saved; raise ex
+    | () -> gamma := saved; gamma1 := saved1
+    | exception ex -> gamma := saved; gamma1 := saved1; raise ex
 
 
 
@@ -3504,7 +3855,7 @@ let check_return ~(fname:string)
           (* Seed [init_table] and the [last_*] ghosts from the block's own
              declarations before checking any equation: a [rec] block is
              unordered, so [last y] may be read before [y] is bound. *)
-          preload_block_lasts l_block.l_eq;
+          preload_block_lasts (flatten_equation_group l_block.l_eq);
           (* handle “let ... and ... and ...” *)
           List.iter process_let_eq l_block.l_eq;
           (* continue into the body; handles further nested lets too *)
@@ -3516,7 +3867,7 @@ let check_return ~(fname:string)
           match e.e_desc with
           | Zelus.Elet (l_block, r_exp) ->
               with_env_snapshot (fun () ->
-                preload_block_lasts l_block.l_eq;
+                preload_block_lasts (flatten_equation_group l_block.l_eq);
                 List.iter process_let_eq l_block.l_eq;
                 process_lets_only r_exp)
           | Zelus.Eseq (a,b) -> process_lets_only a; process_lets_only b
@@ -3527,6 +3878,8 @@ let check_return ~(fname:string)
 
   
     | _ ->
+        if has_annotated_hybrid (hybrid_equations_exp e) then
+          failwith "T-DER-FIN: annotated derivatives must occur in a top-level let/where equation group";
         check_return ~fname ~ret_binder ~ret_base ~ret_pred e rettype
   
 
@@ -3643,7 +3996,11 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
             debug (Printf.sprintf "Efundecl %s\n" n);
             debug (Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
 
-            if n = "main" then (
+            let hybrid_eqs = hybrid_equations_exp f_body in
+            if has_annotated_hybrid hybrid_eqs && List.length hybrid_eqs <> 1 then
+              failwith "T-DER-FIN: this implementation supports one scalar derivative per function";
+            if has_annotated_hybrid hybrid_eqs then validate_hybrid_placement f_body;
+            if n = "main" && not (has_annotated_hybrid hybrid_eqs) then (
               debug "skipping main function";
               debug "\027[32mProgram is well-typed: all generated fixpoint checks are safe.\027[0m";
             ) else (

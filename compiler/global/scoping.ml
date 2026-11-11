@@ -358,7 +358,7 @@ and unwrap_state_handlers_ann (hs_ann : Zparsetree.state_handler_ann list) :
 and build_equation defnames eq =
   match eq.desc with
     | EQeq(pat, _) -> build false defnames pat
-    | EQemit(n, _) | EQder(n, _, _, _) | EQinit(n, _)
+    | EQemit(n, _) | EQder(n, _, _, _, _) | EQinit(n, _)
     | EQnext(n, _, _) | EQpluseq(n, _) -> 
         if S.mem n defnames then defnames else S.add n defnames
     | EQautomaton(s_h_list, _) ->
@@ -819,14 +819,15 @@ and equation env_pat env eq_list { desc = desc; loc = loc } =
   | EQeq(pat, e) ->
      eqmake loc
 	    (Zelus.EQeq(check_pattern env_pat pat, expression env e)) :: eq_list
-  | EQder(n, e, e0_opt, p_h_e_list) ->
+  | EQder(n, ty, e, e0_opt, p_h_e_list) ->
      let e = expression env e in
      let e0_opt = Zmisc.optional_map (expression env) e0_opt in
      let p_h_e_list =
        present_handler_exp_list env_pat env p_h_e_list in
      let initialized = match e0_opt with | None -> false | Some _ -> true in
      let n = name_with_sort initialized loc env_pat n in
-     eqmake loc (Zelus.EQder(n, e, e0_opt, p_h_e_list)) :: eq_list
+     let eq = eqmake loc (Zelus.EQder(n, e, e0_opt, p_h_e_list)) in
+     { eq with Zelus.eq_der_type = Zmisc.optional_map (types env) ty } :: eq_list
   | EQinit(n, e0) ->
      let n = name_with_sort true loc env_pat n in
      let e0 = expression env e0 in
