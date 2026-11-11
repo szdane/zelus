@@ -28,6 +28,12 @@
  (libraries zlcompilerlibs))
 
 (test
+ (name environment_temporal)
+ (modules environment_temporal)
+ (deps stdlib.zli)
+ (libraries unix zlcompilerlibs))
+
+(test
  (name hybrid_typing)
  (modules hybrid_typing)
  (deps stdlib.zli (glob_files hybrid_good/*.zls) (glob_files hybrid_bad/*.zls))

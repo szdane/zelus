@@ -615,8 +615,8 @@ let to_zpt_refine_canon (t : Zelus.type_expression) : Zparsetree.type_expression
 
  
 
-let run_fq name lhs rhs = 
-  let fq_query = Gen.to_fq "v" ~cid:5 ~lhs:lhs ~rhs:rhs ~env:(current_env ()) () in
+let run_fq ?(later=false) name lhs rhs =
+  let fq_query = Gen.to_fq "v" ~cid:5 ~lhs:lhs ~rhs:rhs ~env:(current_env ~later ()) () in
   (*search for fixpoint query io*)
   (* debug (Printf.sprintf "%s" fq_query); *)
   fixpoint_is_safe ~label:name fq_query
@@ -628,13 +628,13 @@ let rhs_var_name (e:Zelus.exp) : string option =
   | _ -> None
 
 
-let run_subtyping_pred ~cid ~(name:string) ~(binder:string) ~(base:string)
+let run_subtyping_pred ?(later=false) ~cid ~(name:string) ~(binder:string) ~(base:string)
   (lhs_pred:Zparsetree.exp) (rhs_pred:Zparsetree.exp)=
     let lhs = mk_refine binder base lhs_pred in
     let rhs = mk_refine binder base rhs_pred in
     match rhs_pred.desc with
        | Zparsetree.Econst (Ebool true) -> true
-       | _ -> run_fq name lhs rhs
+       | _ -> run_fq ~later name lhs rhs
 
 (* [init x = e] equations seen so far.
 
@@ -650,7 +650,7 @@ let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
    in another function or an enclosing scope cannot initialize this state. *)
 let hybrid_init_table : (int, Zelus.exp) Hashtbl.t = Hashtbl.create 16
 
-let nf_match_and_check ?(last_t0=false) ~cid ~(name:string) ~(binder:string) ~(base:string)
+let nf_match_and_check ?(last_t0=false) ?(later=false) ~cid ~(name:string) ~(binder:string) ~(base:string)
   (lhs_pred_nf:Zparsetree.exp) (rhs_pred_nf:Zparsetree.exp)
     : bool =
     (* 1. split into  && x  *)
@@ -681,7 +681,7 @@ let nf_match_and_check ?(last_t0=false) ~cid ~(name:string) ~(binder:string) ~(b
     in
     let ok_now =
       if not phi_mentions_last then
-        run_subtyping_pred ~cid ~name ~binder ~base phi_lhs phi_rhs
+        run_subtyping_pred ~later ~cid ~name ~binder ~base phi_lhs phi_rhs
       else begin
         let init_of_last nm =
           if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
@@ -721,7 +721,7 @@ let nf_match_and_check ?(last_t0=false) ~cid ~(name:string) ~(binder:string) ~(b
     if is_true psi_rhs' then true
     else
     if is_ltl_free psi_lhs' && is_ltl_free psi_rhs' then
-      run_subtyping_pred ~cid ~name ~binder ~base psi_lhs' psi_rhs'
+      run_subtyping_pred ~later:true ~cid ~name ~binder ~base psi_lhs' psi_rhs'
     else begin
       (* Rejected before any query is built, so there is no .fq to dump: say
          so, otherwise the absence of a saved file reads as a lost dump. *)
@@ -1461,6 +1461,7 @@ let process_let_rec_fby
   let ann_tail_nf = mk_and psi_ann_tail (mk_X (mk_G psi_ann_tail)) in
   let ok_tail =
     nf_match_and_check
+      ~later:true
       ~cid:5
       ~name:(x ^ ":rec-fby-tail")
       ~binder:ret_binder
@@ -1607,7 +1608,7 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
   in
 
   (* Run the subtyping check *)
-  let ok_tail = run_fq ("tuple-fby-tail:" ^ vv_k) lhs_tail_ty rhs_tail_ty in
+  let ok_tail = run_fq ~later:true ("tuple-fby-tail:" ^ vv_k) lhs_tail_ty rhs_tail_ty in
   if not ok_tail then
     failwith "Liquid type error: tuple fby tail check failed (vv_* form)";
   
@@ -3885,6 +3886,22 @@ let check_return ~(fname:string)
 
 
       
+(* Top-level values do not change with time. Their verified head remains true
+   at every instant, even when the source annotation omits [globally]. Keep
+   that fact in the invariant as well, so later call preconditions can use it. *)
+let add_constant_binding name ty =
+  match ty.desc with
+  | Zparsetree.Erefinement (binding, pred) ->
+      let head = environment_pred ~later:false pred in
+      let tail = environment_pred ~later:true pred in
+      let invariant =
+        if is_true tail || Pprint.string_of_expr head = Pprint.string_of_expr tail
+        then head else mk_and head tail in
+      add_binding name
+        { ty with desc = Zparsetree.Erefinement
+            (binding, mk_and head (mk_X (mk_G invariant))) }
+  | _ -> add_binding name ty
+
 let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
   match impl.desc with
   | Zelus.Econstdecl (id, rhs_ty, _is_static, e) -> (
@@ -3914,7 +3931,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                 let rhs_ty_zpt =
                   { desc = Zparsetree.Erefinement ((value_var, base_ty_zpt), ann_nf); loc = dummy_loc }
                 in
-                add_binding id rhs_ty_zpt
+                add_constant_binding id rhs_ty_zpt
               else
                 failwith (Printf.sprintf "Liquid type error: const %s (ITE) violates its annotation" id)
           | _ -> failwith "Not a Etypeconstr"
@@ -3948,7 +3965,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                     , rhs_pred_nf);
                 loc = dummy_loc }
             in
-            add_binding id rhs_ty_zpt
+            add_constant_binding id rhs_ty_zpt
           ) else ((
           match base_ty.desc with 
             | Zelus.Etypefun(a, b, arg, out) -> (
