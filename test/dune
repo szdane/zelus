@@ -4,5 +4,37 @@
 (test
  (name test_runner)
  (modules test_runner)
- (deps (glob_files good/*.zls) (glob_files bad/*.zls) stdlib.zli)
+ (deps (glob_files good/*.zls) (glob_files bad/*.zls)
+       (glob_files typing_good/*.zls) stdlib.zli)
  (libraries alcotest zlcompilerlibs))
+
+(rule
+ (copy good/derivative_tuple.zls derivative_tuple.zls))
+
+(rule
+ (targets derivative_tuple.ml derivative_tuple.zci)
+ (deps derivative_tuple.zls ../lib/std/stdlib.zci)
+ (action
+  (run %{exe:../compiler/zeluc.exe} -stdlib ../lib/std derivative_tuple.zls)))
+
+(test
+ (name derivative_tuple_simulation)
+ (modules derivative_tuple_simulation derivative_tuple)
+ (libraries zlstdlib))
+
+(test
+ (name predicate_derivative)
+ (modules predicate_derivative)
+ (libraries zlcompilerlibs))
+
+(test
+ (name environment_temporal)
+ (modules environment_temporal)
+ (deps stdlib.zli)
+ (libraries unix zlcompilerlibs))
+
+(test
+ (name hybrid_typing)
+ (modules hybrid_typing)
+ (deps stdlib.zli (glob_files hybrid_good/*.zls) (glob_files hybrid_bad/*.zls))
+ (libraries unix zlcompilerlibs))

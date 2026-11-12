@@ -8,11 +8,11 @@ MLFLAGS=-linkpkg -package zelus
 sim: zelus-compile 
 
 
-main.ml: automaton01.zls
-	$(ZELUC) $(ZFLAGS) automaton01.zls
+main.ml: recursive02.zls
+	$(ZELUC) $(ZFLAGS) recursive02.zls
 
 zelus-compile: main.ml
-	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o automaton01.opt automaton01.ml main.ml
+	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o recursive02.opt recursive02.ml main.ml
 
 clean: 
-	rm automaton01.opt *.cmi *.cmx *.o *.zci main.ml automaton01.ml 
+	rm recursive02.opt *.cmi *.cmx *.o *.zci main.ml recursive02.ml 

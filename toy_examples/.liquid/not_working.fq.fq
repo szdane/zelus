@@ -1,0 +1,256 @@
+// Config {srcFile = "not_working.fq", cores = Nothing, minPartSize = 500, maxPartSize = 700, solver = z3, linear = False, defunction = False, allowHO = False, allowHOqs = False, eliminate = none, scrape = no, elimBound = Nothing, smtTimeout = Nothing, elimStats = False, solverStats = False, metadata = False, stats = False, parts = False, save = True, minimize = False, minimizeQs = False, minimizeKs = False, minimalSol = False, etaElim = False, autoKuts = False, nonLinCuts = False, noslice = False, rewriteAxioms = False, pleUndecGuards = False, etabeta = False, localRewrites = False, saveBfqOnError = False, interpreter = False, noEnvReduction = False, inlineANFBinds = False, checkCstr = [], extensionality = False, rwTermination = False, stdin = False, json = False, fuel = Nothing, restOrdering = "rpo", noStringTheory = False, explicitKvars = False, sortedSolution = False, saveDir = Nothing}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bind 0 nxt : {v : func(1 , [bool; bool]) | []}
+bind 1 hd : {v : func(1 , [bool; bool]) | []}
+bind 2 globally : {v : func(1 , [bool; bool]) | []}
+bind 3 m : {v : func(1 , [bool; bool]) | []}
+bind 2888 alpha : {v : real | [(tmp_41 =
+                                  (v = (1.0 - ((ki * dt) * dt))));
+                               (v = (1.0 - ((ki * dt) * dt)));
+                               (nxt (globally tmp_41))]}
+bind 2889 beta : {v : real | [(tmp_42 = (v = ki));
+                              (v = ki);
+                              (nxt (globally tmp_42))]}
+bind 2890 dt : {v : real | [(tmp_1 = (1.0e-2 < v));
+                            (1.0e-2 < v);
+                            (nxt (globally tmp_1))]}
+bind 2891 energyk : {v : real | [(tmp_43 =
+                                    (v = last_energyk1bound));
+                                 (v = last_energyk1bound);
+                                 (nxt (globally tmp_43))]}
+bind 2892 energyk1 : {v : real | [(tmp_44 =
+                                     (v =
+                                        (((alpha * errork1) * errork1) +
+                                           ((beta * integralk1) * integralk1))));
+                                  (v =
+                                     (((alpha * errork1) * errork1) +
+                                        ((beta * integralk1) * integralk1)));
+                                  (nxt (globally tmp_44))]}
+bind 2893 energyk1v2 : {v : real | [(tmp_47 =
+                                       && [(v = energyk1);
+                                           (v =
+                                              (((alpha * errork1dev) * errork1dev) +
+                                                 ((beta * integralk1dev) * integralk1dev)))]);
+                                    (v = energyk1);
+                                    (v =
+                                       (((alpha * errork1dev) * errork1dev) +
+                                          ((beta * integralk1dev) * integralk1dev)));
+                                    (nxt (globally tmp_47))]}
+bind 2894 energyk1v2p1 : {v : real | [(tmp_48 =
+                                         (v = ((alpha * errork1dev) * errork1dev)));
+                                      (v = ((alpha * errork1dev) * errork1dev));
+                                      (nxt (globally tmp_48))]}
+bind 2895 energyk1v2p1vf : {v : real | [(tmp_49 =
+                                           && [(v = energyk1v2p1);
+                                               (v =
+                                                  (((1.0 - ((ki * dt) * dt)) *
+                                                      (((1.0 - (kp * dt)) * errork) -
+                                                         ((ki * dt) * integralk))) *
+                                                     (((1.0 - (kp * dt)) * errork) -
+                                                        ((ki * dt) * integralk))))]);
+                                        (v = energyk1v2p1);
+                                        (v =
+                                           (((1.0 - ((ki * dt) * dt)) *
+                                               (((1.0 - (kp * dt)) * errork) -
+                                                  ((ki * dt) * integralk))) *
+                                              (((1.0 - (kp * dt)) * errork) -
+                                                 ((ki * dt) * integralk))));
+                                        (nxt (globally tmp_49))]}
+bind 2896 energyk1v2p2 : {v : real | [(tmp_50 =
+                                         (v = ((beta * integralk1dev) * integralk1dev)));
+                                      (v = ((beta * integralk1dev) * integralk1dev));
+                                      (nxt (globally tmp_50))]}
+bind 2897 errork : {v : real | [(tmp_35 = (v = last_errork1));
+                                (v = last_errork1);
+                                (nxt (globally tmp_35))]}
+bind 2898 errork1 : {v : real | [(tmp_39 = (v = (r - xk1)));
+                                 (v = (r - xk1));
+                                 (nxt (globally tmp_39))]}
+bind 2899 errork1dev : {v : real | [(tmp_45 =
+                                       && [(v = errork1);
+                                           (v =
+                                              (((1.0 - (kp * dt)) * errork) -
+                                                 ((ki * dt) * integralk)))]);
+                                    (v = errork1);
+                                    (v = (((1.0 - (kp * dt)) * errork) - ((ki * dt) * integralk)));
+                                    (nxt (globally tmp_45))]}
+bind 2900 integralk : {v : real | [(tmp_36 =
+                                      (v = last_integralk1));
+                                   (v = last_integralk1);
+                                   (nxt (globally tmp_36))]}
+bind 2901 integralk1 : {v : real | [(tmp_40 =
+                                       (v = (integralk + (errork1 * dt))));
+                                    (v = (integralk + (errork1 * dt)));
+                                    (nxt (globally tmp_40))]}
+bind 2902 integralk1dev : {v : real | [(tmp_46 =
+                                          && [(v = integralk1);
+                                              (v =
+                                                 (((dt * (1.0 - (kp * dt))) * errork) +
+                                                    ((1.0 - ((ki * dt) * dt)) * integralk)))]);
+                                       (v = integralk1);
+                                       (v =
+                                          (((dt * (1.0 - (kp * dt))) * errork) +
+                                             ((1.0 - ((ki * dt) * dt)) * integralk)));
+                                       (nxt (globally tmp_46))]}
+bind 2903 ki : {v : real | [(tmp_3 =
+                               && [&& [(0.0 < v); ((v * (dt * dt)) < 1.0)];
+                                   ((((kp * kp) + v) * dt) < (2.0 * kp))]);
+                            (0.0 < v);
+                            ((v * (dt * dt)) < 1.0);
+                            ((((kp * kp) + v) * dt) < (2.0 * kp));
+                            (nxt (globally tmp_3))]}
+bind 2904 kp : {v : real | [(tmp_2 =
+                               && [(0.0 < v); ((v * dt) < 2)]);
+                            (0.0 < v);
+                            ((v * dt) < 2);
+                            (nxt (globally tmp_2))]}
+bind 2905 last_alpha : {v : real | [(v =
+                                       (1.0 - ((ki * dt) * dt)))]}
+bind 2906 last_beta : {v : real | [(v = ki)]}
+bind 2907 last_energyk1 : {v : real | [(v =
+                                          (((last_alpha * last_errork1) * last_errork1) +
+                                             ((last_beta * last_integralk1) * last_integralk1)))]}
+bind 2908 last_energyk1bound : {v : real | [(v = last_energyk1);
+                                            (v <= last_alpha)]}
+bind 2909 last_errork : {v : real | [(v = last_last_errork1)]}
+bind 2910 last_errork1 : {v : real | [(v = (r - last_xk1))]}
+bind 2911 last_integralk : {v : real | [(v =
+                                           last_last_integralk1)]}
+bind 2912 last_integralk1 : {v : real | [(v =
+                                            (last_integralk + (last_errork1 * dt)))]}
+bind 2913 last_last_errork1 : {v : real | []}
+bind 2914 last_last_integralk1 : {v : real | []}
+bind 2915 last_last_xk1 : {v : real | []}
+bind 2916 last_uk : {v : real | [(v =
+                                    ((kp * last_errork) + (ki * last_integralk)))]}
+bind 2917 last_xk : {v : real | [(v = last_last_xk1)]}
+bind 2918 last_xk1 : {v : real | [(v =
+                                     (last_xk + (last_uk * dt)))]}
+bind 2919 r : {v : real | [(nxt (globally true))]}
+bind 2920 tmp_1 : {v : bool | []}
+bind 2921 tmp_2 : {v : bool | []}
+bind 2922 tmp_3 : {v : bool | []}
+bind 2923 tmp_34 : {v : bool | []}
+bind 2924 tmp_35 : {v : bool | []}
+bind 2925 tmp_36 : {v : bool | []}
+bind 2926 tmp_37 : {v : bool | []}
+bind 2927 tmp_38 : {v : bool | []}
+bind 2928 tmp_39 : {v : bool | []}
+bind 2929 tmp_40 : {v : bool | []}
+bind 2930 tmp_41 : {v : bool | []}
+bind 2931 tmp_42 : {v : bool | []}
+bind 2932 tmp_43 : {v : bool | []}
+bind 2933 tmp_44 : {v : bool | []}
+bind 2934 tmp_45 : {v : bool | []}
+bind 2935 tmp_46 : {v : bool | []}
+bind 2936 tmp_47 : {v : bool | []}
+bind 2937 tmp_48 : {v : bool | []}
+bind 2938 tmp_49 : {v : bool | []}
+bind 2939 tmp_50 : {v : bool | []}
+bind 2940 uk : {v : real | [(tmp_37 =
+                               (v = ((kp * errork) + (ki * integralk))));
+                            (v = ((kp * errork) + (ki * integralk)));
+                            (nxt (globally tmp_37))]}
+bind 2941 xk : {v : real | [(tmp_34 = (v = last_xk1));
+                            (v = last_xk1);
+                            (nxt (globally tmp_34))]}
+bind 2942 xk1 : {v : real | [(tmp_38 = (v = (xk + (uk * dt))));
+                             (v = (xk + (uk * dt)));
+                             (nxt (globally tmp_38))]}
+
+
+
+
+constraint:
+  env [0;
+       1;
+       2;
+       3;
+       2888;
+       2889;
+       2890;
+       2891;
+       2892;
+       2893;
+       2894;
+       2895;
+       2896;
+       2897;
+       2898;
+       2899;
+       2900;
+       2901;
+       2902;
+       2903;
+       2904;
+       2905;
+       2906;
+       2907;
+       2908;
+       2909;
+       2910;
+       2911;
+       2912;
+       2913;
+       2914;
+       2915;
+       2916;
+       2917;
+       2918;
+       2919;
+       2920;
+       2921;
+       2922;
+       2923;
+       2924;
+       2925;
+       2926;
+       2927;
+       2928;
+       2929;
+       2930;
+       2931;
+       2932;
+       2933;
+       2934;
+       2935;
+       2936;
+       2937;
+       2938;
+       2939;
+       2940;
+       2941;
+       2942]
+  lhs {VV##5 : real | [(VV##5 = integralk1);
+                       (VV##5 =
+                          (((dt * (1.0 - (kp * dt))) * errork) +
+                             ((1.0 - ((ki * dt) * dt)) * integralk)))]}
+  rhs {VV##5 : real | [(VV##5 =
+                          (((dt * (1.0 - (kp * dt))) * errork) +
+                             ((1.0 - ((ki * dt) * dt)) * integralk)))]}
+  id 5 tag []
+  // META constraint id 5 : ()
+
+
+
+
+
+
+
+
+

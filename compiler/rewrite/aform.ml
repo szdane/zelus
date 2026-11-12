@@ -17,6 +17,9 @@
 (* [x1:t1,...,xn:tn] so that [x = (x1,...,xn)] *)
 (* distribute pattern matchings [(p1,...,pn) = (e1,...,en)] into *)
 (* p1 = e1 and ... pn = en] *)
+(* Continuous tuple memories are split as well: [der x = (e1, e2)] *)
+(* becomes [der x1 = e1 and der x2 = e2], with matching initial/reset *)
+(* assignments and tuple-valued reads. Other memories retain one name. *)
 open Zident
 open Zelus
 open Deftypes
@@ -43,6 +46,7 @@ let name_of_name x subst =
 let build l_env subst =
   (* returns a pair [spat, se] with [spat] a pattern, [se] an expression *)
   let result acc { source = s } ty sort =
+    let s = if String.length s > 0 && s.[0] = '#' then "derivative_tuple" else s in
     let id = Zident.fresh s in
     (Zaux.varpat id ty, Zaux.var id ty),
     Env.add id { t_typ = ty; t_sort = sort } acc in
@@ -56,11 +60,11 @@ let build l_env subst =
     | Tlink(ty_link) -> value s sort acc ty_link in
   let add n { t_typ; t_sort } (subst_acc, env_acc) =
     match t_sort with
-    | Sval | Sstatic ->
+    | Sval | Sstatic | Smem { m_kind = Some Cont } ->
 	let r, env_acc = value n t_sort env_acc t_typ in
 	Env.add n r subst_acc, env_acc
     | _ ->
-     (* state variables are not splitted but renamed *)
+     (* Other state variables are not split but renamed. *)
      let r, env_acc = result env_acc n t_typ t_sort in
      Env.add n r subst_acc, env_acc in
   Env.fold add l_env (subst, Env.empty)
@@ -77,11 +81,33 @@ let rec matching compose eq_list p e =
 and matching_list compose eq_list p_list e_list =
   List.fold_left2 (matching compose) eq_list p_list e_list
 
+(* A derivative (or initializer) must ultimately target a scalar name.
+   Destructure a non-literal product once, before distributing its leaves. *)
+let rec state_matching compose p e =
+  match p.p_desc, e.e_desc with
+  | Etuplepat ps, Etuple es ->
+     List.concat (List.map2 (state_matching compose) ps es)
+  | Evarpat x, _ -> [Zaux.eqmake (compose x e)]
+  | Etuplepat _, _ ->
+     let tmp = Zident.fresh "derivative" in
+     let env = Env.singleton tmp { t_typ = e.e_typ; t_sort = Sval } in
+     let subst, env = build env Env.empty in
+     let tmp_p, tmp_e = find tmp subst in
+     [Zaux.eq_block (Zaux.make_block env
+        (Zaux.eqmake (EQeq(tmp_p, e)) :: state_matching compose p tmp_e))]
+  | _ -> assert false
+
 (** expressions *)
 let rec expression subst ({ e_desc = desc } as e) =
   match desc with
   | Econst _ | Econstr0 _ | Eglobal _ -> e
-  | Elast(x) -> { e with e_desc = Elast(name_of_name x subst) }
+  | Elast(x) ->
+     let rec last e =
+       match e.e_desc with
+       | Elocal x -> { e with e_desc = Elast x }
+       | Etuple es -> { e with e_desc = Etuple (List.map last es) }
+       | _ -> assert false in
+     last (exp_of_name x subst)
   | Elocal(x) ->
      let ename = exp_of_name x subst in 
      { e with e_desc = ename.e_desc }
@@ -157,13 +183,14 @@ and equation subst eq_list ({ eq_desc = desc } as eq) =
      let p = pattern subst p in
      let e = expression subst e in
      matching (fun p e -> Zaux.eqmake (EQeq(p, e))) eq_list p e
-  | EQder(x, e, e_opt, []) ->
-     returns eq (EQder(name_of_name x subst, expression subst e,
-		       Zmisc.optional_map (expression subst) e_opt, [])) eq_list
+  | EQder(x, e, None, []) ->
+     List.rev_append
+       (state_matching (fun x e -> EQder(x, e, None, []))
+          (pat_of_name x subst) (expression subst e)) eq_list
   | EQinit(x, e) ->
-     (* [x] should not be renamed as it is a state variable *)
-     returns eq (EQinit(name_of_name x subst,
-			expression subst e)) eq_list
+     List.rev_append
+       (state_matching (fun x e -> EQinit(x, e))
+          (pat_of_name x subst) (expression subst e)) eq_list
   | EQnext(x, e, e_opt) ->
      (* [x] should not be renamed as it is a state variable *)
      returns eq (EQnext(name_of_name x subst, expression subst e,
@@ -226,9 +253,7 @@ and block subst ({ b_vars = v_list; b_body = eq_list; b_env = b_env } as b) =
   (* the field [b.b_locals] must be [] as this compilation step is done *)
   (* after normalisation *)
   let vardec_list subst v_list =
-  (* Warning. if [n] is a state variable or associated with a *)
-  (* default value of combine function, it is not split into a tuple *)
-  (* but a single name. The code below makes this assumption. *)
+  (* Continuous tuple memories have one declaration per scalar leaf. *)
   let vardec acc ({ vardec_name = n} as v) =
     let p = pat_of_name n subst in
     let nset = Vars.fv_pat S.empty S.empty p in

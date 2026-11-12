@@ -39,6 +39,99 @@ open Zparsetree
 open Utilities
 open ResetUtils
 
+exception Predicate_derivative_error of Zlocation.location * string
+
+(* Syntactic total derivative of a real-arithmetic predicate. [derivatives]
+   explicitly maps each variable to its time derivative: it may contain fresh
+   derivative symbols or the RHSs of the ODEs. Constant parameters must map to
+   zero; an absent variable is an error, rather than an implicit constant.
+
+   This is the differential-induction derivative, not differentiation of a
+   Boolean-valued function. Comparisons retain their relation, and both AND
+   and OR differentiate to AND. See Definition 3.2 (3.2--3.3) of
+   https://symbolaris.com/pub/diffcut.pdf. Negations are pushed into comparisons
+   first. The initial fragment is polynomial real arithmetic; temporal
+   operators, division, disequality and arbitrary calls are rejected.
+
+   This helper does not establish initial conditions, reset preservation or
+   the evolution-domain implication needed for a complete typing rule. *)
+let differentiate_predicate
+    ~(derivatives : (Zparsetree.longname * Zparsetree.exp) list)
+    (predicate : Zparsetree.exp) : Zparsetree.exp =
+  let error e message =
+    raise (Predicate_derivative_error (e.loc, message)) in
+  let real loc n = { desc = Econst (Efloat n); loc } in
+  let number n e =
+    match e.desc with
+    | Econst (Efloat f) -> f = n
+    | Econst (Eint i) -> float_of_int i = n
+    | _ -> false in
+  let app loc op args =
+    { desc = Eapp ({ app_inline = false; app_statefull = false },
+                   { desc = Evar (Name op); loc }, args); loc } in
+  let add loc a b =
+    if number 0.0 a then b else if number 0.0 b then a
+    else app loc "+." [a; b] in
+  let mul loc a b =
+    if number 0.0 a || number 0.0 b then real loc 0.0
+    else if number 1.0 a then b else if number 1.0 b then a
+    else app loc "*." [a; b] in
+  let neg loc a =
+    if number 0.0 a then real loc 0.0 else app loc "-." [real loc 0.0; a] in
+  let sub loc a b =
+    if number 0.0 b then a else if number 0.0 a then neg loc b
+    else app loc "-." [a; b] in
+  let operator f =
+    match f.desc with
+    | Evar (Name op) -> Some op
+    | Evar (Modname { qual; id }) when qual = Initial.stdlib_module -> Some id
+    | _ -> None in
+  let rec term e =
+    match e.desc with
+    | Econst (Eint _ | Efloat _) -> e, real e.loc 0.0
+    | Evar name ->
+        (match List.assoc_opt name derivatives with
+         | Some derivative -> e, derivative
+         | None -> error e ("Missing time derivative for " ^ Pprint.string_of_longname name))
+    | Etypeconstraint (inner, _) -> term inner
+    | Eapp (_, f, args) ->
+        (match operator f, args with
+         | Some "", [a] -> term a (* Utilities.mk_paren *)
+         | Some ("~+" | "~+."), [a] -> term a
+         | Some ("~-" | "~-.") , [a] ->
+             let a, da = term a in neg e.loc a, neg e.loc da
+         | Some ("+" | "+."), [a; b] ->
+             let a, da = term a and b, db = term b in
+             app e.loc "+." [a; b], add e.loc da db
+         | Some ("-" | "-."), [a; b] ->
+             let a, da = term a and b, db = term b in
+             app e.loc "-." [a; b], sub e.loc da db
+         | Some ("*" | "*."), [a; b] ->
+             let a, da = term a and b, db = term b in
+             app e.loc "*." [a; b], add e.loc (mul e.loc da b) (mul e.loc a db)
+         | _ -> error e "Unsupported arithmetic in predicate derivative (expected a polynomial)")
+    | _ -> error e "Unsupported arithmetic in predicate derivative (expected a polynomial)"
+  and formula negated e =
+    match e.desc with
+    | Econst (Ebool b) -> { e with desc = Econst (Ebool (b <> negated)) }
+    | Etypeconstraint (inner, _) -> formula negated inner
+    | Eapp (_, f, args) ->
+        (match operator f, args with
+         | Some "", [p] -> formula negated p
+         | Some "not", [p] -> formula (not negated) p
+         | Some ("&&" | "||"), [p; q] ->
+             app e.loc "&&" [formula negated p; formula negated q]
+         | Some ("=" | "<" | "<=" | ">" | ">=" as relation), [a; b] ->
+             let relation =
+               if not negated then relation
+               else match relation with
+                 | "<" -> ">=" | "<=" -> ">" | ">" -> "<=" | ">=" -> "<"
+                 | _ -> error e "Disequality is not supported in predicate derivatives" in
+             app e.loc relation [snd (term a); snd (term b)]
+         | _ -> error e "Unsupported predicate derivative (expected comparisons and Boolean connectives)")
+    | _ -> error e "Unsupported predicate derivative (expected comparisons and Boolean connectives)" in
+  formula false predicate
+
 
 let build_fby_pred_with_ghosts ~(binder:string)
                                ~(base:string) rhs1 rhs2
@@ -522,8 +615,8 @@ let to_zpt_refine_canon (t : Zelus.type_expression) : Zparsetree.type_expression
 
  
 
-let run_fq name lhs rhs = 
-  let fq_query = Gen.to_fq "v" ~cid:5 ~lhs:lhs ~rhs:rhs ~env:(current_env ()) () in
+let run_fq ?(later=false) name lhs rhs =
+  let fq_query = Gen.to_fq "v" ~cid:5 ~lhs:lhs ~rhs:rhs ~env:(current_env ~later ()) () in
   (*search for fixpoint query io*)
   (* debug (Printf.sprintf "%s" fq_query); *)
   fixpoint_is_safe ~label:name fq_query
@@ -535,25 +628,88 @@ let rhs_var_name (e:Zelus.exp) : string option =
   | _ -> None
 
 
-let run_subtyping_pred ~cid ~(name:string) ~(binder:string) ~(base:string)
+let run_subtyping_pred ?(later=false) ~cid ~(name:string) ~(binder:string) ~(base:string)
   (lhs_pred:Zparsetree.exp) (rhs_pred:Zparsetree.exp)=
     let lhs = mk_refine binder base lhs_pred in
     let rhs = mk_refine binder base rhs_pred in
     match rhs_pred.desc with
        | Zparsetree.Econst (Ebool true) -> true
-       | _ -> run_fq name lhs rhs
+       | _ -> run_fq ~later name lhs rhs
 
-let nf_match_and_check ~cid ~(name:string) ~(binder:string) ~(base:string)
+(* [init x = e] equations seen so far.
+
+   In Zelus [init x = e] initializes the MEMORY of [x] — that is, [last x] at
+   the first instant — and never [x] itself; at t=0 [x] is whatever its own
+   equation computes.  (Typing records [EQinit] in the *initialized* set and
+   never in the *defined* set, and code generation emits a static [init] into
+   the machine's [reset] method only, never into [step].)  So this table is
+   exactly what a t=0 query must substitute for [last_x]. *)
+let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
+
+(* Hybrid initializers are keyed by scoped identity, so a same-named state
+   in another function or an enclosing scope cannot initialize this state. *)
+let hybrid_init_table : (int, Zelus.exp) Hashtbl.t = Hashtbl.create 16
+
+let nf_match_and_check ?(last_t0=false) ?(later=false) ~cid ~(name:string) ~(binder:string) ~(base:string)
   (lhs_pred_nf:Zparsetree.exp) (rhs_pred_nf:Zparsetree.exp)
     : bool =
     (* 1. split into  && x  *)
     let (phi_lhs, psi_lhs) = split_nf lhs_pred_nf in
     let (phi_rhs, psi_rhs) = split_nf rhs_pred_nf in
 
-    (* 2. “now” part *)
-    
+    (* 2. “now” part.
+
+       [phi] is the t=0 obligation, but a [last_y] fact in the environment is a
+       t>=1 fact: at the first instant [last y] is [init y], which need not
+       satisfy [y]'s invariant.  So whenever the t=0 obligation mentions a
+       [last_*] symbol, discharge it the way the automaton head check does —
+       neutralize every [last_*] environment fact and replace [last_y] by
+       [init y] on both sides.  Self-triggering rather than opt-in, because
+       every arm that can read [last] (plain synthesis, ITE, calls, fby) funnels
+       through here, and wrapping them one at a time leaves holes: an ITE
+       reading [last s] used to be discharged against [s]'s invariant instead of
+       against [init s], which let an out-of-range [init] verify. *)
+    (* Opt-in: only an equation's own t=0 obligation gets this treatment.
+       [nf_match_and_check] is also reused for comparisons that are not
+       "first instant vs later" at all — the fby TAIL check compares a
+       shifted NF, whose [phi] slot is not a t=0 obligation and whose
+       [last_*] names must keep their facts. *)
+    let phi_mentions_last =
+      last_t0
+      && (collect_last_vars_zpt phi_lhs [] <> []
+          || collect_last_vars_zpt phi_rhs [] <> [])
+    in
     let ok_now =
-    run_subtyping_pred ~cid ~name ~binder ~base phi_lhs phi_rhs
+      if not phi_mentions_last then
+        run_subtyping_pred ~later ~cid ~name ~binder ~base phi_lhs phi_rhs
+      else begin
+        let init_of_last nm =
+          if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
+            let y = String.sub nm 5 (String.length nm - 5) in
+            match Hashtbl.find_opt init_table y with
+            | Some e -> Some { Zparsetree.desc = vc_gen_expression e; loc = dummy_loc }
+            | None -> None
+          else None
+        in
+        let rec subst_last (e : Zparsetree.exp) : Zparsetree.exp =
+          match e.desc with
+          | Zparsetree.Evar (Name s) ->
+              (match init_of_last s with Some e' -> e' | None -> e)
+          | Zparsetree.Eapp (ai, fn, args) ->
+              { e with desc =
+                  Zparsetree.Eapp (ai, subst_last fn, List.map subst_last args) }
+          | Zparsetree.Etuple es ->
+              { e with desc = Zparsetree.Etuple (List.map subst_last es) }
+          | _ -> e
+        in
+        let saved_t0_gamma = neutralize_stream_facts_for_t0 [] in
+        let r =
+          run_subtyping_pred ~cid ~name:(name ^ ":t0") ~binder ~base
+            (subst_last phi_lhs) (subst_last phi_rhs)
+        in
+        gamma := saved_t0_gamma;
+        r
+      end
     in
     if not ok_now then (false )else
     (* 3. strip common x/g/m chain from the “later” part *)
@@ -565,7 +721,7 @@ let nf_match_and_check ~cid ~(name:string) ~(binder:string) ~(base:string)
     if is_true psi_rhs' then true
     else
     if is_ltl_free psi_lhs' && is_ltl_free psi_rhs' then
-      run_subtyping_pred ~cid ~name ~binder ~base psi_lhs' psi_rhs'
+      run_subtyping_pred ~later:true ~cid ~name ~binder ~base psi_lhs' psi_rhs'
     else begin
       (* Rejected before any query is built, so there is no .fq to dump: say
          so, otherwise the absence of a saved file reads as a lost dump. *)
@@ -1178,6 +1334,7 @@ let install_fby_binding ~(name:string)
    is the only one that still knows the source-declared binder), and [binder]
    must be [value_var] to match it. *)
 let ite_check_via_nf
+  ~(last_t0:bool)
   ~(name:string)
   ~(binder:string)
   ~(base:string)
@@ -1200,8 +1357,8 @@ let ite_check_via_nf
               (pp_nf_as_type ~binder ~base else_nf));
 
     (* Both branches must satisfy the annotation NF *)
-    let ok_then = nf_match_and_check ~cid:5 ~name:(name^":then") ~binder ~base then_nf ann_nf in
-    let ok_else = nf_match_and_check ~cid:5 ~name:(name^":else") ~binder ~base else_nf ann_nf in
+    let ok_then = nf_match_and_check ~last_t0 ~cid:5 ~name:(name^":then") ~binder ~base then_nf ann_nf in
+    let ok_else = nf_match_and_check ~last_t0 ~cid:5 ~name:(name^":else") ~binder ~base else_nf ann_nf in
     ok_then && ok_else
 
 (* v = e1  &&  X(G(M(v = e2)))  → normalize whole thing to NF *)
@@ -1290,13 +1447,26 @@ let process_let_rec_fby
     shifted_ghosts;
 
   let lhs_tail_nf = nf_eq_v_rhs_fby_tail ~shift:1 e2 in
+  (* Compare the tail against the annotation's INVARIANT, not the whole
+     annotation.  [ann_nf] is [phi && nxt(globally psi)], where [phi] is the
+     value at t=0 — and that is already discharged by the HEAD check above,
+     against [e1].  [lhs_tail_nf]'s own head is the tail's first value, i.e.
+     the value at t=1, so matching it against [phi] demands that t=1 satisfy a
+     t=0 fact: for [ex = 1 fby (ex+1) : {v | v = 1 && nxt(globally(v > last_ex))}]
+     it asked to prove [last_ex + 1 = 1].  That obligation is false, and used to
+     pass only because the [last_ex] ghost was installed as the self-
+     contradictory [last_ex > last_ex], making the whole environment
+     inconsistent and every query vacuously safe. *)
+  let (_phi_ann_tail, psi_ann_tail) = base_ind_of_nf ann_nf in
+  let ann_tail_nf = mk_and psi_ann_tail (mk_X (mk_G psi_ann_tail)) in
   let ok_tail =
     nf_match_and_check
+      ~later:true
       ~cid:5
       ~name:(x ^ ":rec-fby-tail")
       ~binder:ret_binder
       ~base:base_name
-      lhs_tail_nf ann_nf
+      lhs_tail_nf ann_tail_nf
   in
   if not ok_tail then begin
     (* rollback provisional binding *)
@@ -1438,7 +1608,7 @@ let process_let_rec_tuple_fby (pat : Zelus.pattern) (rhs : Zelus.exp) : unit =
   in
 
   (* Run the subtyping check *)
-  let ok_tail = run_fq ("tuple-fby-tail:" ^ vv_k) lhs_tail_ty rhs_tail_ty in
+  let ok_tail = run_fq ~later:true ("tuple-fby-tail:" ^ vv_k) lhs_tail_ty rhs_tail_ty in
   if not ok_tail then
     failwith "Liquid type error: tuple fby tail check failed (vv_* form)";
   
@@ -1828,15 +1998,6 @@ let preload_refenv_vars_aut (vars : (string * Zelus.type_expression) list) : uni
 
 (* ===================== [init] / [last] in a plain [let rec] ================ *)
 
-(* [init x = e] equations seen so far.
-
-   In Zelus [init x = e] initializes the MEMORY of [x] — that is, [last x] at
-   the first instant — and never [x] itself; at t=0 [x] is whatever its own
-   equation computes.  (Typing records [EQinit] in the *initialized* set and
-   never in the *defined* set, and code generation emits a static [init] into
-   the machine's [reset] method only, never into [step].)  So this table is
-   exactly what a t=0 query must substitute for [last_x]. *)
-let init_table : (string, Zelus.exp) Hashtbl.t = Hashtbl.create 16
 
 (* The sound environment fact for the ghost [last_y] at every instant t>=1.
 
@@ -1927,7 +2088,9 @@ let preload_block_lasts (eqs : Zelus.eq list) : unit =
   List.iter
     (fun (eq : Zelus.eq) ->
        match eq.eq_desc with
-       | EQinit (id, e) -> Hashtbl.replace init_table (zident_pretty id) e
+       | EQinit (id, e) ->
+           Hashtbl.replace init_table (zident_pretty id) e;
+           Hashtbl.replace hybrid_init_table id.Zident.num e
        | _ -> ())
     eqs;
   (* 2) Declared annotations of the block's annotated locals. *)
@@ -1993,6 +2156,31 @@ let preload_block_lasts (eqs : Zelus.eq list) : unit =
               "Liquid type error: 'last %s' is used in this block but there is no \
                'init %s = ...' to give its value at the first instant" y y))
     lasts;
+
+  (* 3b) An [x = e1 fby e2] tail ALSO needs [last_z] ghosts, for every plain
+        variable [z] of [e2] — [nf_fby_eq] builds the tail by shifting [e2] one
+        instant into the past, so [z] becomes [last_z] even though the source
+        contains no [last] node at all.  The existing
+        [ensure_last_of_bound_var (collect_plain_vars e2)] in the fby arm is a
+        gamma lookup, so it silently no-ops when [z]'s own equation comes later
+        in the block ([prev = 0 fby ex] with [ex] defined below it), leaving
+        [last_z] free and crashing the solver.  Seed those here as well.
+
+        No [init] is required for these: the fby's own head [e1] supplies the
+        first instant, so there is nothing to look up at t=0. *)
+  let fby_tail_lasts =
+    List.fold_left
+      (fun acc (eq : Zelus.eq) ->
+         match eq.eq_desc with
+         | EQeq (pat, rhs) ->
+             (match pat.p_desc, rhs.e_desc with
+              | Zelus.Etypeconstraintpat (_, _), Zelus.Eop (Zelus.Efby, [_e1; e2]) ->
+                  collect_plain_vars e2 @ acc
+              | _ -> acc)
+         | _ -> acc)
+      [] eqs
+    |> List.sort_uniq String.compare
+  in
   (* 4) Install a ghost ONLY for the variables actually read through [last],
         then close over whatever further [last_z] their facts name.
 
@@ -2027,59 +2215,7 @@ let preload_block_lasts (eqs : Zelus.eq list) : unit =
                  (collect_last_vars_zpt pred []))
     end
   in
-  List.iter install_needed lasts
-
-(* [nf_match_and_check] for an equation whose RHS reads [last y].
-
-   [nf_match_and_check] runs its t=0 and t>=1 sub-queries against the SAME
-   environment, but the [last_*] facts are t>=1 facts: at t=0 [last y] is
-   [init y], which need not satisfy [y]'s invariant.  Left in scope for the t=0
-   query they would let an out-of-range [init] be "proved" in range.  So the
-   t=0 query runs with every [last_*] fact neutralized and with [last_y]
-   substituted by [init y] on both sides, while the t>=1 query keeps the full
-   environment — the same discipline as the automaton head / globally-base
-   checks. *)
-let nf_match_and_check_with_last
-      ~(name:string) ~(binder:string) ~(base:string)
-      (lhs_nf:Zparsetree.exp) (rhs_nf:Zparsetree.exp) : bool =
-  let (phi_lhs, psi_lhs) = split_nf lhs_nf in
-  let (phi_rhs, psi_rhs) = split_nf rhs_nf in
-  let init_of_last nm =
-    if String.length nm >= 5 && String.sub nm 0 5 = "last_" then
-      let y = String.sub nm 5 (String.length nm - 5) in
-      match Hashtbl.find_opt init_table y with
-      | Some e -> Some { Zparsetree.desc = vc_gen_expression e; loc = dummy_loc }
-      | None -> None
-    else None
-  in
-  let rec subst_last (e : Zparsetree.exp) : Zparsetree.exp =
-    match e.desc with
-    | Zparsetree.Evar (Name s) ->
-        (match init_of_last s with Some e' -> e' | None -> e)
-    | Zparsetree.Eapp (ai, fn, args) ->
-        { e with desc =
-            Zparsetree.Eapp (ai, subst_last fn, List.map subst_last args) }
-    | Zparsetree.Etuple es ->
-        { e with desc = Zparsetree.Etuple (List.map subst_last es) }
-    | _ -> e
-  in
-  (* t=0 *)
-  let saved_t0_gamma = neutralize_stream_facts_for_t0 [] in
-  let ok_now =
-    run_subtyping_pred ~cid:5 ~name:(name ^ ":t0") ~binder ~base
-      (subst_last phi_lhs) (subst_last phi_rhs)
-  in
-  gamma := saved_t0_gamma;
-  if not ok_now then false
-  else begin
-    (* t>=1, with the full environment restored *)
-    let psi_lhs', psi_rhs' = strip_matching_ltl psi_lhs psi_rhs in
-    if is_true psi_rhs' then true
-    else if is_ltl_free psi_lhs' && is_ltl_free psi_rhs' then
-      run_subtyping_pred ~cid:5 ~name:(name ^ ":tail") ~binder ~base
-        psi_lhs' psi_rhs'
-    else false
-  end
+  List.iter install_needed (List.sort_uniq String.compare (lasts @ fby_tail_lasts))
 
 let process_scalar_eq base_pat ty_ann_zelus rhs =
     debug "Processing let eq with annotation";
@@ -2129,18 +2265,10 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
        this covers every other shape (ITE, calls, plain synthesis). *)
     List.iter ensure_last_of_bound_var (collect_last_vars rhs);
 
-    (* When the RHS reads [last y], the t=0 and t>=1 obligations need different
-       environments (see [nf_match_and_check_with_last]); otherwise the ordinary
-       one-environment check applies. *)
+    (* Does this equation's own t=0 obligation involve a [last]? If so the
+       checks below must discharge it against [init y] rather than against
+       [y]'s invariant (see the "now" part of [nf_match_and_check]). *)
     let rhs_reads_last = collect_last_vars rhs <> [] in
-    let check_synth_nf ~(name:string) lhs_nf rhs_nf =
-      if rhs_reads_last then
-        nf_match_and_check_with_last
-          ~name ~binder:value_var ~base:base_name lhs_nf rhs_nf
-      else
-        nf_match_and_check
-          ~cid:5 ~name ~binder:value_var ~base:base_name lhs_nf rhs_nf
-    in
 
     (* {v | true} fast-path *)
     (match pred_zpt.desc with
@@ -2208,7 +2336,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
         
               let ok =
                 nf_match_and_check
-                  ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                  ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                   lhs_nf ann_nf
               in
         
@@ -2262,7 +2390,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                         (pp_nf_as_type ~binder:ret_binder ~base:base_name ann_nf));
                 let ok =
                   nf_match_and_check
-                    ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                    ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                     lhs_nf ann_nf
                 in
                 if ok then
@@ -2282,6 +2410,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
             | Zelus.Eop (Zelus.Eifthenelse, i :: t_then :: t_else :: []) ->
                 let ok =
                   ite_check_via_nf
+                    ~last_t0:rhs_reads_last
                     ~name:x ~binder:ret_binder ~base:base_name
                     ~ann_nf ~cond:i ~t_then ~t_else
                 in
@@ -2344,7 +2473,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
               (* 5) Subtyping: (callee_ret_nf  caller_ann_nf') in NF *)
               let ok =
                 nf_match_and_check
-                  ~cid:5 ~name:(fname ^ ":call-ret")
+                  ~last_t0:rhs_reads_last ~cid:5 ~name:(fname ^ ":call-ret")
                   ~binder:ret_binder ~base:ret_base_name
                   callee_ret_nf caller_ann_nf'
               in
@@ -2394,7 +2523,11 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                       (* Not found in  -> fall back to synthesizing v=rhs && X(G(v=rhs)) *)
                       let v_eq_rhs = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc = dummy_loc } in
                       let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
-                      let ok_nf = check_synth_nf ~name:x lhs_nf ann_nf in
+                      let ok_nf =
+                        nf_match_and_check
+                          ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                          lhs_nf ann_nf
+                      in
                       let rhs_ty_zpt =
                         { desc = Zparsetree.Erefinement ((ret_binder, base_ty), ann_nf)
                         ; loc  = dummy_loc }
@@ -2408,7 +2541,11 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                      [Elast] node and not a plain variable reference. *)
                   let v_eq_rhs = mk_eq (mk_v ()) { desc = vc_gen_expression rhs; loc = dummy_loc } in
                   let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
-                  let ok_nf = check_synth_nf ~name:x lhs_nf ann_nf in
+                  let ok_nf =
+                        nf_match_and_check
+                          ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                          lhs_nf ann_nf
+                      in
                   let rhs_ty_zpt =
                     { desc = Zparsetree.Erefinement ((ret_binder, base_ty), ann_nf)
                     ; loc  = dummy_loc }
@@ -3148,8 +3285,175 @@ let process_unannotated_scalar_eq (x : string) (rhs : Zelus.exp) : unit =
                (pp_nf_as_type ~binder:value_var ~base:base_name pred));
       add_binding x (mk_refine value_var (String.lowercase_ascii base_name) pred)
 
-let process_let_eq (eq : Zelus.eq) : unit =
+(* Scalar T-DER-FIN (NFM manuscript, Fig. 5, pp. 14--15).
+   The derivative annotation supplies safety phi; the refinement on each
+   initializer/reset expression supplies its user-chosen differential invariant.
+   Segment entry, pre-reset state and arbitrary flow state are DISTINCT symbols.
+   In particular, neither safety nor the candidate invariant at the arbitrary
+   flow state may be assumed while proving the differential obligation. *)
+let process_scalar_derivative (eq : Zelus.eq) : unit =
+  match eq.eq_desc, eq.eq_der_type with
+  | EQder (id, rhs, init, handlers), Some safety_type ->
+      let name = zident_pretty id in
+      let fail message =
+        Format.eprintf "%aT-DER-FIN (%s): %s@."
+          Zlocation.output_location eq.eq_loc name message;
+        failwith ("T-DER-FIN: " ^ message) in
+      let state = "#hybrid_state" in
+      let constants = ref Zmisc.S.empty in
+      let zero = { desc = Econst (Efloat 0.0); loc = dummy_loc } in
+      let binary op a b = mk_app (mk_var op) [a; b] in
+      let implies = binary "=>" in
+      let global n =
+        match find_binding n with
+        | Some ty ->
+            let _, base, _ = refine_parts_of_gamma_ty ty in
+            if not (List.mem (String.lowercase_ascii base) ["float"; "real"; "int"])
+            then fail ("expected a numeric constant: " ^ n);
+            constants := Zmisc.S.add n !constants;
+            mk_var n
+        | None -> fail ("no verified constant binding for " ^ n) in
+      let rec convert ?binder ?(last=false) ?(self=true) (e : Zelus.exp) =
+        let recur = convert ?binder ~last ~self in
+        match e.e_desc with
+        | Zelus.Econst (Efloat _ | Eint _ | Ebool _ as c) ->
+            { desc = Econst (fst (literal_and_base c)); loc = e.e_loc }
+        | Zelus.Elocal x when Zident.compare x id = 0 ->
+            if not self then fail "initializer cannot read the current state";
+            mk_var state
+        | Zelus.Elast x when last && Zident.compare x id = 0 -> mk_var state
+        | Zelus.Eglobal { lname = Name n } when Some n = binder -> mk_var state
+        | Zelus.Eglobal { lname = Name n } -> global n
+        | Zelus.Eglobal { lname = Modname {qual; id = n} }
+            when qual = Modules.current.name -> global n
+        | Zelus.Etypeconstraint (inner, _) -> recur inner
+        | Zelus.Eapp (ai, f, args) when not ai.app_statefull ->
+            let op = match f.e_desc with
+              | Zelus.Eglobal { lname = Name op } -> op
+              | Zelus.Eglobal { lname = Modname {qual; id = op} }
+                  when qual = Initial.stdlib_module -> op
+              | _ -> fail "only standard polynomial operators are supported" in
+            let args = List.map recur args in
+            (match op, args with
+             | ("~-" | "~-."), [a] -> binary "-." zero a
+             | ("~+" | "~+."), [a] -> a
+             | ("+" | "+." | "-" | "-." | "*" | "*."
+               | "<" | "<=" | ">" | ">=" | "=" | "&&" | "||"), [_; _]
+             | "not", [_] | "globally", [_] -> mk_app (mk_var op) args
+             | _ -> fail ("unsupported hybrid expression: " ^ op))
+        | _ -> fail "this scalar rule supports polynomial expressions in the derivative state and verified global constants" in
+      let predicate annotation =
+        match annotation.Zelus.desc with
+        | Zelus.Erefinement ((binder, base), pred) ->
+            (match base.desc with
+             | Zelus.Etypeconstr (Name ("float" | "real"), []) -> ()
+             | _ -> fail "a scalar float refinement is required");
+            let pred = convert ~binder pred in
+            (* A derivative annotation denotes a continuous invariant. Accept
+               either a plain predicate or one outer globally wrapper only. *)
+            (match pred.desc with
+             | Eapp (_, {desc = Evar (Name "globally")}, [p]) -> p
+             | _ -> pred)
+        | _ -> fail "a user-supplied scalar refinement is required" in
+      let safety = predicate safety_type in
+      let rhs = convert rhs in
+      let guards = List.map (fun (h : Zelus.exp Zelus.present_handler) ->
+        match h.p_cond.desc with
+        | Zelus.Econdexp {e_desc = Zelus.Eop (Zelus.Eup, [u])} ->
+            convert ~last:true u
+        | _ -> fail "each reset must have a single up(polynomial) guard") handlers in
+      let init = match init with
+        | Some e -> e
+        | None ->
+            (match Hashtbl.find_opt hybrid_init_table id.Zident.num with
+             | Some e -> e
+             | None -> fail "an explicitly annotated initializer is required") in
+      let segment label precondition ~initial expression =
+        match expression.Zelus.e_desc with
+        | Zelus.Etypeconstraint (value, annotation) ->
+            let invariant = predicate annotation in
+            let value = convert ~self:(not initial) ~last:(not initial) value in
+            label, precondition, value, invariant
+        | _ -> fail (label ^ " requires an expression refinement specifying its inductive invariant") in
+      let segments =
+        segment "T1" mk_true ~initial:true init ::
+        List.mapi (fun i (h : Zelus.exp Zelus.present_handler) ->
+          segment (Printf.sprintf "T2-%d" (i + 1))
+            (mk_and safety (mk_eq (List.nth guards i) zero))
+            ~initial:false h.p_body) handlers in
+      let derivatives = (Name state, rhs) ::
+        List.map (fun n -> Name n, zero) (Zmisc.S.elements !constants) in
+      let derivative p =
+        try differentiate_predicate ~derivatives p with
+        | Predicate_derivative_error (_, message) -> fail message in
+      (* Validate arithmetic without assigning a separate semantics to terms. *)
+      let term_derivative term =
+        match (derivative (mk_eq term zero)).desc with
+        | Eapp (_, _, [dt; _]) -> dt
+        | _ -> assert false in
+      ignore (derivative safety);
+      ignore (term_derivative rhs);
+      List.iter (fun (_, pre, value, invariant) ->
+        ignore (derivative pre); ignore (term_derivative value);
+        ignore (derivative invariant)) segments;
+      let guard_derivatives = List.map term_derivative guards in
+      let fresh prefix =
+        let rec next () =
+          let n = gensym prefix in
+          if Zmisc.S.mem n !constants || n = name then next () else n in
+        next () in
+      let pre_name = fresh "hybrid_pre" and start_name = fresh "hybrid_start"
+      and flow_name = fresh "hybrid_flow" in
+      let pre = mk_var pre_name and start = mk_var start_name
+      and flow = mk_var flow_name in
+      let at value p = subst_var state value p in
+      (* Conditional domain facts retain uncertainty about activity at entry.
+         Never infer activation from safety or from u <= 0 alone. The prose
+         on p. 14 requires u=0 AND du<0 (the displayed implication is a typo). *)
+      let domain = mk_big_and (List.map2 (fun u du ->
+        let active = mk_or (binary "<" (at start u) zero)
+          (mk_and (mk_eq (at start u) zero) (binary "<" (at start du) zero)) in
+        implies active (binary "<=" (at flow u) zero)) guards guard_derivatives) in
+      (* Build an isolated solver environment. In particular, existing local
+         aliases or last_* ghosts must not pin the arbitrary flow state. *)
+      let env = List.map (fun n -> mk_refine n "float" mk_true)
+          [pre_name; start_name; flow_name] @
+        List.map (fun n -> match find_binding n with
+          | Some ty -> invariant_only_type ty
+          | None -> assert false) (Zmisc.S.elements !constants) in
+      List.iter (fun (label, source, value, invariant) ->
+        let assumptions = mk_and (at pre source) (mk_eq start (at pre value)) in
+        let check suffix lhs goal =
+          match goal.desc with
+          | Econst (Ebool true) -> ()
+          | _ ->
+              let label = name ^ ":" ^ label ^ "-" ^ suffix in
+              (* Fixpoint rejects a RHS that simplifies to an empty conjunction
+                 (e.g. D(x=0) for x'=0). Name the goal in the environment so
+                 these valid constant obligations still have an atomic RHS. *)
+              let goal_name = fresh "hybrid_goal" in
+              let env = mk_refine goal_name "bool" (mk_eq (mk_v ()) goal) :: env in
+              let query = Gen.to_fq value_var ~cid:5
+                ~lhs:(mk_refine value_var "float" lhs)
+                ~rhs:(mk_refine value_var "float" (mk_eq (mk_var goal_name) mk_true))
+                ~env () in
+              if not (fixpoint_is_safe ~label query) then fail (label ^ " obligation failed") in
+        check "establish" assumptions
+          (mk_and (at start safety) (at start invariant));
+        check "flow" (mk_big_and [assumptions; at start invariant; domain])
+          (at flow (derivative invariant));
+        check "bridge" (mk_big_and [assumptions; domain; at flow invariant])
+          (at flow safety)) segments;
+      (* T3: only the verified safety invariant is exported to the body. *)
+      add_binding name (mk_refine value_var "float"
+        (mk_G (at (mk_v ()) safety)))
+  | _ -> invalid_arg "process_scalar_derivative: expected an annotated derivative"
+
+let rec process_let_eq (eq : Zelus.eq) : unit =
       match eq.eq_desc with
+      | EQder _ when eq.eq_der_type <> None ->
+          process_scalar_derivative eq
+      | EQand eqs | EQbefore eqs -> List.iter process_let_eq eqs
       | EQeq (pat, rhs) -> begin
           match pat.p_desc with
           | Etypeconstraintpat (bp, ty_ann_zelus) -> begin
@@ -3200,6 +3504,90 @@ let process_let_eq (eq : Zelus.eq) : unit =
       | EQautomaton(_,_,_) -> ()
       | _ -> ()
     ;;
+
+(* Inventory derivatives even under syntax this first implementation cannot
+   verify. This prevents unsupported placements (and the main fast path) from
+   silently accepting an annotated equation without discharging its premises. *)
+let rec hybrid_equations_exp (e : Zelus.exp) =
+  let expressions es = List.concat_map hybrid_equations_exp es in
+  match e.e_desc with
+  | Zelus.Elet (l, body) -> hybrid_equations_list l.l_eq @ hybrid_equations_exp body
+  | Zelus.Eblock (b, body) -> hybrid_equations_block b @ hybrid_equations_exp body
+  | Zelus.Eapp (_, f, es) -> expressions (f :: es)
+  | Zelus.Eop (_, es) | Zelus.Etuple es | Zelus.Econstr1 (_, es) -> expressions es
+  | Zelus.Eseq (a, b) -> expressions [a; b]
+  | Zelus.Etypeconstraint (e, _) | Zelus.Eassume e | Zelus.Erecord_access (e, _) ->
+      hybrid_equations_exp e
+  | Zelus.Erecord fields -> expressions (List.map snd fields)
+  | Zelus.Erecord_with (e, fields) -> expressions (e :: List.map snd fields)
+  | Zelus.Ematch (_, e, hs) -> expressions (e :: List.map (fun h -> h.Zelus.m_body) hs)
+  | Zelus.Epresent (hs, other) ->
+      List.concat_map (fun h -> hybrid_equations_condition h.Zelus.p_cond) hs @
+      expressions (List.map (fun h -> h.Zelus.p_body) hs @ Option.to_list other)
+  | Zelus.Eperiod p -> expressions (p.p_period :: Option.to_list p.p_phase)
+  | _ -> []
+and hybrid_equations_list eqs =
+  List.concat_map (fun (eq : Zelus.eq) -> match eq.eq_desc with
+    | EQder _ -> [eq]
+    | EQand eqs | EQbefore eqs -> hybrid_equations_list eqs
+    | EQreset (eqs, e) -> hybrid_equations_list eqs @ hybrid_equations_exp e
+    | EQblock b -> hybrid_equations_block b
+    | EQeq (_, e) | EQinit (_, e) | EQpluseq (_, e) -> hybrid_equations_exp e
+    | EQnext (_, e, init) ->
+        hybrid_equations_exp e @ List.concat_map hybrid_equations_exp (Option.to_list init)
+    | EQemit (_, e) -> List.concat_map hybrid_equations_exp (Option.to_list e)
+    | EQpresent (hs, other) ->
+        List.concat_map (fun h -> hybrid_equations_condition h.Zelus.p_cond @
+          hybrid_equations_block h.p_body) hs @
+        List.concat_map hybrid_equations_block (Option.to_list other)
+    | EQmatch (_, e, hs) -> hybrid_equations_exp e @
+        List.concat_map (fun h -> hybrid_equations_block h.Zelus.m_body) hs
+    | EQautomaton (_, hs, initial) ->
+        List.concat_map hybrid_equations_state hs @
+        List.concat_map hybrid_equations_state_exp (Option.to_list initial)
+    | EQautomatonRef (_, _, hs, initial, _) ->
+        List.concat_map (fun h -> hybrid_equations_state h.Zelus.sha_handler) hs @
+        List.concat_map hybrid_equations_state_exp (Option.to_list initial)
+    | EQforall h -> hybrid_equations_block h.for_body) eqs
+and hybrid_equations_block (b : Zelus.eq list Zelus.block) =
+  List.concat_map (fun l -> hybrid_equations_list l.Zelus.l_eq) b.b_locals @
+  hybrid_equations_list b.b_body
+and hybrid_equations_condition (c : Zelus.scondpat) =
+  match c.desc with
+  | Zelus.Econdand (a, b) | Zelus.Econdor (a, b) ->
+      hybrid_equations_condition a @ hybrid_equations_condition b
+  | Zelus.Econdexp e | Zelus.Econdpat (e, _) -> hybrid_equations_exp e
+  | Zelus.Econdon (c, e) -> hybrid_equations_condition c @ hybrid_equations_exp e
+and hybrid_equations_state (s : Zelus.state_handler) =
+  hybrid_equations_block s.s_body @ List.concat_map (fun (e : Zelus.escape) ->
+    hybrid_equations_condition e.e_cond @
+    List.concat_map hybrid_equations_block (Option.to_list e.e_block) @
+    hybrid_equations_state_exp e.e_next_state) s.s_trans
+and hybrid_equations_state_exp (s : Zelus.state_exp) =
+  match s.desc with
+  | Zelus.Estate0 _ -> []
+  | Zelus.Estate1 (_, es) -> List.concat_map hybrid_equations_exp es
+
+let has_annotated_hybrid eqs = List.exists (fun eq -> eq.Zelus.eq_der_type <> None) eqs
+
+let rec flatten_equation_group eqs =
+  List.concat_map (fun (eq : Zelus.eq) -> match eq.eq_desc with
+    | EQand es | EQbefore es -> flatten_equation_group es
+    | _ -> [eq]) eqs
+
+let rec validate_hybrid_placement (e : Zelus.exp) =
+  let unsupported eqs =
+    if has_annotated_hybrid eqs then
+      failwith "T-DER-FIN: annotated derivatives must occur in a top-level let/where equation group" in
+  match e.e_desc with
+  | Zelus.Elet (l, body) ->
+      List.iter (fun (eq : Zelus.eq) -> match eq.eq_desc with
+        | EQder _ -> ()
+        | _ -> unsupported (hybrid_equations_list [eq]))
+        (flatten_equation_group l.l_eq);
+      validate_hybrid_placement body
+  | Zelus.Eseq (a, b) -> validate_hybrid_placement a; validate_hybrid_placement b
+  | _ -> unsupported (hybrid_equations_exp e)
     
     
 
@@ -3251,9 +3639,10 @@ let add_annotated_arg_to_env (p : Zelus.pattern) : unit =
 
   let with_env_snapshot (f : unit -> unit) : unit =
     let saved = !gamma in
+    let saved1 = !gamma1 in
     match f () with
-    | () -> gamma := saved
-    | exception ex -> gamma := saved; raise ex
+    | () -> gamma := saved; gamma1 := saved1
+    | exception ex -> gamma := saved; gamma1 := saved1; raise ex
 
 
 
@@ -3467,7 +3856,7 @@ let check_return ~(fname:string)
           (* Seed [init_table] and the [last_*] ghosts from the block's own
              declarations before checking any equation: a [rec] block is
              unordered, so [last y] may be read before [y] is bound. *)
-          preload_block_lasts l_block.l_eq;
+          preload_block_lasts (flatten_equation_group l_block.l_eq);
           (* handle “let ... and ... and ...” *)
           List.iter process_let_eq l_block.l_eq;
           (* continue into the body; handles further nested lets too *)
@@ -3479,7 +3868,7 @@ let check_return ~(fname:string)
           match e.e_desc with
           | Zelus.Elet (l_block, r_exp) ->
               with_env_snapshot (fun () ->
-                preload_block_lasts l_block.l_eq;
+                preload_block_lasts (flatten_equation_group l_block.l_eq);
                 List.iter process_let_eq l_block.l_eq;
                 process_lets_only r_exp)
           | Zelus.Eseq (a,b) -> process_lets_only a; process_lets_only b
@@ -3490,11 +3879,29 @@ let check_return ~(fname:string)
 
   
     | _ ->
+        if has_annotated_hybrid (hybrid_equations_exp e) then
+          failwith "T-DER-FIN: annotated derivatives must occur in a top-level let/where equation group";
         check_return ~fname ~ret_binder ~ret_base ~ret_pred e rettype
   
 
 
       
+(* Top-level values do not change with time. Their verified head remains true
+   at every instant, even when the source annotation omits [globally]. Keep
+   that fact in the invariant as well, so later call preconditions can use it. *)
+let add_constant_binding name ty =
+  match ty.desc with
+  | Zparsetree.Erefinement (binding, pred) ->
+      let head = environment_pred ~later:false pred in
+      let tail = environment_pred ~later:true pred in
+      let invariant =
+        if is_true tail || Pprint.string_of_expr head = Pprint.string_of_expr tail
+        then head else mk_and head tail in
+      add_binding name
+        { ty with desc = Zparsetree.Erefinement
+            (binding, mk_and head (mk_X (mk_G invariant))) }
+  | _ -> add_binding name ty
+
 let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
   match impl.desc with
   | Zelus.Econstdecl (id, rhs_ty, _is_static, e) -> (
@@ -3509,6 +3916,8 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                  [ann_nf] is canonicalized to [value_var] by [zls_pred_to_nf]. *)
               let ann_nf = zls_pred_to_nf ~binder:v ann_pred in
               let ok = ite_check_via_nf
+                          (* top-level constant: no equation, so no [last] *)
+                          ~last_t0:false
                           ~name:id
                           ~binder:value_var
                           ~base:base_name
@@ -3522,7 +3931,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                 let rhs_ty_zpt =
                   { desc = Zparsetree.Erefinement ((value_var, base_ty_zpt), ann_nf); loc = dummy_loc }
                 in
-                add_binding id rhs_ty_zpt
+                add_constant_binding id rhs_ty_zpt
               else
                 failwith (Printf.sprintf "Liquid type error: const %s (ITE) violates its annotation" id)
           | _ -> failwith "Not a Etypeconstr"
@@ -3556,9 +3965,8 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
                     , rhs_pred_nf);
                 loc = dummy_loc }
             in
-            add_binding id rhs_ty_zpt
-          ) else (
-          (
+            add_constant_binding id rhs_ty_zpt
+          ) else ((
           match base_ty.desc with 
             | Zelus.Etypefun(a, b, arg, out) -> (
               match arg.desc with
@@ -3605,7 +4013,11 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
             debug (Printf.sprintf "Efundecl %s\n" n);
             debug (Printf.sprintf "# of Arguments: %d\n" (List.length p_list));
 
-            if n = "main" then (
+            let hybrid_eqs = hybrid_equations_exp f_body in
+            if has_annotated_hybrid hybrid_eqs && List.length hybrid_eqs <> 1 then
+              failwith "T-DER-FIN: this implementation supports one scalar derivative per function";
+            if has_annotated_hybrid hybrid_eqs then validate_hybrid_placement f_body;
+            if n = "main" && not (has_annotated_hybrid hybrid_eqs) then (
               debug "skipping main function";
               debug "\027[32mProgram is well-typed: all generated fixpoint checks are safe.\027[0m";
             ) else (

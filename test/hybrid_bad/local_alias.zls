@@ -1,0 +1,5 @@
+(* polynomial expressions in the derivative state *)
+let hybrid bad () = x where
+  rec der (x : {v:float | globally (0.0 <= v)}) = y
+    init (0.0 : {v:float | 0.0 <= v})
+  and y = -. x

@@ -47,7 +47,7 @@ let block_spat_e_list s pat spat_e_list =
 
 let present s x spat_e_list e eq_list =
   let spat_b_list =
-    block_spat_e_list s (varpat x Initial.typ_float) spat_e_list in
+    block_spat_e_list s (varpat x e.e_typ) spat_e_list in
   (* only generate a present if [spat_b_list] is not empty *)
   match spat_b_list with
     | [] -> (eq_der x e) :: eq_list

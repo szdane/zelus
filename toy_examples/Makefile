@@ -4,15 +4,20 @@ OCAMLFIND=ocamlfind
 OCAMLOPT=ocamlopt
 INCLUDE=-I /usr/local/include
 CCLIB="-g `pkg-config --libs --cflags lcm`"
-MLFLAGS=-linkpkg -package zelus 
+MLFLAGS=-linkpkg -package zelus
 
-sim: zelus-compile 
+EXAMPLES=casc parallel parallel_v2 buggy
 
-main.ml: last.zls
-	$(ZELUC) $(ZFLAGS) last.zls
+.PHONY: sim all clean $(EXAMPLES)
 
-zelus-compile: main.ml
-	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o last.opt last.ml main.ml
+sim: casc
 
-clean: 
-	rm -f last.opt *.cmi *.cmx *.o *.zci main.ml last.ml 
+all: $(EXAMPLES)
+
+# Each example regenerates the shared main.ml, so always rebuild from scratch.
+$(EXAMPLES):
+	$(ZELUC) $(ZFLAGS) $@.zls
+	$(OCAMLFIND) $(OCAMLOPT) $(MLFLAGS) -o $@.opt $@.ml main.ml
+
+clean:
+	rm -f $(addsuffix .opt,$(EXAMPLES)) *.cmi *.cmx *.o *.zci main.ml $(addsuffix .ml,$(EXAMPLES))

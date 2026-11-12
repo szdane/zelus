@@ -1,0 +1,30 @@
+(*let hybrid simple () = (x) where
+    (*rec init x = 0.0*)
+    rec der (x : {v:float | globally (0.0 <= v && v <= 1.0)}) = 1.0
+       init (0.0 : {v:float | globally(0.0 <= v)})
+       reset up(x -. 1.0) -> (0.0 : {v:float | globally(0.0 <= v)})
+*)
+
+let hybrid tuple () = (x1, x2) where
+  rec der (x1, x2) = (1.0, 2.0)
+    init (0.0, 0.0)
+    reset up (x1 -. 1.0) -> (0.0, 0.0)
+
+(*
+Rewrites to
+
+rec der x1 = 1.0 init 0.0 reset up (x1-.1.0) -> 0.0
+and der x2 = 2.0 init 0.0 reset up (x1-.1.0) -> 0.0
+
+*)
+
+let dt = 0.1
+let hybrid main () = () where
+  rec (x, y) = tuple ()
+  and trigger = period (dt)
+  and _ =
+    present trigger ->
+      (print_float x;
+      print_string " ";
+      print_float y;
+       print_newline ())

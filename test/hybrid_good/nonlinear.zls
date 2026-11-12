@@ -1,0 +1,3 @@
+let hybrid nonlinear () = x where
+  rec der (x : {v:float | globally (v *. v <= 1.0)}) = -. x
+    init (1.0 : {v:float | globally (v *. v <= 1.0)})

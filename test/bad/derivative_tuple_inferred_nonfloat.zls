@@ -1,0 +1,2 @@
+let hybrid invalid () = x where
+  rec der x = (1.0, (2.0, true)) init (0.0, (0.0, false))

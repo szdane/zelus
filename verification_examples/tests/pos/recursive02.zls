@@ -1,0 +1,12 @@
+let node exec1 () : {(v:int) | true} =
+    let rec init ex = 0
+    and (prev : {prev:int | true && nxt(globally(true))}) = last ex
+    and (ex : {ex:int | ex>prev && nxt(globally(ex > prev))}) = prev + 1 in ex
+
+
+
+let dt = 0.1 
+let hybrid main () = 
+    let rec trigger = (period (dt)) in
+        present (trigger) -> (let (x) = exec1 () in
+        (print_int x; print_newline ())) else ()
