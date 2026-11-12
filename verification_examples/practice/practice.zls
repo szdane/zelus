@@ -1,11 +1,15 @@
 (* Learning Example 1 *)
 
-(* let exec () = 5
+(* let node exec () =
+  let rec init x = 0
+  and (y : {y:int|globally(y > 0)}) = last x + 1
+  and (x : {x:int|globally(x = y + 1)}) = y + 1
+in y
 
 let hybrid main () =
     let rec trigger = (period (0.1)) in
-        present (trigger) -> (let flow = exec () in 
-        (print_int flow; print_newline ())) else () *)
+        present (trigger) -> (let x = exec () in 
+        (print_int x; print_newline ())) else () *)
 
 
 
@@ -49,7 +53,6 @@ let hybrid main () =
 
 (* Example 5: tank *)
 
-(* Doesn't work because of bug with refinements inside functions I think *)
 
 (* let min_level: { v : int | globally(v = 10)} = 10
 let max_level: { v : int | globally(v = 20) } = 20
@@ -546,7 +549,7 @@ in xk *)
 (* let rec init ex = 0
   and (prev : {prev:int | globally(true)}) = last pres
   and (pres : {pres:int | globally(pres < prev)}) = prev - 1  
-in pres*)
+in pres *)
 
 
 (* let hybrid main () = 
@@ -576,34 +579,101 @@ in present trigger -> (let x = 1. in print_newline () ) else () *)
 
 
 
+(* Example power *)
 
+(* let p : {p : float | globally((p = 2.))} = 2.
 
-
-let r : {r : float|globally(r = 1.)} = 1.
-
-let dt : {dt : float|globally(dt = 0.1)} = 0.1
-
-let kp : {kp : float|globally(kp = 2.)} = 2.
-
-let x0 : {x0 : float|globally(x0 = 0.)} = 0.
-let error0 : {error0 : float|globally(error0 = r -. x0)} = r -. x0
-
-let kmin : {kmin : float|globally(kmin = 10.)} = 10.
-
-
-let node exec () : {(vx:float)*(ve:float)|globally(vx = last_xk1 && ve = errork)} =
-  let rec init xk1 = x0
-  and (xk : {xk:float|globally((xk = last_xk1) && (0. <= xk))}) = last xk1
-
-
-  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
-  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
-  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
-
-  and (errorbound : {errorbound:float|globally(errorbound <= 0.64)}) = (1. -. kp *. dt) *. errork
-in xk, errork
-
+let node exec () =
+let rec (x : {x:float |x = 9}) = 3. ** p
+  and (y : {y:float |y = 162}) = x ** 2. *. 2.
+in y
 
 let hybrid main () =
   let rec trigger = (period (0.1)) 
-in present trigger -> (let x = 1. in print_newline () ) else ()
+in present trigger -> (let x = 1. in print_newline () ) else () *)
+
+
+(* let test (x:{x:float|globally(x = 1.)}) : {y:float|globally(y = x +. 1.)} =
+  let rec (y : {y:float|globally(y = x +. 1)}) = x +. 1.
+in y
+
+let node exec () =
+let rec (x : {x:float |globally(x = 1.)}) = 1.
+  and (res : {res:float |globally(res = x +. 1.)}) = test (x)
+  and (z : {z:float |globally(z = res +. 2.)}) = res +. 1.
+in z
+
+let hybrid main () =
+  let rec trigger = (period (0.1)) 
+in present trigger -> (let x = 1. in print_newline () ) else () *)
+
+
+(* #22 First step not taken into account for aliases *)
+
+(* let node exec () : {(vx:float)|globally(true)} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|globally((xk = last_xk1) && (xk >= 0.))}) = last xk1
+  and (xk1 : {xk1:float|globally(xk1 = xk +. 1.)}) = xk +. 1.
+
+  and (verif : {verif:float|(globally((verif >= 1.)))}) = xk
+in xk
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x = exec () in
+        print_float x; print_newline ()) else () *)
+
+
+
+(* Test nxt(...) *)
+
+let node exec () : {(vx:float)*(ve:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|(xk = 0. && nxt(globally(xk = last_xk1 && xk >= 1.)))}) = last xk1
+  and (xk1 : {xk1:float|(xk1 = 1. && nxt(globally((xk1 = xk +. 1.) && (xk1 >= 2.))))}) = xk +. 1.
+  
+  and (test : {test:float|(test = 1. && nxt(globally((test >= 2.))))}) = xk1
+
+in xk, xk1
+
+(* let node exec () : {(vx:float)*(ve:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|((globally(xk = last_xk1 && xk >= 0.)))}) = last xk1
+  and (xk1 : {xk1:float|((globally((xk1 = xk +. 1.) && (xk1 >= 0.))))}) = xk +. 1.
+
+  and (xkbound : {xkbound:float|(true && nxt(globally(xkbound >= 2.)))}) = xk1
+in xk, xk1 *)
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x, x1 = exec () in
+        print_float x;
+        print_string ",";
+        print_float x1;
+        print_newline ())  else ()
+
+
+
+
+
+(* Never stops *)
+
+(* let node exec () : {(vx:float)|(true)} =
+  let x0 = 0. in
+  let (x1  : {x1:float |  globally(0.2 <= x1  && x1  <= r)}) = x0  +. kp *. (r -. x0)  *. dt in
+  let (x2  : {x2:float |  globally(0.36 <= x2  && x2  <= r)}) = x1  +. kp *. (r -. x1)  *. dt in
+  let (x3  : {x3:float |  globally(0.488 <= x3  && x3  <= r)}) = x2  +. kp *. (r -. x2)  *. dt in
+  let (x4  : {x4:float |  globally(0.5904 <= x4  && x4  <= r)}) = x3  +. kp *. (r -. x3)  *. dt in
+  let (x5  : {x5:float |  globally(0.67232 <= x5  && x5  <= r)}) = x4  +. kp *. (r -. x4)  *. dt in
+  let (x6  : {x6:float |  globally(0.737856 <= x6  && x6  <= r)}) = x5  +. kp *. (r -. x5)  *. dt in
+  let (x7  : {x7:float |  globally(0.7902848 <= x7  && x7  <= r)}) = x6  +. kp *. (r -. x6)  *. dt in
+  let (x8  : {x8:float |  globally(0.83222784 <= x8  && x8  <= r)}) = x7  +. kp *. (r -. x7)  *. dt in
+  let (x9  : {x9:float |  globally(0.865782272 <= x9  && x9  <= r)}) = x8  +. kp *. (r -. x8)  *. dt in
+  let (x10 : {x10:float | globally(0.88 <= x10 && x10 <= r)}) = x9  +. kp *. (r -. x9)  *. dt
+in x0 *)
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x = exec () in
+        print_float x; print_newline ())  else ()

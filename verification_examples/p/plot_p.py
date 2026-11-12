@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib
-matplotlib.use("MacOSX")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
 

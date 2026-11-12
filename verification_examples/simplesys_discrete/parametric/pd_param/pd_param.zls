@@ -1,6 +1,6 @@
 (* PD discrete simple sys *)
 
-let r : {v : float |globally(true)} = 1.
+let r : {r : float |globally(true)} = 1.
 
 let dt : {dt : float |globally((0.01 < dt) && (dt <= 0.1))} = 0.1
 

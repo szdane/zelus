@@ -1,0 +1,84 @@
+(* Sampled P continuous simple sys *)
+
+let r : {r : float|globally(true)} = 1.
+
+let dt : {dt : float|globally(dt = 0.1)} = 0.1
+
+let kp : {kp : float|globally(kp = 2.)} = 2.
+
+
+(* let r : {r : float | globally(true)} = 1. 
+
+let dt : {dt : float | globally(0. < dt)} = 0.1 
+
+let kp : {kp : float | globally((0. < kp) && (kp *. dt < 2.) && (kp = 1.2 *. 1. /. dt))} = 1.2 *. 1. /. dt *)
+
+(* let pid (x:{(vx:float) | true}) : {(ve:float)*(vu:float)|globally((error = r -. x) && (u = kp *. error))} =
+  let rec (error : {error:float|globally(error = r -. x)}) = r -. x
+  and (u : {u:float|globally(u = kp *. error)}) =  kp *. error
+in error, u *)
+
+let pide (x:{(vx:float) | true}) : {(error:float)|globally(error = r -. x)} =
+  let rec (error : {error:float|globally(error = r -. x)}) = r -. x
+  and (u : {u:float|globally(u = kp *. error)}) =  kp *. error
+in error
+
+let pidu (x:{(vx:float) | true}) : 
+  {(u:float)|globally(u = kp *. error)} =
+  let rec (error : {error:float|globally(error = r -. x)}) = r -. x
+  and (u : {u:float|globally(u = kp *. error)}) =  kp *. error
+in u
+
+
+let hybrid exec () = 
+  let rec trigger = (period (dt))
+
+  (* and error, u = present(trigger) -> pid (x) init (1., 0.) *)
+
+  (* and ((error,u) : {(errork:float)*(u:float)|globally((error = r -. x) && (u = kp *. error))}) = present(trigger) -> pid (x) init (1., 0.) *)
+
+  (* and (error : {(errork:float)|globally(error = r -. x)}) = present(trigger) -> pide (x) init 1.
+  and (u : {(u:float)|globally(u = kp *. error)}) = present(trigger) -> pidu (x) init 0. *)
+
+  and error = present(trigger) -> pide x init 1.
+  and u = present(trigger) -> pidu x init 0.  
+
+  and der x = u init 0.
+
+  (* and der (x : {x:float|globally(((0. <= r) && (0. < (1. -. kp *. dt)) && (0. <= xk && xk <= r)) || 
+                               ((r < 0.) && (0. < (1. -. kp *. dt)) && (r <= xk && xk <= 0.)) ||
+                               ((0. <= r) && ((1. -. kp *. dt) < 0.) && (0. <= xk && xk <= 2. *. r)) ||
+                               ((r < 0.) && ((1. -. kp *. dt) < 0.) && (2 *. r <= xk && xk <= 0.)))}) = u init 0. *)
+
+in x, u, error
+
+
+
+(* let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|globally(((0. <= r) && (0. < (1. -. kp *. dt)) && (0. <= xk && xk <= r)) || 
+                               ((r < 0.) && (0. < (1. -. kp *. dt)) && (r <= xk && xk <= 0.)) ||
+                               ((0. <= r) && ((1. -. kp *. dt) < 0.) && (0. <= xk && xk <= 2. *. r)) ||
+                               ((r < 0.) && ((1. -. kp *. dt) < 0.) && (2 *. r <= xk && xk <= 0.)))}) = last xk1
+
+  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
+
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+  
+  and (xk1 : {xk1:float |globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+in xk, uk, errork *)
+
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1))
+    and x, u, error = exec () 
+  in present trigger -> (
+                        print_float x;        
+                        print_string ",";
+                        print_float u;
+                        print_string ",";
+                        print_float error;
+                        print_newline ()) else ()
+

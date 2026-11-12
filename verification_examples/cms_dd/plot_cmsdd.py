@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib
-matplotlib.use("MacOSX")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
 
@@ -16,17 +16,17 @@ dt = 0.1
 t = [i * dt for i in range(len(data))]
 
 fig, axs = plt.subplots(
-    4,
+    3,
     1,
     figsize=(12, 7),
 )
 
 
 # Position
-axs[0].plot(t, data["x"], label="PID normal")
-axs[0].plot(t, data["x_esin"], label="PID + noise")
-axs[0].plot(t, data["x_estat"], label="PID + offset")
-axs[0].plot(t, data["x_e"], label="PID + noise & offset")
+axs[0].plot(t, data["x"], label="System output")
+# axs[0].plot(t, data["x_esin"], label="PID + noise")
+# axs[0].plot(t, data["x_estat"], label="PID + offset")
+# axs[0].plot(t, data["x_e"], label="PID + noise & offset")
 
 axs[0].set_ylabel("Position x")
 axs[0].set_xlabel("Temps (s)")
@@ -36,26 +36,26 @@ axs[0].legend(
 )
 
 # Vitesse
-axs[1].plot(t, data["v"], color="green")
+axs[1].plot(t, data["v"], color="green", label="Speed v")
 
-axs[1].set_ylabel("Speed v normal PID")
+axs[1].set_ylabel("v")
 axs[1].set_xlabel("Temps (s)")
 axs[1].grid(True)
 
 
 # Commande
-axs[2].plot(t, data["u"], color="red")
+axs[2].plot(t, data["u"], color="red", label="Control u")
 
-axs[2].set_ylabel("Control u normal PID")
+axs[2].set_ylabel("u")
 axs[2].set_xlabel("Temps (s)")
 axs[2].grid(True)
 
 # Noise
-axs[3].plot(t, data["noise"], color="red")
+# axs[3].plot(t, data["noise"], color="red")
 
-axs[3].set_ylabel("Noise")
-axs[3].set_xlabel("Temps (s)")
-axs[3].grid(True)
+# axs[3].set_ylabel("Noise")
+# axs[3].set_xlabel("Temps (s)")
+# axs[3].grid(True)
 
 
 # Titre

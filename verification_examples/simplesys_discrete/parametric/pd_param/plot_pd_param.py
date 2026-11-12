@@ -44,7 +44,7 @@ axs[1].grid(True)
 
 # Titre
 fig.suptitle(
-    "Response of a descrete P_param simple sys to a step",
+    "Response of a descrete PD_param simple sys to a step",
     fontsize=16
 )
 

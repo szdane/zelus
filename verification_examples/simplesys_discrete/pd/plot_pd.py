@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib
-matplotlib.use("MacOSX")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
 
@@ -9,7 +9,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 data = pd.read_csv(
     os.path.join(path, "resultspd.csv"),
     header=None,
-    names=["x", "u", "error", "derivative", "a", "b"]
+    names=["x", "u", "error", "derivative"]
 )
 
 dt = 0.1
@@ -23,7 +23,8 @@ fig, axs = plt.subplots(
 
 
 # Position
-axs[0].plot(t, data["x"], label="PD normal")
+axs[0].plot(t, data["x"], label="system output")
+axs[0].axhline(y=1, color="orange", linestyle="--", label="reference")
 
 axs[0].set_ylabel("Position x")
 axs[0].set_xlabel("Time (s)")
@@ -32,7 +33,7 @@ axs[0].legend()
 
 
 # Commande
-axs[1].plot(t, data["u"], color="red")
+axs[1].plot(t, data["u"], color="red", label="Commande u")
 
 axs[1].set_ylabel("u")
 axs[1].set_xlabel("Time (s)")
@@ -44,7 +45,7 @@ axs[1].grid(True)
 
 # Titre
 fig.suptitle(
-    "Response of a continuous PD to a step on a simple sys",
+    "Response of a discrete PD to a step",
     fontsize=16
 )
 

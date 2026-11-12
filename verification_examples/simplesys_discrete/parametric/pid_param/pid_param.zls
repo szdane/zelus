@@ -1,0 +1,257 @@
+(* PID discrete simple sys parametric variables *)
+
+let r : {r : float |globally(true)} = 1.
+
+let dt : {dt : float | globally(dt = 0.1)} = 0.1
+
+let kp : {kp : float | globally(kp = 2.)} = 2.
+
+let ki : {ki : float | globally((ki = 1.))} = 1.
+
+let kd : {kd : float | globally((kd = 0.5))} = 0.5
+
+
+(* let dt : {dt : float | globally((0.01 < dt) && (dt <= 0.1))} = 0.1
+
+let kp : {kp : float | globally(not (kp *. dt = 1.) && ((kp *. kp +. 1.) *. dt < 2. *. kp))} = 2.
+
+let ki : {ki : float | globally((0. < ki) && (ki *. dt *. dt < 1.) && ((kp *. kp +. ki) *. dt < 2. *. kp))} = 1. *)
+
+
+
+(* let dt : {dt : float |globally((0.01 < dt))} = 0.1
+
+let kp : {kp : float |globally(not (kp *. dt = 1.) && (kp *. kp *. dt < 2. *. kp))} = 0.2 *. 1. /. dt
+(* ((kp *. kp +. ki) *. dt < 2. *. kp) <=> (kp *. kp *. dt < 2. *. kp) having ki > 0 *)
+
+let ki : {ki : float |globally((0. < ki) && ((kp *. kp +. ki) *. dt < 2. *. kp) && (ki *. dt *. dt < 1))} = (2. *. kp /. dt -. kp *. kp) /. 36. *)
+
+
+
+let calc_energyk1v2 ((energyk1:{energyk1:float|globally(energyk1 = alpha *. errork1 ** 2. +. beta *. (gamma *. errork1 +. integralk1) ** 2. +. mu *. derivativek1 ** 2.)}), 
+                    (alpha:{alpha:float|globally(alpha = (kp ** 2. -. ki) /. kp)}), 
+                    (beta:{beta:float|globally(beta = kp *. ki)}),
+                    (gamma:{gamma:float|globally(gamma = 1. /. kp -. dt)}),
+                    (mu:{mu:float|globally(mu = (1. -. kp *. dt) *. dt)}),
+                    (errork1dev:{errork1dev:float|globally((errork1dev = errork1) && (errork1dev = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek))}), 
+                    (integralk1dev:{integralk1dev:float|globally((integralk1dev = integralk1) && (integralk1dev = dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek))}), 
+                    (derivativek1dev:{derivativek1dev:float|globally((derivativek1dev = derivativek1) && (derivativek1dev = 0. -. kp *. errork -. ki *. integralk +. kd *. derivativek))}), 
+                    (errork1:{errork:float|true}), 
+                    (integralk1:{integralk:float|true}), 
+                    (derivativek1:{derivativek1:float|true}), 
+                    (errork:{errork:float|true}), 
+                    (integralk:{integralk:float|true}),
+                    (derivativek:{derivativek:float|true})) : 
+  {energyk1v2:float|globally((energyk1v2 = energyk1) && (energyk1v2 = alpha *. errork1dev ** 2. +. beta *. (gamma *. errork1dev +. integralk1dev) ** 2. +. mu *. derivativek1dev ** 2.))} =
+  let (energyk1v2 : {energyk1v2:float|globally((energyk1v2 = energyk1) && (energyk1v2 = alpha *. errork1dev ** 2. +. beta *. (gamma *. errork1dev +. integralk1dev) ** 2. +. mu *. derivativek1dev ** 2.))}) = energyk1
+in energyk1v2
+
+
+let calc_energyk1v2p1 ((energyk1v2p1:{energyk1v2p1:float|globally(energyk1v2p1 = alpha *. errork1dev ** 2.)}), 
+                      (alpha:{alpha:float|globally(alpha = (kp ** 2. -. ki) /. kp)}), 
+                      (errork1dev:{errork1dev:float|globally(errork1dev = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek)}), 
+                      (errork:{errork:float|true}), 
+                      (integralk:{integralk:float|true}), 
+                      (derivativek:{derivativek:float|true})) : 
+  {energyk1v2p1vf:float|globally((energyk1v2p1vf = energyk1v2p1) && (energyk1v2p1vf = (alpha *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.)))} =
+  let rec (energyk1v2p1v2 : {energyk1v2p1v2:float|globally((energyk1v2p1v2 = energyk1v2p1) && (energyk1v2p1v2 = (alpha *. errork1dev *. errork1dev)))}) = energyk1v2p1
+  and (energyk1v2p1v3 : {energyk1v2p1v3:float|globally((energyk1v2p1v3 = energyk1v2p1v2) && (energyk1v2p1v3 = (alpha *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) *. errork1dev)))}) = energyk1v2p1v2
+
+  and (energyk1v2p1vf : {energyk1v2p1vf:float|globally((energyk1v2p1vf = energyk1v2p1v3) && (energyk1v2p1vf = (alpha *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek))))}) = energyk1v2p1v3
+in energyk1v2p1vf
+
+let calc_energyk1v2p2 ((energyk1v2p2:{energyk1v2p2:float|globally(energyk1v2p2 = beta *. (gamma *. errork1dev +. integralk1dev) ** 2.)}), 
+                      (beta:{beta:float|globally(beta = kp *. ki)}),
+                      (gamma:{gamma:float|globally(gamma = 1. /. kp -. dt)}),
+                      (errork1dev:{errork1dev:float|globally(errork1dev = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek)}), 
+                      (integralk1dev:{integralk1dev:float|globally(integralk1dev = dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)}), 
+                      (errork:{errork:float|true}), 
+                      (integralk:{integralk:float|true}),
+                      (derivativek:{derivativek:float|true})) : 
+  {energyk1v2p2vf:float|globally((energyk1v2p2vf = energyk1v2p2) && (energyk1v2p2vf = (kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.))} =
+
+  let rec (energyk1v2p2v2 : {energyk1v2p2v2:float|globally((energyk1v2p2v2 = energyk1v2p2) && (energyk1v2p2v2 = (kp *. ki) *. ((1. /. kp -. dt) *. errork1dev +. integralk1dev) *. ((1. /. kp -. dt) *. errork1dev +. integralk1dev)))}) = energyk1v2p2
+
+in energyk1v2p2v2
+
+
+let calc_energyk1v2p3 ((energyk1v2p3:{energyk1v2p3:float|globally(energyk1v2p3 = mu *. derivativek1dev ** 2.)}), 
+                      (mu:{mu:float|globally(mu = (1. -. kp *. dt) *. dt)}), 
+                      (derivativek1dev:{derivativek1dev:float|globally((derivativek1dev = 0. -. kp *. errork -. ki *. integralk +. kd *. derivativek))}), 
+                      (errork:{errork:float|true}), 
+                      (integralk:{integralk:float|true}), 
+                      (derivativek:{derivativek:float|true})) : 
+  {energyk1v2p3vf:float|globally((energyk1v2p3vf = energyk1v2p3) && (energyk1v2p3vf = ((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.))} =
+  let rec (energyk1v2p3v2 : {energyk1v2p3v2:float|globally((energyk1v2p3v2 = energyk1v2p3))}) = ((1. -. kp *. dt) *. dt) *. derivativek1dev ** 2.
+  and (energyk1v2p3vf : {energyk1v2p3vf:float|globally((energyk1v2p3vf = energyk1v2p3v2) && (energyk1v2p3vf = ((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.))}) = energyk1v2p3v2
+in energyk1v2p3vf
+
+let calc_energyk1v4 ((energyk1v3:{energyk1v3:float|globally(energyk1v3 = energyk1v2p1vf +. energyk1v2p2vf +. energyk1v2p3vf)}), 
+                      (energyk1v2p1vf:{energyk1v2p1vf:float|globally(energyk1v2p1vf = ((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.)}), 
+                      (energyk1v2p2vf:{energyk1v2p2vf:float|globally(energyk1v2p2vf = (kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.)}), 
+                      (energyk1v2p3vf:{energyk1v2p3vf:float|globally(energyk1v2p3vf = ((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.)}), 
+                      (errork:{errork:float|true}), 
+                      (integralk:{integralk:float|true}), 
+                      (derivativek:{derivativek:float|true})) : 
+  {energyk1v4:float|globally((energyk1v4 = energyk1v3) && (energyk1v4 = (((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.) +. 
+    ((kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.) +. 
+    (((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.)))} =
+  (* let rec (energyk1v4 : {energyk1v4:float|globally((energyk1v4 = energyk1v3) && (energyk1v4 = (((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.) +. 
+    ((kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.) +. 
+    (((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.)))}) = energyk1v3  *)
+  let rec (energyk1v4 : {energyk1v4:float|globally((energyk1v4 = energyk1v3) && (energyk1v4 = (((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.) +. 
+    (energyk1v2p2vf) +. 
+    (energyk1v2p3vf)))}) = energyk1v3 
+  and (energyk1v5 : {energyk1v5:float|globally((energyk1v5 = energyk1v4) && (energyk1v5 = (((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.) +. 
+    ((kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.) +. 
+    (energyk1v2p3vf)))}) = energyk1v4
+  and (energyk1v6 : {energyk1v6:float|globally((energyk1v6 = energyk1v5) && (energyk1v6 = (((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.) +. 
+    ((kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.) +. 
+    ((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.))}) = energyk1v5
+in energyk1v6
+
+
+let calc_energyk1vf ((energyk1:{energyk1:float|globally(energyk1 = alpha *. errork1 ** 2. +. beta *. (gamma *. errork1 +. integralk1) ** 2. +. mu *. derivativek1 ** 2.)}), 
+                    (alpha : {alpha:float|globally(alpha = (kp ** 2. -. ki) /. kp)}),
+                    (beta : {beta:float|globally(beta = kp *. ki)}),
+                    (gamma : {gamma:float|globally(gamma = 1. /. kp -. dt)}),
+                    (mu : {mu:float|globally(mu = (1. -. kp *. dt) *. dt)}),
+                    (errork1dev : {errork1dev:float|globally((errork1dev = errork1) && (errork1dev = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek))}),
+                    (integralk1dev : {integralk1dev:float|globally((integralk1dev = integralk1) && (integralk1dev = dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek))}),
+                    (derivativek1dev : {derivativek1dev:float|globally((derivativek1dev = derivativek1) && (derivativek1dev = 0. -. kp *. errork -. ki *. integralk +. kd *. derivativek))}),
+                    (errork1:{errork1:float|true}), 
+                    (integralk1:{integralk1:float|true}),
+                    (derivativek1:{derivativek1:float|true}),
+                    (errork:{errork:float|true}), 
+                    (integralk:{integralk:float|true}),
+                    (derivativek:{derivativek:float|true})) : 
+  {energyk1vf:float|globally((energyk1vf = energyk1v2) && (energyk1vf = kp *. (1. -. kp *. dt) *. errork ** 2. +. 2. *. ki *. (1. -. kp *. dt) *. errork *. integralk +. ki *. (kp -. ki *. dt) *. integralk ** 2. +. kd *. kd *. dt *. derivativek ** 2.))} =
+  let rec (energyk1v2 : {energyk1v2:float|globally((energyk1v2 = energyk1) && (energyk1v2 = alpha *. errork1dev ** 2. +. beta *. (gamma *. errork1dev +. integralk1dev) ** 2. +. mu *. derivativek1dev ** 2.))}) = 
+      calc_energyk1v2(energyk1, alpha, beta, gamma, mu, errork1dev, integralk1dev, derivativek1dev, errork1, integralk1, derivativek1, errork, integralk, derivativek)
+  
+  and (energyk1v2p1 : {energyk1v2p1:float|globally(energyk1v2p1 = alpha *. errork1dev ** 2.)}) = alpha *. errork1dev ** 2.
+  and (energyk1v2p1vf : {energyk1v2p1vf:float|globally((energyk1v2p1vf = energyk1v2p1) && (energyk1v2p1vf = ((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.))}) = 
+    calc_energyk1v2p1(energyk1v2p1, alpha, errork1dev, errork, integralk, derivativek)
+
+  and (energyk1v2p2 : {energyk1v2p2:float|globally(energyk1v2p2 = beta *. (gamma *. errork1dev +. integralk1dev) ** 2.)}) = beta *. (gamma *. errork1dev +. integralk1dev) ** 2. 
+  and (energyk1v2p2vf : {energyk1v2p2vf:float|globally((energyk1v2p2vf = energyk1v2p2) && (energyk1v2p2vf = 
+    (kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.))}) = 
+      calc_energyk1v2p2(energyk1v2p2, beta, gamma, errork1dev, integralk1dev, errork, integralk, derivativek)
+  
+  and (energyk1v2p3 : {energyk1v2p3:float|globally(energyk1v2p3 = mu *. derivativek1dev ** 2.)}) = mu *. derivativek1dev ** 2.
+  and (energyk1v2p3vf : {energyk1v2p3vf:float|globally((energyk1v2p3vf = energyk1v2p3) && (energyk1v2p3vf = ((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.))}) = 
+    calc_energyk1v2p3(energyk1v2p3, mu, derivativek1dev, errork, integralk, derivativek)
+
+  and (energyk1v3 : {energyk1v3:float|globally((energyk1v3 = energyk1v2) && (energyk1v3 = energyk1v2p1vf +. energyk1v2p2vf +. energyk1v2p3vf))}) = energyk1v2p1vf +. energyk1v2p2vf +. energyk1v2p3vf
+  
+  and (energyk1v3v2 : {energyk1v3v2:float|globally((energyk1v3v2 = energyk1v3) && (energyk1v3v2 = energyk1v2p1vf +. energyk1v2p2vf +. energyk1v2p3vf))}) = energyk1v2p1vf +. energyk1v2p2vf +. energyk1v2p3vf
+  
+  and (energyk1v4 : {energyk1v4:float|globally((energyk1v4 = energyk1v3) && (energyk1v4 = (((kp ** 2. -. ki) /. kp) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) ** 2.) +. 
+    ((kp *. ki) *. ((1. /. kp -. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek) +. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek)) ** 2.) +. 
+    (((1. -. kp *. dt) *. dt) *. (0. -. kp *. errork -. ki *. integralk +. kd *. derivativek) ** 2.)))}) = calc_energyk1v4 (energyk1v3, energyk1v2p1vf, energyk1v2p2vf, energyk1v2p3vf, errork, integralk, derivativek) 
+
+  and (energyk1v5 : {energyk1v5:float|globally((energyk1v5 = energyk1v3) && (energyk1v5 = kp *. (1. -. kp *. dt) *. errork ** 2. +. 2. *. ki *. (1. -. kp *. dt) *. errork *. integralk +. ki *. (kp -. ki *. dt) *. integralk ** 2. +. kd *. kd *. dt *. derivativek ** 2.))}) = energyk1v3 
+
+  and (energyk1vf : {energyk1vf:float|globally((energyk1vf = energyk1v5) && (energyk1vf = kp *. (1. -. kp *. dt) *. errork ** 2. +. 2. *. ki *. (1. -. kp *. dt) *. errork *. integralk +. ki *. (kp -. ki *. dt) *. integralk ** 2. +. kd *. kd *. dt *. derivativek ** 2.))}) = energyk1
+in energyk1vf
+
+
+let calc_diffenergy ((energyk1vf:{energyk1vf:float|globally((energyk1vf = energyk1) && (energyk1vf = kp *. (1. -. kp *. dt) *. errork ** 2. +. 2. *. ki *. (1. -. kp *. dt) *. errork *. integralk +. ki *. (kp -. ki *. dt) *. integralk ** 2. +. kd *. kd *. dt *. derivativek ** 2.))}), 
+                    (energykv2:{energykv2:float|globally((energykv2 = energyk) && (energykv2 = ((kp ** 2. -. ki) /. kp) *. errork ** 2. +. (kp *. ki) *. ((1. /. kp -. dt) *. errork +. integralk) ** 2. +. ((1. -. kp *. dt) *. dt) *. derivativek1dev ** 2.))}),                       
+                    (energyk1:{energyk1:float|true}), 
+                    (energyk:{energyk:float|true}),                    
+                    (errork:{errork:float|true}), 
+                    (integralk:{integralk:float|true}),                 
+                    (derivativek:{derivativek:float|true})) :                    
+  {diffenergyvf:float|globally((diffenergyvf = energyk1 -. energyk) && (diffenergyvf <= 0.))} =
+  let rec (diffenergyv1 : {diffenergyv1:float|globally((diffenergyv1 = energyk1vf -. energykv2) && 
+                      (diffenergyv1 = kp *. (1. -. kp *. dt) *. errork ** 2. +. 2. *. ki *. (1. -. kp *. dt) *. errork *. integralk +. ki *. (kp -. ki *. dt) *. integralk ** 2. +. kd *. kd *. dt *. derivativek ** 2. -. 
+                      (((kp ** 2. -. ki) /. kp) *. errork ** 2. +. (kp *. ki) *. ((1. /. kp -. dt) *. errork +. integralk) ** 2. +. ((1. -. kp *. dt) *. dt) *. derivativek1dev ** 2.)))}) = energyk1vf -. energykv2
+  and (diffenergyv2 : {diffenergyv2:float|globally((diffenergyv2 = diffenergyv1) && (diffenergyv2 = 0. -. dt *. (kp *. kp +. ki *. kp *. dt -. 2. *. ki) *. errork ** 2. -. dt *. ki *. ki *. integralk ** 2. +. dt *. (kd *. kd +. kp *. dt -. 1.) *. derivativek ** 2.))}) = diffenergyv1
+  and (diffenergyvf : {diffenergyvf:float|globally((diffenergyvf = energyk1 -. energyk) && (diffenergyvf <= 0.))}) = diffenergyv2
+in diffenergyvf
+
+
+
+let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vdv:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|globally(xk = last_xk1)}) = last xk1
+
+  and init errork1 = 1.
+  and (errork : {errork:float|globally(errork = last_errork1)}) = last errork1
+
+  and init integralk1 = 0.
+  and (integralk : {integralk:float|globally(integralk = last_integralk1)}) = last integralk1
+
+  and init derivativek1 = 0.
+  and (derivativek : {derivativek:float|globally(derivativek = last_derivativek1)}) = last derivativek1
+
+  and (uk : {uk:float|globally(uk = kp *. errork +. ki *. integralk -. kd *. derivativek)}) = kp *. errork +. ki *. integralk -. kd *. derivativek
+
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+  
+  and (errork1 : {errork1:float|globally(errork1 = r -. xk1)}) = r -. xk1
+
+  and (integralk1 : {integralk1:float|globally(integralk1 = integralk +. errork1 *. dt)}) = integralk +. errork1 *. dt
+
+  and (derivativek1 : {derivativek1:float|globally(derivativek1 = (errork1 -. errork) /. dt)}) = (errork1 -. errork) /. dt
+
+
+
+  and (alpha : {alpha:float|globally(alpha = (kp ** 2. -. ki) /. kp)}) = (kp ** 2. -. ki) /. kp
+  and (beta : {beta:float|globally(beta = kp *. ki)}) = kp *. ki
+  and (gamma : {gamma:float|globally(gamma = 1. /. kp -. dt)}) = 1. /. kp -. dt
+  and (mu : {mu:float|globally(mu = (1. -. kp *. dt) *. dt)}) = (1. -. kp *. dt) *. dt
+  and init energyk1bound = alpha +. beta *. gamma ** 2.
+  and (energyk : {energyk:float|globally(energyk = last_energyk1bound)}) = last energyk1bound
+  and (energyk1 : {energyk1:float|globally((energyk1 = alpha *. errork1 ** 2. +. beta *. (gamma *. errork1 +. integralk1) ** 2. +. mu *. derivativek1 ** 2.))}) = 
+    alpha *. errork1 ** 2. +. beta *. (gamma *. errork1 +. integralk1) ** 2. +. mu *. derivativek1 ** 2.
+
+
+
+
+
+  and (errork1dev : {errork1dev:float|globally((errork1dev = errork1) && (errork1dev = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek))}) = 
+    (1. -. kp *. dt) *. errork -. ki *. dt *. integralk +. kd *. dt *. derivativek
+  and (integralk1dev : {integralk1dev:float|globally((integralk1dev = integralk1) && (integralk1dev = dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek))}) = 
+    dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt ** 2.) *. integralk +. kd *. dt ** 2. *. derivativek
+  and (derivativek1dev : {derivativek1dev:float|globally((derivativek1dev = derivativek1) && (derivativek1dev = 0. -. kp *. errork -. ki *. integralk +. kd *. derivativek))}) = 
+    0. -. kp *. errork -. ki *. integralk +. kd *. derivativek
+
+
+  and (energyk1vf : {energyk1vf:float|globally((energyk1vf = energyk1) && (energyk1vf = kp *. (1. -. kp *. dt) *. errork ** 2. +. 2. *. ki *. (1. -. kp *. dt) *. errork *. integralk +. ki *. (kp -. ki *. dt) *. integralk ** 2. +. kd *. kd *. dt *. derivativek ** 2.))}) = 
+    calc_energyk1vf(energyk1, alpha, beta, gamma, mu, errork1dev, integralk1dev, derivativek1dev, errork1, integralk1, derivativek1, errork, integralk, derivativek)
+
+
+  and (energykv2 : {energykv2:float|globally(
+    (energykv2 = energyk) && (energykv2 = ((kp ** 2. -. ki) /. kp) *. errork ** 2. +. (kp *. ki) *. ((1. /. kp -. dt) *. errork +. integralk) ** 2. +. ((1. -. kp *. dt) *. dt) *. derivativek1dev ** 2.))}) = energyk
+
+
+  and (diffenergy : {diffenergy:float|globally((diffenergy = energyk1 -. energyk) && (diffenergy <= 0.))}) = 
+    calc_diffenergy(energyk1vf, energykv2, energyk1, energyk, errork, integralk, derivativek)
+
+
+  and (energyk1bound : {energyk1bound:float|globally((energyk1bound = energyk1) && (energyk1bound <= alpha + beta *. gamma ** 2.))}) = energyk1
+    
+
+  and (xkbound : {xkbound:float|globally(1. -. beta *. gamma ** 2. /. (2 *. alpha) <= xkbound && xkbound <= 1. +. beta *. gamma ** 2. /. (2 *. alpha))}) = xk
+
+in xk, uk, errork, integralk, derivativek
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let xk, uk, errork, integralk, derivativek = exec () in
+        print_float xk;
+        print_string ",";
+        print_float uk;
+        print_string ",";
+        print_float errork;
+        print_string ",";
+        print_float integralk;        
+        print_string ",";
+        print_float derivativek;        
+        print_newline ()
+    )
+  else ()
+
