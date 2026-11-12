@@ -22,7 +22,7 @@ let rec string_of_expr (e : exp) =
   | Econst (Ebool b)                  -> string_of_bool b
   | Eapp (_, { desc = Evar (Name "not"); _ }, [e1]) ->
       "!(" ^ string_of_expr e1 ^ ")"
-  | Eapp (_, { desc = Evar (Name op); _ }, [e1; e2]) ->
+      | Eapp (_, { desc = Evar (Name op); _ }, [e1; e2]) ->
       Printf.sprintf "%s %s %s"
         (string_of_expr e1) op (string_of_expr e2)
   | _ -> "<expr>"
