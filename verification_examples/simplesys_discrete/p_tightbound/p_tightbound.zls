@@ -1,0 +1,142 @@
+(* P discrete simple sys *)
+
+(* Parametric version *)
+
+let r : {r : float | globally(true)} = 1.
+
+let dt : {dt : float | globally(0. < dt)} = 0.1 
+
+let kp : {kp : float | globally((0. < kp) && (kp *. dt < 2.) && (kp *. dt <> 1.))} = 0.2 *. 1. /. dt
+
+let x0 : {x0 : float|globally(true)} = 0.
+let error0 : {error0 : float|globally(error0 = r -. x0)} = r -. x0
+
+let kmin : {kmin : float|globally(kmin = 9.)} = 9.
+
+let eps0 : {eps0 : float|globally(eps0 = 0.2)} = 0.2
+
+let eps : {eps : float|globally((eps = (1. -. kp *. dt) ** kmin *. error0) && (true))} = (1. -. kp *. dt) ** kmin *. error0
+
+(* let test : {test : float|globally((eps0 *. 100. <= eps *. 100. /. r))} = eps0 *)
+
+let node exec () : {(vx:float)*(ve:float)|(true)} =
+  let rec init xk1 = x0
+  and (xk : {xk:float|globally(((x0 <= r) && (0. < (1. -. kp *. dt)) && (x0 <= xk && xk <= r)) || 
+                               ((r < x0) && (0. < (1. -. kp *. dt)) && (r <= xk && xk <= x0)) ||
+                               ((x0 <= r) && ((1. -. kp *. dt) < 0.) && (x0 <= xk && xk <= 2. *. r -. x0)) ||
+                               ((r < x0) && ((1. -. kp *. dt) < 0.) && (2. *. r -. x0 <= xk && xk <= x0)))}) = last xk1
+
+  and (errork : {errork:float|globally((errork = r -. xk))}) = r -. xk
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+  and (abs_eps : {abs_eps:float|globally(abs_eps = (-1.) ** (kmin) *. eps)}) = (-1.) ** (kmin) *. eps
+
+
+and (errorkmin : {errorkmin:float|globally((((x0 <= r) && (0. < (1. -. kp *. dt))) && ((0. <= errorkmin) && (errorkmin <= eps))) || 
+                                           (((x0 > r) && (0. < (1. -. kp *. dt))) && ((eps <= errorkmin) && (errorkmin <= 0.))) ||
+                                           (((x0 <= r) && (0. > (1. -. kp *. dt))) && (((-1.) *. abs_eps <= errorkmin) && (errorkmin <= abs_eps))) || 
+                                           (((x0 > r) && (0. > (1. -. kp *. dt))) && ((abs_eps <= errorkmin) && (errorkmin <= (-1.) *. abs_eps))))}) = (1. -. kp *. dt) ** kmin *. errork
+
+in xk, errork
+
+
+
+
+(* Numerical version *)
+
+(* let r : {r : float|globally(r = 1.)} = 1.
+
+let dt : {dt : float|globally(dt = 0.1)} = 0.1
+
+let kp : {kp : float|globally(kp = 2.)} = 2.
+
+let x0 : {x0 : float|globally(true)} = 0.
+let error0 : {error0 : float|globally(error0 = r -. x0)} = r -. x0
+
+let kmin : {kmin : float|globally(kmin = 9.)} = 9.
+let eps : {eps : float|globally(eps = 0.5)} = 0.5
+
+let node exec () : {(vx:float)*(ve:float)|(true)} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|(xk = 0. && nxt(globally((xk = last_xk1))))}) = last xk1
+
+  and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+  and (errorkmin : {errorkmin:float|globally((0. <= errorkmin) && (errorkmin <= eps *. r))}) = (1. -. kp *. dt) ** kmin *. errork
+in xk, errork *)
+
+(* power operator not implemented in liquidfixpoint this is just a syntaxe helper, kmin needs to be defined numerically. *)
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let xk, errork = exec () in
+
+        print_float xk;
+        print_string ",";
+        print_float errork;
+        print_string ",";
+        print_float eps;
+        print_string ",";
+        print_float kmin;
+        print_string ",";
+        print_float r;
+        print_newline ()) else ()
+
+
+
+(* With next(...) *)
+
+(* let node exec () : {(vx:float)*(ve:float)|(true)} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|(xk = 0. && nxt(globally((xk = last_xk1) && (true))))}) = last xk1
+
+  and init errork1 = 1.
+  (* and (errork : {errork:float|globally(errork = last_errork1)}) = last errork1 *)
+  and (errork : {errork:float|(errork = 1. && nxt(globally((errork = last_errork1))))}) = last errork1
+  and (errork1 : {errork1:float|(globally((errork1 = (1. -. kp *. dt) *. errork)))}) = (1. -. kp *. dt) *. errork
+
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+  (* and (errorkmin : {errorkmin:float|globally((0. <= errorkmin) && (errorkmin <= eps *. r))}) = (1. -. kp *. dt) ** kmin *. errork *)
+  and (errorkmin : {errorkmin:float|errorkmin = 1. && nxt(globally(errorkmin = errork && (0. <= errorkmin) && (errorkmin <= 0.8 *. r)))}) = errork
+in xk, errork *)
+
+
+
+(* With a counter *)
+
+(* let node exec () : {(vx:float)*(ve:float)|(true)} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|(xk = 0. && nxt(globally((xk = last_xk1 && xk >= 0.))))}) = last xk1
+  and init cnt1 = 0.
+  and (cnt : {cnt:float|(cnt = 0. && nxt(globally((cnt = last_cnt1 && cnt >= 1.))))}) = last cnt1
+  and (cnt1 : {cnt1:float|globally((cnt1 = cnt +. 1.) && (cnt1 >= cnt +. 1.))}) = cnt +. 1.
+
+
+  and (errork : {errork:float|(errork = 1. && nxt(globally((errork = r -. xk) && (0. <= errork && errork <= 1.))))}) = r -. xk
+  and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
+  and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
+
+  and (errorkmin : {errorkmin:float|globally((0. <= errorkmin) && (errorkmin <= eps *. r))}) = (1. -. kp *. dt) ** kmin *. errork
+
+
+  and (test : {test:float|(cnt < kmin || errorkmin <= eps *. r)}) = kp *. errork
+
+
+  (* and (test : {test:float|(cnt >= kmin && errorkmin <= eps *. r)}) = kp *. errork *)
+  (* and (test2 : {test2:float|true && nxt(globally((errork <= 0.8)))}) = errork *)
+  (* and (test3 : {test3:float|globally((cnt < kmin) || (cnt >= kmin && errork <= 1.))}) = errork *)
+(* and (test3 : {test3:float|globally((cnt < kmin) || ((0. -.eps *. r <= errork) && (errork <= eps *. r)))}) = errork *)
+(* and (test3 : {test3:float|nxt(globally((0. -. eps *. r <= errork) && (errork <= eps *. r)))}) = errork *)
+(* and (test_cnt : {test_cnt:float|(cnt = 0. && nxt(globally(cnt >= 1.)))}) = cnt *)
+
+in xk, errork *)
+
+
+
+
+

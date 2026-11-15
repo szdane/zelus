@@ -1,0 +1,41 @@
+(* Water tank example *)
+
+
+(* let hybrid exec () =
+  let rec automaton
+    | On  -> do der level = 10.  unless (up (level -. 9.)) then Off
+    | Off -> do der level = -10. unless (up (1. -. level)) then On
+    end
+  and init level = 5.
+in level *)
+
+let hybrid exec () =
+  let rec der level = (if rising then 1. else -1.) init 5.
+  and rising =
+    if level >= 9. then false
+    else if level <= 1. then true
+    else true -> pre rising
+  in level
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1))
+    and level = exec () 
+  in present trigger -> (print_float level;        
+                         print_string ",";
+                         print_newline ()) else ()
+
+(* let node exec () =
+  let rec 
+    init level = 15
+    and automaton_ref:
+    {level : {v:int | globally(v >= min_level + margin && v <= max_level - margin)}}
+    | On -> do level = last level + in_rate + out_rate unless ((last level + in_rate + out_rate + margin) > max_level) then Off
+    | Off -> do level= last level + out_rate unless ((last level + out_rate - margin) < min_level) then On
+    end
+    in level
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let flow = exec () in
+        (print_int flow; print_newline ())) else ()  *)
