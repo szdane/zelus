@@ -1,0 +1,1932 @@
+zeluc -verify -nodeadcode -s main p.zls
+compiling p
+ide: IDENT: r
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: kp
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: dt
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: eps
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: x_bound
+ide: IDENT: xk
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xk:type_expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xk1:type_expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+new-syntax type refinement
+ide: IDENT: xk1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xk1:type_expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Efundecl x_bound 
+ide: IDENT: exec
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vx:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vu:type_expression
+label_type star list
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: ve:type_expression
+Desc const
+Simple expression
+new-syntax refinement tuple
+ide: IDENT: xk1
+Desc const
+Simple expression
+ide: IDENT: xk
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xk:type_expression
+Desc const
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: xk1
+Desc last
+Simple expression
+ide: IDENT: errork
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: errork:type_expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: uk
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: uk:type_expression
+ide: IDENT: uk
+ext_ident: ide: uk
+Desc var
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: xk1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xk1:type_expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc seq expression
+Simple expression
+expression_desc: e1 && e2
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: x_bound
+ext_ident: ide: x_bound
+Desc var
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+ide: IDENT: errork1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: errork1:type_expression
+ide: IDENT: errork1
+ext_ident: ide: errork1
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+ide: IDENT: v1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v1:type_expression
+ide: IDENT: v1
+ext_ident: ide: v1
+Desc var
+Simple expression
+ide: IDENT: errork1
+ext_ident: ide: errork1
+Desc var
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: v2
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v2:type_expression
+Desc const
+Simple expression
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+ide: IDENT: v2
+ext_ident: ide: v2
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: v3
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v3:type_expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc const
+Simple expression
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 < e2
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+Desc const
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 > e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc const
+Simple expression
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 < e2
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: v3
+ext_ident: ide: v3
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression_desc: e1 && e2
+Desc seq expression
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: errork1
+ext_ident: ide: errork1
+Desc var
+Simple expression
+ide: IDENT: bound
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: bound:type_expression
+Desc const
+Simple expression
+ide: IDENT: bound
+ext_ident: ide: bound
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+ide: IDENT: bound
+ext_ident: ide: bound
+Desc var
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+expression_desc: e1 && e2
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: uk
+ext_ident: ide: uk
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Tuple
+Kinded refinement function
+ide: IDENT: main
+ide: IDENT: trigger
+simple_pattern: ide
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: trigger
+ext_ident: ide: trigger
+Desc var
+Simple expression
+Desc seq expression
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: u
+simple_pattern: ide
+ide: IDENT: error
+simple_pattern: ide
+ide: IDENT: exec
+ext_ident: ide: exec
+Desc var
+Desc void
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: u
+ext_ident: ide: u
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: error
+ext_ident: ide: error
+Desc var
+ide: IDENT: print_newline
+ext_ident: ide: print_newline
+Desc var
+Desc void
+Desc seq expression
+Simple expression
+Desc void
+Simple expression
+Kinded non-refinement function main 
+ ide: IDENT: r
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: kp
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: kd
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: dt
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: v:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: v
+ext_ident: ide: v
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+Desc const
+Simple expression
+Erefinementdecl
+ide: IDENT: exec
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vx:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vu:type_expression
+label_type star list
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: ve:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vd:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: ven:type_expression
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: vf:type_expression
+Desc const
+Simple expression
+new-syntax refinement tuple
+ide: IDENT: xk1
+Desc const
+Simple expression
+ide: IDENT: errork
+Desc const
+Simple expression
+ide: IDENT: xk
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xk:type_expression
+Desc const
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: xk1
+Desc last
+Simple expression
+ide: IDENT: errork
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: errork:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: errorkm1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: errorkm1:type_expression
+Desc const
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: errork
+Desc last
+Simple expression
+ide: IDENT: xkm1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xkm1:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: xkm1
+ext_ident: ide: xkm1
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: errorkm1
+ext_ident: ide: errorkm1
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: errorkm1
+ext_ident: ide: errorkm1
+Desc var
+Simple expression
+ide: IDENT: derivativek
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: derivativek:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: errorkm1
+ext_ident: ide: errorkm1
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: errorkm1
+ext_ident: ide: errorkm1
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: uk
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: uk:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: uk
+ext_ident: ide: uk
+Desc var
+Simple expression
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: kd
+ext_ident: ide: kd
+Desc var
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: kp
+ext_ident: ide: kp
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: kd
+ext_ident: ide: kd
+Desc var
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+ide: IDENT: xk1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xk1:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: uk
+ext_ident: ide: uk
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: uk
+ext_ident: ide: uk
+Desc var
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: errork1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: errork1:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: errork1
+ext_ident: ide: errork1
+Desc var
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk1
+ext_ident: ide: xk1
+Desc var
+Simple expression
+ide: IDENT: derivativek1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: derivativek1:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: derivativek1
+ext_ident: ide: derivativek1
+Desc var
+Simple expression
+ide: IDENT: errork1
+ext_ident: ide: errork1
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: errork1
+ext_ident: ide: errork1
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: dt
+ext_ident: ide: dt
+Desc var
+Simple expression
+ide: IDENT: energyk
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: energyk:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: energyk
+ext_ident: ide: energyk
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+ide: IDENT: en0
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: en0:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: en0
+ext_ident: ide: en0
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: energy0
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: energy0:type_expression
+ide: IDENT: energy0
+ext_ident: ide: energy0
+Desc var
+Simple expression
+ide: IDENT: energyk
+ext_ident: ide: energyk
+Desc var
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: energyk
+ext_ident: ide: energyk
+Desc var
+Simple expression
+Desc const
+Simple expression
+ide: IDENT: energybound
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: energybound:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: energybound
+ext_ident: ide: energybound
+Desc var
+Simple expression
+ide: IDENT: energy0
+ext_ident: ide: energy0
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: energyk
+ext_ident: ide: energyk
+Desc var
+Simple expression
+ide: IDENT: energydecomp
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: energydecomp:type_expression
+ide: IDENT: energydecomp
+ext_ident: ide: energydecomp
+Desc var
+Simple expression
+ide: IDENT: energyk
+ext_ident: ide: energyk
+Desc var
+Simple expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errorbound
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: errorbound:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: errorbound
+ext_ident: ide: errorbound
+Desc var
+Simple expression
+ide: IDENT: energy0
+ext_ident: ide: energy0
+Desc var
+Simple expression
+expression: INFIX0: e1 <= e2
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: xkbound1
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xkbound1:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: xkbound1
+ext_ident: ide: xkbound1
+Desc var
+Simple expression
+ide: IDENT: energy0
+ext_ident: ide: energy0
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+expression: INFIX0: e1 <= e2
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: r
+ext_ident: ide: r
+Desc var
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: xkbound2
+simple_pattern: ide
+ide: IDENT: float
+ext_ident: ide: float
+type constr
+label_type: xkbound2:type_expression
+ide: IDENT: globally
+ext_ident: ide: globally
+Desc var
+ide: IDENT: xkbound2
+ext_ident: ide: xkbound2
+Desc var
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+expression: INFIX0: e1 <= e2
+Desc seq expression
+new-syntax type refinement
+simple_pattern: ( p:type_expression )
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: xk
+ext_ident: ide: xk
+Desc var
+Simple expression
+ide: IDENT: uk
+ext_ident: ide: uk
+Desc var
+Simple expression
+ide: IDENT: errork
+ext_ident: ide: errork
+Desc var
+Simple expression
+ide: IDENT: derivativek
+ext_ident: ide: derivativek
+Desc var
+Simple expression
+ide: IDENT: energy0
+ext_ident: ide: energy0
+Desc var
+Simple expression
+ide: IDENT: en0
+ext_ident: ide: en0
+Desc var
+Simple expression
+Tuple
+Kinded refinement function
+ide: IDENT: main
+ide: IDENT: trigger
+simple_pattern: ide
+Desc const
+Simple expression
+Desc seq expression
+Simple expression
+ide: IDENT: trigger
+ext_ident: ide: trigger
+Desc var
+Simple expression
+Desc seq expression
+ide: IDENT: x
+simple_pattern: ide
+ide: IDENT: u
+simple_pattern: ide
+ide: IDENT: error
+simple_pattern: ide
+ide: IDENT: derivative
+simple_pattern: ide
+ide: IDENT: en0
+simple_pattern: ide
+ide: IDENT: f
+simple_pattern: ide
+ide: IDENT: exec
+ext_ident: ide: exec
+Desc var
+Desc void
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: x
+ext_ident: ide: x
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: u
+ext_ident: ide: u
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: error
+ext_ident: ide: error
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: derivative
+ext_ident: ide: derivative
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: en0
+ext_ident: ide: en0
+Desc var
+ide: IDENT: print_string
+ext_ident: ide: print_string
+Desc var
+Desc const
+ide: IDENT: print_float
+ext_ident: ide: print_float
+Desc var
+ide: IDENT: f
+ext_ident: ide: f
+Desc var
+ide: IDENT: print_newline
+ext_ident: ide: print_newline
+Desc var
+Desc void
+Desc seq expression
+Simple expression
+Desc void
+Simple expression
+Kinded non-refinement function main 
+ 

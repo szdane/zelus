@@ -288,7 +288,7 @@ let fixpoint_is_safe ?(label = "check") (fq_txt : string) : bool =
   ensure_fixpoint_installed ();
 (* debug (Printf.sprintf "%s" fq_txt); *)
 (* new code display for name of variable rhs & lhs *)
-  Printf.printf "\n\n\027[1;36m>>> [CHECKING] %s\027[0m%!" label;
+  (* Printf.printf "\n\n\027[1;36m>>> [CHECKING] %s\027[0m%!" label;
   fq_txt
   |> String.split_on_char '\n'
   |> List.map String.trim
@@ -298,7 +298,9 @@ let fixpoint_is_safe ?(label = "check") (fq_txt : string) : bool =
         && String.sub l 0 (String.length p) = p
       in
       starts "lhs" || starts "rhs")
-  |> List.iter debug;
+  |> List.iter debug; *)
+  Printf.printf "\n\n\027[1;36m>>> [CHECKING] %s\027[0m\n%s\n%!"
+  label fq_txt;
 (* end new code *)
   let tmp_dir = Filename.get_temp_dir_name () in
   let tmp = Filename.temp_file ~temp_dir:tmp_dir "liq_query" ".fq" in

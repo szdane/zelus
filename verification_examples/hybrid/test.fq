@@ -1,0 +1,14 @@
+bind 0 nxt : {v:func(1, [bool, bool]) | true }
+bind 1 hd  : {v:func(1, [bool, bool]) | true}
+bind 2 globally : {v:func(1, [bool, bool]) | true}
+bind 3 m  : {v:func(1, [bool, bool]) | true}
+bind 30 hybrid_goal_10 : {v:bool | (v = (((0.0 <= hybrid_start_2) && (hybrid_start_2 <= 1.0)) && (0.0 <= hybrid_start_2)))}
+bind 31 hybrid_pre_1 : {v:real | true}
+bind 32 hybrid_start_2 : {v:real | true}
+bind 33 hybrid_flow_3 : {v:real | true}
+
+constraint:
+  env [0;1;2;3;30;31;32;33]
+  lhs {v:real | ((((0.0 <= hybrid_pre_1) && (hybrid_pre_1 <= 1.0)) && ((hybrid_pre_1 - 2.0) = 0.0)) && (hybrid_start_2 = 3.0))}
+  rhs {v:real | ((((0.0 <= hybrid_start_2) && (hybrid_start_2 <= 1.0)) && (0.0 <= hybrid_start_2)))}
+  id 5 tag []
