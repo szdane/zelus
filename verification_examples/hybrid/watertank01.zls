@@ -1,0 +1,20 @@
+let hybrid exec () =
+let rec der (x : {v:float | globally((-3. <= v && v <= -1.) || (1. <= v && v <= 3.))}) = 2.0
+  init (1.0 : {v:float | globally(1. <= v)})
+  reset up (x -. 3.0) -> ((-3.0) : {v:float | globally(-3. <= v)})
+    | up (x +. 1.0) -> (1.0 : {v:float | globally(1. <= v)})
+  and (level : {level:float | globally((level = x *. x) && (1. <= level && level <= 9. ))}) = x *. x
+in level
+
+
+
+
+
+
+
+let hybrid main () =
+  let rec trigger = (period (0.1))
+  and level = exec ()
+  in present trigger -> (print_float (level);
+  print_string ",";
+  print_newline ()) else ()
