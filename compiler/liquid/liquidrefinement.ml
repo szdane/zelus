@@ -134,61 +134,79 @@ let differentiate_predicate
 
 
 (* new code for ** *)
+
+(* Extract a constant from a refinement predicate. *)
 let rec const_value_of_pred (p : Zparsetree.exp) : Zparsetree.exp option =
   match p.Zparsetree.desc with
-  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "="); _ },
-                     [ { Zparsetree.desc = Zparsetree.Evar (Name "v"); _ };
-                       ({ Zparsetree.desc = Zparsetree.Econst _; _ } as c) ]) -> Some c
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "="); _ }, [ { Zparsetree.desc = Zparsetree.Evar (Name "v"); _ }; ({ Zparsetree.desc = Zparsetree.Econst _; _ } as c) ]) -> Some c
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "="); _ }, [ ({ Zparsetree.desc = Zparsetree.Econst _; _ } as c); { Zparsetree.desc = Zparsetree.Evar (Name "v"); _ } ]) -> Some c
   | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "&&"); _ }, [a; b]) ->
       (match const_value_of_pred a with
        | Some c -> Some c
        | None -> const_value_of_pred b)
-  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name ""); _ }, [inner]) ->
-      const_value_of_pred inner
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name ""); _ }, [inner]) -> const_value_of_pred inner
   | _ -> None
 
+(* Convert an integer or integral float constant into an OCaml int. *)
 let int_of_const (c : Zparsetree.exp) : int option =
   match c.Zparsetree.desc with
   | Zparsetree.Econst (Eint n) -> Some n
   | Zparsetree.Econst (Efloat f) when Float.is_integer f -> Some (int_of_float f)
   | _ -> None
 
-let exponent_value (ex : Zparsetree.exp) : int option =
+(* Extract the integer value of an exponent. *)
+let rec exponent_value (ex : Zparsetree.exp) : int option =
   match ex.Zparsetree.desc with
   | Zparsetree.Evar (Name p) ->
       (match find_binding p with
        | Some { Zparsetree.desc = Zparsetree.Erefinement (_, pred); _ } ->
            Option.bind (const_value_of_pred pred) int_of_const
        | _ -> None)
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name op); _ }, [inner])
+      when op = "-" || op = "-." || op = "~-" || op = "~-." ->
+      Option.map (fun n -> -n) (exponent_value inner)
+  | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name ""); _ }, [inner]) ->
+      exponent_value inner
   | _ -> int_of_const ex
 
+(* Expand all occurrences of **. *)
 let rec expand_pow (e : Zparsetree.exp) : Zparsetree.exp =
   match e.Zparsetree.desc with
   | Zparsetree.Eapp (_, { Zparsetree.desc = Zparsetree.Evar (Name "**"); _ }, [b; ex]) ->
       let b' = expand_pow b in
+      let rec prod k =
+        if k = 1 then b'
+        else mk_app (mk_var "*") [b'; prod (k - 1)]
+      in
       (match exponent_value ex with
+       | Some 0 ->
+           { Zparsetree.desc = Zparsetree.Econst (Efloat 1.0); loc = e.loc }
        | Some n when n >= 1 ->
-           let rec prod k =
-             if k = 1 then b' else mk_app (mk_var "*") [b'; prod (k - 1)]
-           in
            mk_paren (prod n)
+       | Some n when n < 0 ->
+           if n = min_int then failwith "Liquid type error: exponent too small";
+           let one = { Zparsetree.desc = Zparsetree.Econst (Efloat 1.0); loc = e.loc } in
+           let denominator = mk_paren (prod (-n)) in
+           mk_paren (mk_app (mk_var "/") [one; denominator])
        | _ ->
-           failwith "Liquid type error: '**' needs an exponent that is a literal \
-                     or a constant variable with a known integer value >= 1")
+           failwith "Liquid type error: '**' needs an exponent that is a literal or a constant variable with a known integer value")
   | Zparsetree.Eapp (ai, f, args) ->
       { e with Zparsetree.desc = Zparsetree.Eapp (ai, f, List.map expand_pow args) }
   | Zparsetree.Etuple es ->
       { e with Zparsetree.desc = Zparsetree.Etuple (List.map expand_pow es) }
   | _ -> e
 
+(* Preserve the original VC generation functions. *)
 let vc_gen_expression_orig = vc_gen_expression
 let vc_gen_expression_shifted_orig = vc_gen_expression_shifted
 
+(* Expand ** after VC expression generation. *)
 let vc_gen_expression e =
   (expand_pow { Zparsetree.desc = vc_gen_expression_orig e; loc = dummy_loc }).Zparsetree.desc
 
 let vc_gen_expression_shifted ~shift e =
   (expand_pow { Zparsetree.desc = vc_gen_expression_shifted_orig ~shift e; loc = dummy_loc }).Zparsetree.desc
+
   (* end new code *)
 
 let build_fby_pred_with_ghosts ~(binder:string)
