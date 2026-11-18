@@ -1,0 +1,9 @@
+let hybrid p () : {r:float | globally (0.0 <= r && r <= 1.0)} = x where
+  rec der (x : {v:float | globally (0.0 <= v && v <= 1.0)}) = x
+    init (0.0 : {v:float | globally (0.0 <= v)})
+    reset up (x -. 1.0) -> (0.0 : {v:float | globally (0.0 <= v)})
+
+let hybrid main () = () where
+  rec x = p ()
+  and trigger = period (0.1)
+  and _ = present trigger -> (print_float x; print_newline ())
