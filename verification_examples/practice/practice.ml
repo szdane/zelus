@@ -1,68 +1,78 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-11-3-21:30) *)
+  (2026-11-18-19:55) *)
 open Ztypes
-let r = 1.
-
-let dt = 0.1
-
-let kp = 2.
-
-let x0 = 0.
-
-let error0 = (-.) r  x0
-
-let kmin = 10.
-
-type ('b , 'a) _exec =
-  { mutable i_41 : 'b ; mutable xk1_39 : 'a }
+type ('a) _exec =
+  { mutable xk1_74 : 'a }
 
 let exec  = 
    let exec_alloc _ =
-     ();{ i_41 = (false:bool) ; xk1_39 = (42.:float) } in
+     ();{ xk1_74 = (42.:float) } in
   let exec_reset self  =
-    (self.i_41 <- true:unit) in 
+    (self.xk1_74 <- 0.:unit) in 
   let exec_step self () =
-    (((if self.i_41 then self.xk1_39 <- x0) ;
-      (let (l_40:float) = self.xk1_39 in
-       let ((xk_38:float): float) = l_40 in
-       let ((errork_36:float): float) = (-.) r  xk_38 in
-       let ((uk_37:float): float) = ( *. ) kp  errork_36 in
-       let ((copy_52:float): float) = (+.) xk_38  (( *. ) uk_37  dt) in
-       self.xk1_39 <- copy_52 ;
-       self.i_41 <- false ;
-       (let ((errorbound_35:float): float) =
-            ( *. ) ((-.) 1.  (( *. ) kp  dt))  errork_36 in
-        (xk_38 , errork_36)))):float * float) in
+    ((let (l_75:float) = self.xk1_74 in
+      let ((xk_73:float): float) = l_75 in
+      let ((copy_98:float): float) = (-.) (abs_float xk_73)  1. in
+      self.xk1_74 <- copy_98 ;
+      (let ((g_70:float): float) = 3. in
+       let ((i_72:float): float) = ( ** ) (-2.)  g_70 in
+       let ((h_71:float): float) = abs_float i_72 in
+       let ((d_67:float): float) = (-1.) in
+       let ((f_69:float): float) = abs_float d_67 in
+       let ((b_65:float): float) = 1. in
+       let ((c_66:float): float) = abs_float b_65 in
+       let ((a_64:float): float) = 1. in
+       let ((e_68:float): float) = 0.5 in
+       a_64)):float) in
   Node { alloc = exec_alloc; reset = exec_reset ; step = exec_step }
-type ('e , 'd , 'c , 'b , 'a) _main =
-  { mutable major_43 : 'e ;
-    mutable h_50 : 'd ;
-    mutable i_48 : 'c ; mutable h_46 : 'b ; mutable result_45 : 'a }
+type ('f , 'e , 'd , 'c , 'b , 'a) _main =
+  { mutable major_77 : 'f ;
+    mutable h_84 : 'e ;
+    mutable i_82 : 'd ;
+    mutable h_80 : 'c ; mutable result_79 : 'b ; mutable xk1_96 : 'a }
 
-let main (cstate_53:Ztypes.cstate) = 
+let main (cstate_100:Ztypes.cstate) = 
   
   let main_alloc _ =
     ();
-    { major_43 = false ;
-      h_50 = 42. ;
-      i_48 = (false:bool) ; h_46 = (42.:float) ; result_45 = (():unit) } in
-  let main_step self ((time_42:float) , ()) =
-    ((self.major_43 <- cstate_53.major ;
-      (let (result_58:unit) =
-           let h_49 = ref (infinity:float) in
-           (if self.i_48 then self.h_46 <- (+.) time_42  0.) ;
-           (let (z_47:bool) = (&&) self.major_43  ((>=) time_42  self.h_46) in
-            self.h_46 <- (if z_47 then (+.) self.h_46  0.1 else self.h_46) ;
-            h_49 := min !h_49  self.h_46 ;
-            self.h_50 <- !h_49 ;
-            self.i_48 <- false ;
-            (let (trigger_44:zero) = z_47 in
-             (begin match trigger_44 with
+    { major_77 = false ;
+      h_84 = 42. ;
+      i_82 = (false:bool) ;
+      h_80 = (42.:float) ; result_79 = (():unit) ; xk1_96 = (42.:float) } in
+  let main_step self ((time_76:float) , ()) =
+    ((self.major_77 <- cstate_100.major ;
+      (let (result_105:unit) =
+           let h_83 = ref (infinity:float) in
+           (if self.i_82 then self.h_80 <- (+.) time_76  0.) ;
+           (let (z_81:bool) = (&&) self.major_77  ((>=) time_76  self.h_80) in
+            self.h_80 <- (if z_81 then (+.) self.h_80  0.1 else self.h_80) ;
+            h_83 := min !h_83  self.h_80 ;
+            self.h_84 <- !h_83 ;
+            self.i_82 <- false ;
+            (let (trigger_78:zero) = z_81 in
+             (begin match trigger_78 with
                     | true ->
-                        let (x_51:float) = 1. in
-                        self.result_45 <- print_newline ()
-                    | _ -> self.result_45 <- ()  end) ; self.result_45)) in
-       cstate_53.horizon <- min cstate_53.horizon  self.h_50 ; result_58)):
-    unit) in  let main_reset self  =
-                (self.i_48 <- true:unit) in
+                        let () = () in
+                        let (l_97:float) = self.xk1_96 in
+                        let ((xk_95:float): float) = l_97 in
+                        let ((copy_99:float): float) =
+                            (-.) (abs_float xk_95)  1. in
+                        self.xk1_96 <- copy_99 ;
+                        (let ((g_92:float): float) = 3. in
+                         let ((i_94:float): float) = ( ** ) (-2.)  g_92 in
+                         let ((h_93:float): float) = abs_float i_94 in
+                         let ((d_89:float): float) = (-1.) in
+                         let ((f_91:float): float) = abs_float d_89 in
+                         let ((b_87:float): float) = 1. in
+                         let ((c_88:float): float) = abs_float b_87 in
+                         let ((e_90:float): float) = 0.5 in
+                         let ((a_86:float): float) = 1. in
+                         let (x_85:float) = a_86 in
+                         let _ = print_float x_85 in
+                         self.result_79 <- print_newline ())
+                    | _ -> self.result_79 <- ()  end) ; self.result_79)) in
+       cstate_100.horizon <- min cstate_100.horizon  self.h_84 ; result_105)):
+    unit) in 
+  let main_reset self  =
+    ((self.i_82 <- true ; self.xk1_96 <- 0.):unit) in
   Node { alloc = main_alloc; step = main_step ; reset = main_reset }

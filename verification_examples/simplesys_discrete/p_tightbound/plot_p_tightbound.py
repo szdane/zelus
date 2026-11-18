@@ -37,7 +37,7 @@ axs[0].plot(t, data["x"], label="system output")
 
 axs[0].axhline(y=goal, color="green", linestyle="--", label="output goal (system upper bound)")
 axs[0].axvline(x=kmin_t, color="orange", linestyle="--", label="kmin")
-axs[0].axhline(y=(goal-eps), color="black", linestyle="--", label="system lower bound")
+axs[0].axhline(y=(goal-eps), color="black", linestyle="--", label="system lower bound (for k >= kmin)")
 
 
 axs[0].annotate( f"kmin={data["kmin"][1]:.0f}", xy=(kmin_t, 0), xycoords=axs[0].get_xaxis_transform(),xytext=(0, -22), textcoords="offset points",
@@ -49,7 +49,7 @@ x_arrow = 0.8
 axs[0].annotate("", xy=(x_arrow, y_top_sys), xytext=(x_arrow, y_bot_sys), xycoords=axs[0].get_yaxis_transform(), arrowprops=dict(arrowstyle="<->", color="red", lw=1.5),)
 axs[0].text(x_arrow + 0.01, (y_top_sys + y_bot_sys) / 2, f"eps={eps * 100 / goal:.0f}%", transform=axs[0].get_yaxis_transform(), ha="left", va="center", color="red", )
 
-axs[0].set_ylabel("meter")
+axs[0].set_ylabel("position")
 axs[0].set_xlabel("Time (s)")
 axs[0].grid(True)
 axs[0].legend()
@@ -60,14 +60,14 @@ axs[1].plot(t, data["error"], color="brown", label="error")
 
 axs[1].axhline(y=0, color="green", linestyle="--", label="error goal (error lower bound)")
 axs[1].axvline(x=kmin_t, color="orange", linestyle="--", label="kmin")
-axs[1].axhline(y=(eps), color="black", linestyle="--", label="error upper bound")
+axs[1].axhline(y=(eps), color="black", linestyle="--", label="error upper bound (for k >= kmin)")
 
 y_top_error = eps
 y_bot_error = 0
 axs[1].annotate("", xy=(x_arrow, y_top_error), xytext=(x_arrow, y_bot_error), xycoords=axs[1].get_yaxis_transform(), arrowprops=dict(arrowstyle="<->", color="red", lw=1.5),)
 axs[1].text(x_arrow + 0.01, (y_top_error + y_bot_error) / 2, f"eps={eps * 100 / goal:.0f}%", transform=axs[1].get_yaxis_transform(), ha="left", va="center", color="red", )
 
-axs[1].set_ylabel("meter")
+axs[1].set_ylabel("position error")
 axs[1].set_xlabel("Time (s)")
 axs[1].grid(True)
 axs[1].legend()
@@ -84,7 +84,7 @@ plt.tight_layout()
 
 # Sauvegarde image
 plt.savefig(
-    os.path.join(path, "results_P.png"),
+    os.path.join(path, "results_p_tightbound.png"),
     dpi=300,
     bbox_inches="tight"
 )

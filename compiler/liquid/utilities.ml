@@ -641,7 +641,7 @@ let is_operator_like_name (s:string) : bool =
 
 let is_builtin_zpt_name (s:string) : bool =
   is_operator_like_name s ||
-  List.mem s ["not"; "nxt"; "globally"; "m"; "hd"; ""]
+  List.mem s ["not"; "nxt"; "globally"; "m"; "hd"; "abs"; "abs_float"; ""]
 
 let shift_current_vars_to_last_in_exp
     ?(shiftable_vars:string list option=None)

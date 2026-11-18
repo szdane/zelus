@@ -1,5 +1,5 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-11-16-20:34) *)
+  (2026-11-18-19:55) *)
 open Ztypes
 type ('e , 'd , 'c , 'b , 'a) _exec =
   { mutable major_34 : 'e ;
@@ -31,14 +31,13 @@ let exec (cstate_54:Ztypes.cstate) =
            (if self.i_39 then self.x_36.pos <- (1. : float)) ;
            self.i_39 <- false ;
            (begin match (self.next_37.zin , self.next_38.zin) with
-                  | (_ , true) -> self.x_36.pos <- ((-3.) : float)
+                  | (_ , true) -> self.x_36.pos <- ((-9.) : float)
                   | (true , _) -> self.x_36.pos <- (1. : float) | _ -> ()  end)
            ;
-           (let ((level_35:float): float) =
-                ( *. ) self.x_36.pos  self.x_36.pos in
-            self.next_38.zout <- (-.) self.x_36.pos  3. ;
+           (let ((level_35:float): float) = abs_float self.x_36.pos in
+            self.next_38.zout <- (-.) self.x_36.pos  9. ;
             self.next_37.zout <- (+.) self.x_36.pos  1. ;
-            self.x_36.der <- 2. ; level_35) in
+            self.x_36.der <- 10. ; level_35) in
        cpos_57 := cindex_55 ;
        (if cstate_54.major then
         (((Zls.set cstate_54.cvec  !cpos_57  self.x_36.pos ;
@@ -101,14 +100,13 @@ let main (cstate_60:Ztypes.cstate) =
             self.i_51 <- false ;
             (let () = () in
              (begin match (self.next_49.zin , self.next_50.zin) with
-                    | (_ , true) -> self.x_45.pos <- ((-3.) : float)
+                    | (_ , true) -> self.x_45.pos <- ((-9.) : float)
                     | (true , _) -> self.x_45.pos <- (1. : float) | _ -> ()  end)
              ;
-             self.next_50.zout <- (-.) self.x_45.pos  3. ;
+             self.next_50.zout <- (-.) self.x_45.pos  9. ;
              self.next_49.zout <- (+.) self.x_45.pos  1. ;
-             self.x_45.der <- 2. ;
-             (let ((level_44:float): float) =
-                  ( *. ) self.x_45.pos  self.x_45.pos in
+             self.x_45.der <- 10. ;
+             (let ((level_44:float): float) = abs_float self.x_45.pos in
               let (level_42:float) = level_44 in
               let (trigger_43:zero) = z_48 in
               (begin match trigger_43 with

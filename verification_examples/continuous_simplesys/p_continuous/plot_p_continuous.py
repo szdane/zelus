@@ -8,9 +8,9 @@ import os
 path = os.path.dirname(os.path.abspath(__file__))
 
 data = pd.read_csv(
-    os.path.join(path, "resultsp.csv"),
+    os.path.join(path, "resultsp_continuous.csv"),
     header=None,
-    names=["x", "u", "counter", "r"]
+    names=["x", "u", "error", "r"]
 )
 
 dt = 0.1
@@ -25,8 +25,8 @@ fig, axs = plt.subplots(
 
 # Position
 axs[0].plot(t, data["x"], label="system output")
-axs[0].plot(t, data["r"], label="reference", linestyle="--")
-axs[0].axhline(y=1, color="orange", linestyle="--")
+axs[0].axhline(y=data["r"][1], label="reference", linestyle="--")
+# axs[0].axhline(y=1, color="orange", linestyle="--")
 
 axs[0].set_ylabel("Position x")
 axs[0].set_xlabel("Temps (s)")

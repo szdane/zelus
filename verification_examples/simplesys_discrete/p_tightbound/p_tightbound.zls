@@ -17,8 +17,6 @@ let eps0 : {eps0 : float|globally(eps0 = 0.2)} = 0.2
 
 let eps : {eps : float|globally((eps = (1. -. kp *. dt) ** kmin *. error0) && (true))} = (1. -. kp *. dt) ** kmin *. error0
 
-(* let test : {test : float|globally((eps0 *. 100. <= eps *. 100. /. r))} = eps0 *)
-
 let node exec () : {(vx:float)*(ve:float)|(true)} =
   let rec init xk1 = x0
   and (xk : {xk:float|globally(((x0 <= r) && (0. < (1. -. kp *. dt)) && (x0 <= xk && xk <= r)) || 

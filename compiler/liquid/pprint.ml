@@ -35,6 +35,12 @@ let is_infix op =
 
 let rec string_of_expr (e : exp) =
   match e.desc with
+  (* abs e  ->  (if (e) >= 0.0 then (e) else (0.0 - (e))) *)
+  | Eapp (_, { desc = Evar (Name f | Modname { id = f; _ }); _ }, [a])
+    when f = "abs" || f = "abs_float" || f = "fabs" ->
+      let s = string_of_expr a in
+      Printf.sprintf "(if (%s) >= 0.0 then (%s) else (0.0 - (%s)))" s s s
+      
   | Evar ln                    -> string_of_longname ln
   | Econst (Eint n)            -> string_of_int n
   | Econst (Ebool b)           -> string_of_bool b

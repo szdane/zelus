@@ -9,24 +9,13 @@ let kp : {v : float|globally(v = 2.)} = 2.
 
 let node exec () : {(vx:float)*(vu:float)*(ve:float)|true} =
   let rec init xk1 = 0.
-and (xk : {xk:float|globally(
-  ((0. <= r) &&
-   (0. < (1. -. kp *. dt)) &&
-   ((1. -. kp *. dt) < 1.) &&
-   (0. <= xk && xk <= r))
-)}) = last xk1
+and (xk : {xk:float|globally(((0. <= r) && (0. < (1. -. kp *. dt)) && ((1. -. kp *. dt) < 1.) && (0. <= xk && xk <= r)))}) = last xk1
 
-and (errork : {errork:float|globally(
-  errork = r -. xk
-)}) = r -. xk
+and (errork : {errork:float|globally(errork = r -. xk)}) = r -. xk
 
-and (uk : {uk:float|globally(
-  uk = kp *. errork
-)}) = kp *. errork
+and (uk : {uk:float|globally(uk = kp *. errork)}) = kp *. errork
 
-and (xk1 : {xk1:float|globally(
-  xk1 = xk +. uk *. dt
-)}) = xk +. uk *. dt
+and (xk1 : {xk1:float|globally(xk1 = xk +. uk *. dt)}) = xk +. uk *. dt
 in xk, uk, errork
 
 let hybrid main () =

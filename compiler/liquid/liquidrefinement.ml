@@ -196,6 +196,15 @@ let rec expand_pow (e : Zparsetree.exp) : Zparsetree.exp =
       { e with Zparsetree.desc = Zparsetree.Etuple (List.map expand_pow es) }
   | _ -> e
 
+(* New code abs *)
+
+
+
+(* End new code abs *)
+
+
+
+
 (* Preserve the original VC generation functions. *)
 let vc_gen_expression_orig = vc_gen_expression
 let vc_gen_expression_shifted_orig = vc_gen_expression_shifted
@@ -422,9 +431,11 @@ let applied_user_fun_name (fexp : Zelus.exp) : string option =
   match fexp.e_desc with
   | Zelus.Eglobal { lname = Name n }
   | Zelus.Eglobal { lname = Modname { id = n; _ } } ->
-      if is_operator_like_name n then None else Some n
+      if is_operator_like_name n
+         || n = "abs" || n = "abs_float" || n = "fabs"
+      then None else Some n
   | _ -> None
-
+  
   (* Convert a Zelus predicate to ZPT expr for "now" and "next" parts.
      [binder] is the DECLARED binder of the source annotation; the result is
      always over [value_var] (see [canon_declared_pred]). *)
