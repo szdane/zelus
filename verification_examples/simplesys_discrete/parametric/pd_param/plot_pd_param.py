@@ -7,7 +7,7 @@ import os
 path = os.path.dirname(os.path.abspath(__file__))
 
 data = pd.read_csv(
-    os.path.join(path, "resultspd.csv"),
+    os.path.join(path, "resultspd_param.csv"),
     header=None,
     names=["x", "u", "error", "derivative", "a", "b"]
 )
@@ -44,7 +44,7 @@ axs[1].grid(True)
 
 # Titre
 fig.suptitle(
-    "Response of a descrete PD_param simple sys to a step",
+    "Response of a descrete P_param simple sys to a step",
     fontsize=16
 )
 

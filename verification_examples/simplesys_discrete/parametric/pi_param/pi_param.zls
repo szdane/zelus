@@ -1,7 +1,6 @@
 (* PD discrete simple sys *)
 
-let r : {v : float |globally(true)} = 1.
-
+let r : {r : float |globally(true)} = 1.
 
 let dt : {dt : float | globally((0.01 < dt) && (dt <= 0.1))} = 0.1
 
@@ -77,7 +76,7 @@ let calc_energyk1vf ((energyk1v2:{energyk1v2:float|globally(energyk1v2 = alpha *
                     (errork:{errork:float|true}), 
                     (integralk:{integralk:float|true})) : 
   {energyk1vf:float|globally((energyk1vf = energyk1v2) && (energyk1vf = (1. -. kp *. dt) *. (1. -. kp *. dt) *. errork *. errork +. ki *. (1. -. ki *. dt *. dt) *. integralk *. integralk))} =
-  let rec (energyk1v3 : {energyk1v3:float|globally((energyk1v3 = energyk1v2) && (energyk1v3 = energyk1v2p1vf +. energyk1v2p2vf))}) = energyk1v2p1vf +. energyk1v2p2vf
+  let rec (energyk1v3 : {energyk1v3:float|globally((energyk1v3 = energyk1v2) && (energyk1v3 = energyk1v2p1vf +. energyk1v2p2vf))}) = energyk1v2
   and (energyk1v4 : {energyk1v4:float|globally((energyk1v4 = energyk1v3) && (energyk1v4 = (1. -. ki *. dt *. dt) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk) *. ((1. -. kp *. dt) *. errork -. ki *. dt *. integralk) +. 
     ki *. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt *. dt) *. integralk) *. (dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt *. dt) *. integralk)))}) = energyk1v3 
   and (energyk1vf : {energyk1vf:float|globally((energyk1vf = energyk1v4) && (energyk1vf = (1. -. kp *. dt) *. (1. -. kp *. dt) *. errork *. errork +. ki *. (1. -. ki *. dt *. dt) *. integralk *. integralk))}) = energyk1v4
@@ -91,8 +90,7 @@ let calc_diffenergy ((energyk1vf:{energyk1vf:float|globally((energyk1vf = energy
                     (errork:{errork:float|true}), 
                     (integralk:{integralk:float|true})) :                    
   {diffenergyvf:float|globally((diffenergyvf = energyk1 -. energyk) && (diffenergyvf <= 0.))} =
-  let rec (diffenergyv1 : {diffenergyv1:float|globally((diffenergyv1 = energyk1vf -. energykv2) && 
-                      (diffenergyv1 = (1. -. kp *. dt) *. (1. -. kp *. dt) *. errork *. errork +. ki *. (1. -. ki *. dt *. dt) *. integralk *. integralk -. 
+  let rec (diffenergyv1 : {diffenergyv1:float|globally((diffenergyv1 = energyk1vf -. energykv2) && (diffenergyv1 = (1. -. kp *. dt) *. (1. -. kp *. dt) *. errork *. errork +. ki *. (1. -. ki *. dt *. dt) *. integralk *. integralk -. 
                       ((1. -. ki *. dt *. dt) *. errork *. errork +. ki *. integralk *. integralk)))}) = energyk1vf -. energykv2
   and (diffenergyv2 : {diffenergyv2:float|globally((diffenergyv2 = diffenergyv1) && (diffenergyv2 = dt *. ((kp *. kp +. ki) *. dt -. 2. *. kp) *. errork *. errork -. ki *. ki *. dt *. dt *. integralk *. integralk))}) = diffenergyv1
   and (diffenergyvf : {diffenergyvf:float|globally((diffenergyvf = energyk1 -. energyk) && (diffenergyvf <= 0.))}) = diffenergyv2
@@ -125,17 +123,12 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)|true} =
   and (beta : {beta:float|globally(beta = ki)}) = ki
   and init energyk1bound = alpha
   and (energyk : {energyk:float|globally(energyk = last_energyk1bound)}) = last energyk1bound
-  and (energyk1 : {energyk1:float|globally((energyk1 = alpha *. errork1 *. errork1 +. beta *. integralk1 *. integralk1))}) = 
-    alpha *. errork1 *. errork1 +. beta *. integralk1 *. integralk1
+  and (energyk1 : {energyk1:float|globally((energyk1 = alpha *. errork1 *. errork1 +. beta *. integralk1 *. integralk1))}) = alpha *. errork1 *. errork1 +. beta *. integralk1 *. integralk1
 
-  and (errork1dev : {errork1dev:float|globally((errork1dev = errork1) && (errork1dev = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk))}) = 
-    (1. -. kp *. dt) *. errork -. ki *. dt *. integralk
-  and (integralk1dev : {integralk1dev:float|globally((integralk1dev = integralk1) && 
-    (integralk1dev = dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt *. dt) *. integralk))}) = 
-    dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt *. dt) *. integralk
+  and (errork1dev : {errork1dev:float|globally((errork1dev = errork1) && (errork1dev = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk))}) = (1. -. kp *. dt) *. errork -. ki *. dt *. integralk
+  and (integralk1dev : {integralk1dev:float|globally((integralk1dev = integralk1) && (integralk1dev = dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt *. dt) *. integralk))}) = dt *. (1. -. kp *. dt) *. errork +. (1. -. ki *. dt *. dt) *. integralk
 
-  and (energyk1v2 : {energyk1v2:float|globally(
-    (energyk1v2 = energyk1) && (energyk1v2 = alpha *. errork1dev *. errork1dev +. beta *. integralk1dev *. integralk1dev))}) = 
+  and (energyk1v2 : {energyk1v2:float|globally((energyk1v2 = energyk1) && (energyk1v2 = alpha *. errork1dev *. errork1dev +. beta *. integralk1dev *. integralk1dev))}) = 
       calc_energyk1v2(energyk1, alpha, beta, errork1dev, integralk1dev, errork1, integralk1, errork, integralk)
 
   and (energyk1v2p1 : {energyk1v2p1:float|globally(energyk1v2p1 = alpha *. errork1dev *. errork1dev)}) = alpha *. errork1dev *. errork1dev
@@ -148,8 +141,7 @@ let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)|true} =
   and (energyk1vf : {energyk1vf:float|globally((energyk1vf = energyk1) && (energyk1vf = (1. -. kp *. dt) *. (1. -. kp *. dt) *. errork *. errork +. ki *. (1. -. ki *. dt *. dt) *. integralk *. integralk))}) = 
     calc_energyk1vf(energyk1v2, energyk1v2p1vf, energyk1v2p2vf, alpha, beta, errork1dev, integralk1dev, errork, integralk)
 
-  and (energykv2 : {energykv2:float|globally(
-    (energykv2 = energyk && energykv2 = (1. -. ki *. dt *. dt) *. errork *. errork +. ki *. integralk *. integralk))}) = energyk
+  and (energykv2 : {energykv2:float|globally((energykv2 = energyk && energykv2 = (1. -. ki *. dt *. dt) *. errork *. errork +. ki *. integralk *. integralk))}) = energyk
 
 
   and (diffenergy : {diffenergy:float|globally((diffenergy = energyk1 -. energyk) && (diffenergy <= 0.))}) = 

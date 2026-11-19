@@ -154,3 +154,51 @@ in x, spd, error, u
                         print_float x_e;
                         print_newline () ) else ()
 
+
+(* PD discrete *)
+
+(* let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vd:float)|true} =
+  let rec init xk1 = 0.
+  and (xk : {xk:float|true}) = last xk1
+  and (xk1 : {xk1:float|true}) = xk +. spdk *. dt
+
+  and init spdk1 = 0.
+  and (spdk : {spdk:float|true}) = last spdk1
+  and (spdk1 : {spdk1:float|true}) = spdk +. (-. k *. xk -. b *. spdk +. uk) *. dt /. mass
+
+
+  and init errork = 1.
+  and (errork : {errork:float|errork = r -. xk}) = r -. xk
+  and (errorkm1 : {errorkm1:float|true}) = last errork
+
+  and (xkm1 : {xkm1:float|xkm1 = r -. errorkm1}) = r -. errorkm1
+
+  and (derivativek : {derivativek:float|derivativek =(errork -. errorkm1) /. dt}) = (errork -. errorkm1) /. dt
+
+  and (uk : {uk:float|uk = kp *. errork -. kd *. derivativek}) = kp *. errork -. kd *. derivativek
+
+in xk, uk, errork, derivativek *)
+
+
+
+(* PID discrete *)
+
+(* let node exec () =
+  let rec init xk1 = 0.
+  and xk = last xk1
+  and (xk1 : {(x:float) | true}) = xk +. spdk *. dt
+
+  and init spdk1 = 0.
+  and spdk = last spdk1
+  and (spdk1 : {(v:float) | true}) = spdk +. (-.k *. xk -. b *. spdk +. uk) *. dt /. mass
+
+  and (errork : {(error:float) | true}) = r -. xk
+
+  and init integralk1 = 0.
+  and integralk = last integralk1
+  and (integralk1 : {integralk1:float|true}) = integralk +. errork *. dt
+
+
+  and (uk : {(u:float) | true}) =  kp *. errork +. ki *. integralk -. kd *. spdk
+
+in xk, uk, errork, integralk, spdk *)

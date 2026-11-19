@@ -1,5 +1,5 @@
 (* The Zelus compiler, version 2.2-dev
-  (2026-11-3-18:4) *)
+  (2026-11-18-19:55) *)
 open Ztypes
 let r = 1.
 
@@ -9,131 +9,141 @@ let kp = 2.
 
 let kd = 0.5
 
-type ('d , 'c , 'b , 'a) _exec =
-  { mutable xk1_83 : 'd ;
-    mutable errork1_80 : 'c ;
-    mutable energyk1_78 : 'b ; mutable derivativek1_76 : 'a }
+type ('e , 'd , 'c , 'b , 'a) _exec =
+  { mutable i_91 : 'e ;
+    mutable xk1_85 : 'd ;
+    mutable errork1_82 : 'c ;
+    mutable energyk1_80 : 'b ; mutable derivativek1_78 : 'a }
 
 let exec  = 
   
   let exec_alloc _ =
     ();
-    { xk1_83 = (42.:float) ;
-      errork1_80 = (42.:float) ;
-      energyk1_78 = (42.:float) ; derivativek1_76 = (42.:float) } in
+    { i_91 = (false:bool) ;
+      xk1_85 = (42.:float) ;
+      errork1_82 = (42.:float) ;
+      energyk1_80 = (42.:float) ; derivativek1_78 = (42.:float) } in
   let exec_reset self  =
-    ((self.derivativek1_76 <- 0. ;
-      self.errork1_80 <- 1. ; self.xk1_83 <- 0. ; self.energyk1_78 <- 1.):
+    ((self.derivativek1_78 <- 0. ; self.i_91 <- true ; self.xk1_85 <- 0.):
     unit) in 
   let exec_step self () =
-    ((let (l_85:float) = self.derivativek1_76 in
-      let ((derivativek_75:float): float) = l_85 in
-      let (l_87:float) = self.errork1_80 in
-      let ((errork_79:float): float) = l_87 in
-      let ((uk_81:float): float) =
-          (-.) (( *. ) kp  errork_79)  (( *. ) kd  derivativek_75) in
-      let (l_88:float) = self.xk1_83 in
-      let ((xk_82:float): float) = l_88 in
-      let ((copy_119:float): float) = (+.) xk_82  (( *. ) uk_81  dt) in
-      self.xk1_83 <- copy_119 ;
-      (let ((copy_118:float): float) = (-.) r  self.xk1_83 in
-       self.errork1_80 <- copy_118 ;
-       (let ((copy_117:float): float) =
-            (/.) ((-.) self.errork1_80  errork_79)  dt in
-        self.derivativek1_76 <- copy_117 ;
-        (let ((copy_116:float): float) =
-             (+.) (( *. ) self.errork1_80  self.errork1_80) 
-                  (( *. ) (( *. ) 0.04  self.derivativek1_76) 
-                          self.derivativek1_76) in
-         let (l_86:float) = self.energyk1_78 in
-         self.energyk1_78 <- copy_116 ;
-         (let ((xkbound_84:float): float) = xk_82 in
-          let ((energyk_77:float): float) = l_86 in
-          (xk_82 , uk_81 , errork_79 , derivativek_75)))))):float *
-                                                            float *
-                                                            float * float) in
+    ((let (l_87:float) = self.derivativek1_78 in
+      let ((derivativek_77:float): float) = l_87 in
+      (if self.i_91 then self.errork1_82 <- r) ;
+      (let (l_89:float) = self.errork1_82 in
+       let ((errork_81:float): float) = l_89 in
+       let ((uk_83:float): float) =
+           (-.) (( *. ) kp  errork_81)  (( *. ) kd  derivativek_77) in
+       let (l_90:float) = self.xk1_85 in
+       let ((xk_84:float): float) = l_90 in
+       let ((copy_123:float): float) = (+.) xk_84  (( *. ) uk_83  dt) in
+       self.xk1_85 <- copy_123 ;
+       (let ((copy_122:float): float) = (-.) r  self.xk1_85 in
+        self.errork1_82 <- copy_122 ;
+        (let ((copy_121:float): float) =
+             (/.) ((-.) self.errork1_82  errork_81)  dt in
+         self.derivativek1_78 <- copy_121 ;
+         (let ((copy_120:float): float) =
+              (+.) (( *. ) self.errork1_82  self.errork1_82) 
+                   (( *. ) (( *. ) 0.04  self.derivativek1_78) 
+                           self.derivativek1_78) in
+          (if self.i_91 then self.energyk1_80 <- ( ** ) r  2.) ;
+          (let (l_88:float) = self.energyk1_80 in
+           self.energyk1_80 <- copy_120 ;
+           self.i_91 <- false ;
+           (let ((xkbound_86:float): float) = xk_84 in
+            let ((energyk_79:float): float) = l_88 in
+            (xk_84 , uk_83 , errork_81 , derivativek_77)))))))):float *
+                                                                float *
+                                                                float * float) in
   Node { alloc = exec_alloc; reset = exec_reset ; step = exec_step }
-type ('i , 'h , 'g , 'f , 'e , 'd , 'c , 'b , 'a) _main =
-  { mutable major_90 : 'i ;
-    mutable h_97 : 'h ;
-    mutable i_95 : 'g ;
-    mutable h_93 : 'f ;
-    mutable result_92 : 'e ;
-    mutable xk1_110 : 'd ;
-    mutable errork1_107 : 'c ;
-    mutable energyk1_105 : 'b ; mutable derivativek1_103 : 'a }
+type ('j , 'i , 'h , 'g , 'f , 'e , 'd , 'c , 'b , 'a) _main =
+  { mutable major_93 : 'j ;
+    mutable h_100 : 'i ;
+    mutable i_98 : 'h ;
+    mutable h_96 : 'g ;
+    mutable result_95 : 'f ;
+    mutable i_119 : 'e ;
+    mutable xk1_113 : 'd ;
+    mutable errork1_110 : 'c ;
+    mutable energyk1_108 : 'b ; mutable derivativek1_106 : 'a }
 
-let main (cstate_124:Ztypes.cstate) = 
+let main (cstate_128:Ztypes.cstate) = 
   
   let main_alloc _ =
     ();
-    { major_90 = false ;
-      h_97 = 42. ;
-      i_95 = (false:bool) ;
-      h_93 = (42.:float) ;
-      result_92 = (():unit) ;
-      xk1_110 = (42.:float) ;
-      errork1_107 = (42.:float) ;
-      energyk1_105 = (42.:float) ; derivativek1_103 = (42.:float) } in
-  let main_step self ((time_89:float) , ()) =
-    ((self.major_90 <- cstate_124.major ;
-      (let (result_129:unit) =
-           let h_96 = ref (infinity:float) in
-           (if self.i_95 then self.h_93 <- (+.) time_89  0.) ;
-           (let (z_94:bool) = (&&) self.major_90  ((>=) time_89  self.h_93) in
-            self.h_93 <- (if z_94 then (+.) self.h_93  0.1 else self.h_93) ;
-            h_96 := min !h_96  self.h_93 ;
-            self.h_97 <- !h_96 ;
-            self.i_95 <- false ;
-            (let (trigger_91:zero) = z_94 in
-             (begin match trigger_91 with
+    { major_93 = false ;
+      h_100 = 42. ;
+      i_98 = (false:bool) ;
+      h_96 = (42.:float) ;
+      result_95 = (():unit) ;
+      i_119 = (false:bool) ;
+      xk1_113 = (42.:float) ;
+      errork1_110 = (42.:float) ;
+      energyk1_108 = (42.:float) ; derivativek1_106 = (42.:float) } in
+  let main_step self ((time_92:float) , ()) =
+    ((self.major_93 <- cstate_128.major ;
+      (let (result_133:unit) =
+           let h_99 = ref (infinity:float) in
+           (if self.i_98 then self.h_96 <- (+.) time_92  0.) ;
+           (let (z_97:bool) = (&&) self.major_93  ((>=) time_92  self.h_96) in
+            self.h_96 <- (if z_97 then (+.) self.h_96  0.1 else self.h_96) ;
+            h_99 := min !h_99  self.h_96 ;
+            self.h_100 <- !h_99 ;
+            self.i_98 <- false ;
+            (let (trigger_94:zero) = z_97 in
+             (begin match trigger_94 with
                     | true ->
-                        let () = () in
-                        let (l_112:float) = self.derivativek1_103 in
-                        let ((derivativek_102:float): float) = l_112 in
-                        let (l_114:float) = self.errork1_107 in
-                        let ((errork_106:float): float) = l_114 in
-                        let ((uk_108:float): float) =
-                            (-.) (( *. ) kp  errork_106) 
-                                 (( *. ) kd  derivativek_102) in
-                        let (l_115:float) = self.xk1_110 in
-                        let ((xk_109:float): float) = l_115 in
-                        let ((copy_123:float): float) =
-                            (+.) xk_109  (( *. ) uk_108  dt) in
-                        self.xk1_110 <- copy_123 ;
-                        (let ((copy_122:float): float) = (-.) r  self.xk1_110 in
-                         self.errork1_107 <- copy_122 ;
-                         (let ((copy_121:float): float) =
-                              (/.) ((-.) self.errork1_107  errork_106)  dt in
-                          self.derivativek1_103 <- copy_121 ;
-                          (let ((copy_120:float): float) =
-                               (+.) (( *. ) self.errork1_107 
-                                            self.errork1_107) 
-                                    (( *. ) (( *. ) 0.04 
-                                                    self.derivativek1_103) 
-                                            self.derivativek1_103) in
-                           let (l_113:float) = self.energyk1_105 in
-                           self.energyk1_105 <- copy_120 ;
-                           (let ((xkbound_111:float): float) = xk_109 in
-                            let ((energyk_104:float): float) = l_113 in
-                            let (derivativek_98:float) = derivativek_102 in
-                            let (errork_99:float) = errork_106 in
-                            let (uk_100:float) = uk_108 in
-                            let (xk_101:float) = xk_109 in
-                            let _ = print_float xk_101 in
-                            let _ = print_string "," in
-                            let _ = print_float uk_100 in
-                            let _ = print_string "," in
-                            let _ = print_float errork_99 in
-                            let _ = print_string "," in
-                            let _ = print_float derivativek_98 in
-                            self.result_92 <- print_newline ()))))
-                    | _ -> self.result_92 <- ()  end) ; self.result_92)) in
-       cstate_124.horizon <- min cstate_124.horizon  self.h_97 ; result_129)):
+                        (if self.i_119 then self.energyk1_108 <- ( ** ) r  2.)
+                        ;
+                        (if self.i_119 then self.errork1_110 <- r) ;
+                        self.i_119 <- false ;
+                        (let () = () in
+                         let (l_115:float) = self.derivativek1_106 in
+                         let ((derivativek_105:float): float) = l_115 in
+                         let (l_117:float) = self.errork1_110 in
+                         let ((errork_109:float): float) = l_117 in
+                         let ((uk_111:float): float) =
+                             (-.) (( *. ) kp  errork_109) 
+                                  (( *. ) kd  derivativek_105) in
+                         let (l_118:float) = self.xk1_113 in
+                         let ((xk_112:float): float) = l_118 in
+                         let ((copy_127:float): float) =
+                             (+.) xk_112  (( *. ) uk_111  dt) in
+                         self.xk1_113 <- copy_127 ;
+                         (let ((copy_126:float): float) =
+                              (-.) r  self.xk1_113 in
+                          self.errork1_110 <- copy_126 ;
+                          (let ((copy_125:float): float) =
+                               (/.) ((-.) self.errork1_110  errork_109)  dt in
+                           self.derivativek1_106 <- copy_125 ;
+                           (let ((copy_124:float): float) =
+                                (+.) (( *. ) self.errork1_110 
+                                             self.errork1_110) 
+                                     (( *. ) (( *. ) 0.04 
+                                                     self.derivativek1_106) 
+                                             self.derivativek1_106) in
+                            let (l_116:float) = self.energyk1_108 in
+                            self.energyk1_108 <- copy_124 ;
+                            (let ((xkbound_114:float): float) = xk_112 in
+                             let ((energyk_107:float): float) = l_116 in
+                             let (derivativek_101:float) = derivativek_105 in
+                             let (errork_102:float) = errork_109 in
+                             let (uk_103:float) = uk_111 in
+                             let (xk_104:float) = xk_112 in
+                             let _ = print_float xk_104 in
+                             let _ = print_string "," in
+                             let _ = print_float uk_103 in
+                             let _ = print_string "," in
+                             let _ = print_float errork_102 in
+                             let _ = print_string "," in
+                             let _ = print_float derivativek_101 in
+                             self.result_95 <- print_newline ())))))
+                    | _ -> self.result_95 <- ()  end) ; self.result_95)) in
+       cstate_128.horizon <- min cstate_128.horizon  self.h_100 ; result_133)):
     unit) in 
   let main_reset self  =
-    ((self.i_95 <- true ;
-      self.derivativek1_103 <- 0. ;
-      self.errork1_107 <- 1. ; self.xk1_110 <- 0. ; self.energyk1_105 <- 1.):
+    ((self.i_98 <- true ;
+      self.i_119 <- true ; self.derivativek1_106 <- 0. ; self.xk1_113 <- 0.):
     unit) in
   Node { alloc = main_alloc; step = main_step ; reset = main_reset }

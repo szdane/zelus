@@ -1,8 +1,8 @@
 (* P discrete simple sys reference = 1 then -1 then 1 ... *)
 
-let dt : {v : float|globally(v = 0.1)} = 0.1          (* Time step *)
+let dt : {dt : float|globally(dt = 0.1)} = 0.1          (* Time step *)
 
-let kp : {v : float|globally(v = 2.)} = 2.           (* Proportional gain *)
+let kp : {kp : float|globally(kp = 2.)} = 2.           (* Proportional gain *)
 
 let node exec () =
   let rec init counter = 0.

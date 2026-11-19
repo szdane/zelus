@@ -1,11 +1,11 @@
 (* PI discrete simple sys *)
 
-let r : {v : float | globally(v = 1.)} = 1.            (* Desired reference *)
+let r : {r : float|globally(r = 1.)} = 1.            (* Desired reference *)
 
-let dt : {v : float | globally(v = 0.1)} = 0.1         (* Time step *)
+let dt : {dt: float|globally(dt = 0.1)} = 0.1         (* Time step *)
 
-let kp : {v : float | globally(v = 2.)} = 2.           (* Proportional gain *)
-let ki : {v : float | globally(v = 1.)} = 1.           (* Integral gain *)
+let kp : {kp : float|globally(kp = 2.)} = 2.           (* Proportional gain *)
+let ki : {ki : float|globally(ki = 1.)} = 1.           (* Integral gain *)
 
 
 let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)|true} =

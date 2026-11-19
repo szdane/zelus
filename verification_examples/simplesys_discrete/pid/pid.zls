@@ -2,11 +2,12 @@
 
 let r : {r : float | globally(r = 1.)} = 1.              (* Desired reference *)
 
+let dt : {dt : float | globally(dt = 0.1)} = 0.1           (* Time step *)
+
 let kp : {kp : float | globally(kp = 2.)} = 2.             (* Proportional gain *)
 let ki : {ki : float | globally(ki = 1.)} = 1.             (* Proportional gain *)
 let kd : {kd : float | globally(kd = 0.5)} = 0.5           (* Proportional gain *)
 
-let dt : {dt : float | globally(dt = 0.1)} = 0.1           (* Time step *)
   
 
 let node exec () : {(vx:float)*(vu:float)*(ve:float)*(vi:float)*(vd:float)|true} =
