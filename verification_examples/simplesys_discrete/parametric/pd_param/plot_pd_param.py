@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib
-matplotlib.use("MacOSX")
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import os
 
@@ -23,18 +23,17 @@ fig, axs = plt.subplots(
 
 
 # Position
-axs[0].plot(t, data["x"], label="PD normal")
+axs[0].plot(t, data["x"])
 
-axs[0].set_ylabel("Position x")
+axs[0].set_ylabel("System output x")
 axs[0].set_xlabel("Time (s)")
 axs[0].grid(True)
-axs[0].legend()
 
 
 # Commande
 axs[1].plot(t, data["u"], color="red")
 
-axs[1].set_ylabel("u")
+axs[1].set_ylabel("Controller output u")
 axs[1].set_xlabel("Time (s)")
 axs[1].grid(True)
 
@@ -44,7 +43,7 @@ axs[1].grid(True)
 
 # Titre
 fig.suptitle(
-    "Response of a descrete P_param simple sys to a step",
+    "Response of a descrete parametric PD on a simple sys to a step",
     fontsize=16
 )
 

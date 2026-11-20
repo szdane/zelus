@@ -313,7 +313,7 @@ let save_failing_fq ~(label : string) (fq_txt : string) : string option =
    and the message that points at it. *)
 let fixpoint_is_safe ?(label = "check") (fq_txt : string) : bool =
   ensure_fixpoint_installed ();
-(* debug (Printf.sprintf "%s" fq_txt); *)
+debug (Printf.sprintf "%s" fq_txt);
 (* new code display for name of variable rhs & lhs *)
   Printf.printf "\n\n\027[1;36m>>> [CHECKING] %s\027[0m%!" label;
   fq_txt

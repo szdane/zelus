@@ -726,7 +726,7 @@ let hybrid main () =
 
 (* Test abs *)
 
-let node exec () : {(vx:float)|true} =
+(* let node exec () : {(vx:float)|true} =
   let rec (e : {e:float|globally(-1. <= e && e <= 1.)}) = 0.5
   and (a : {a:float|globally(abs e <= 1.)}) = 1.
 
@@ -744,6 +744,24 @@ let node exec () : {(vx:float)|true} =
   and (xk1 : {xk1:float|globally((xk1 = abs_float(xk) -. 1.))}) = abs_float(xk) -. 1.
 
 in a
+
+
+let hybrid main () =
+    let rec trigger = (period (0.1)) in
+        present (trigger) -> (let x = exec () in
+        print_float x;
+        print_newline ())  else () *)
+
+
+
+(* Test bug induction *)
+
+
+let node exec () : {(vx:float)|true} =
+  let rec init b = 100.
+  and (a : {a:float|globally(a = last_b)}) = last b
+  and (b : {b:float|globally(b <= 0.)}) = a -. 1.
+in b
 
 
 let hybrid main () =
