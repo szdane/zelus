@@ -1,0 +1,25 @@
+(* Sections 5.2/E.2: the paper's event-triggered automatic-braking model.
+   For brake = -0.2, x - speed^2/(2*brake) = x + 2.5*speed^2.
+   This polynomial form preserves the paper's guard without division.
+   Conjuncts establish the constant acceleration before proving the stopping
+   distance bound; the stopped segment also establishes speed = 0 first. *)
+let obstacle : {r:float | r = 5.0} = 5.0
+let brake : {r:float | r = -0.2} = -0.2
+let margin : {r:float | r = 0.1} = 0.1
+
+let hybrid cruise_control () : {r:float | globally (r < obstacle)} = position where
+  rec der ((position, speed, acceleration) : {(p:float) * (s:float) * (a:float) |
+    globally (p +. 2.5 *. s *. s +. margin <= obstacle)}) =
+    (speed, acceleration, 0.0)
+    init ((0.0, 1.0, 1.0) : {(p:float) * (s:float) * (a:float) | true})
+    reset up (position +. 2.5 *. speed *. speed +. margin -. obstacle) ->
+      ((last position, last speed, brake) : {(p:float) * (s:float) * (a:float) |
+        a = brake && p +. 2.5 *. s *. s +. margin <= obstacle})
+      | up (-. speed) ->
+      ((last position, last speed, 0.0) : {(p:float) * (s:float) * (a:float) |
+        a = 0.0 && s = 0.0 && p +. 2.5 *. s *. s +. margin <= obstacle})
+
+let hybrid main () = () where
+  rec position = cruise_control ()
+  and trigger = period (0.1)
+  and _ = present trigger -> (print_float position; print_newline ())

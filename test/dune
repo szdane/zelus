@@ -36,5 +36,7 @@
 (test
  (name hybrid_typing)
  (modules hybrid_typing)
- (deps stdlib.zli (glob_files hybrid_good/*.zls) (glob_files hybrid_bad/*.zls))
+ (deps stdlib.zli (glob_files hybrid_good/*.zls) (glob_files hybrid_bad/*.zls)
+       ../verification_examples/hybrid/bouncing_ball.zls
+       ../verification_examples/hybrid/cruise_control.zls)
  (libraries unix zlcompilerlibs))

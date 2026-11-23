@@ -1,0 +1,6 @@
+(* T1-flow-1 *)
+(* A later conjunct is unavailable to an earlier check. Assuming the whole
+   candidate would prove both derivatives at zero, but position=t^2/2. *)
+let hybrid bad () = position where
+  rec der ((position, velocity) : {(p:float) * (q:float) | p = 0.0}) = (velocity, 1.0)
+    init ((0.0, 0.0) : {(p:float) * (q:float) | p = 0.0 && q *. q = 0.0})

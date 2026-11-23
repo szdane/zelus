@@ -1,0 +1,9 @@
+(* Reset components read the same pre-state, rather than each other's updated
+   values. The exported relational safety also proves the algebraic equation. *)
+let hybrid swap () : {r:float | globally (r = 3.0)} = total where
+  rec der ((left, right) : {(a:float) * (b:float) |
+    globally (0.0 <= a && a <= 2.0 && a +. b = 3.0)}) = (1.0, -1.0)
+    init ((1.0, 2.0) : {(a:float) * (b:float) | 0.0 <= a && a +. b = 3.0})
+    reset up (left -. 2.0) ->
+      ((last right, last left) : {(a:float) * (b:float) | 0.0 <= a && a +. b = 3.0})
+  and (total : {r:float | globally (r = 3.0)}) = left +. right

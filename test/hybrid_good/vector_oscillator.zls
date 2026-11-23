@@ -1,0 +1,8 @@
+(* Coupled derivatives cancel only when the entire vector field is substituted.
+   The verified relation must also reach the tuple return check. *)
+let hybrid oscillator () : {(a:float) * (b:float) |
+  globally (a *. a +. b *. b <= 1.0)} = (position, velocity) where
+  rec der ((position, velocity) : {(p:float) * (q:float) |
+    globally (p *. p +. q *. q <= 1.0)}) = (velocity, -. position)
+    init ((1.0, 0.0) : {(initial_p:float) * (initial_q:float) |
+      globally (initial_p *. initial_p +. initial_q *. initial_q <= 1.0)})

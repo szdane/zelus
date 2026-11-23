@@ -1,0 +1,5 @@
+let hybrid separate () : {r:float | globally (r <= 1.0)} = position where
+  rec init state = ((1.0, 0.0) : {(p:float) * (q:float) | p *. p +. q *. q <= 1.0})
+  and der (state : {(p:float) * (q:float) |
+    globally (p *. p +. q *. q <= 1.0)}) = (velocity, -. position)
+  and (position, velocity) = state

@@ -1,0 +1,10 @@
+(* Both guards are active after the boundary reset because its new rate points
+   inward. Guard derivatives must use the entry vector, including the rate. *)
+let hybrid tank () : {r:float | globally (1.0 <= r && r <= 9.0)} = level where
+  rec der ((level, rate) : {(l:float) * (f:float) |
+    globally (1.0 <= l && l <= 9.0 && f *. f = 25.0)}) = (rate, 0.0)
+    init ((5.0, 5.0) : {(l:float) * (f:float) | f *. f = 25.0})
+    reset up (level -. 9.0) ->
+      ((last level, -5.0) : {(l:float) * (f:float) | f *. f = 25.0})
+      | up (1.0 -. level) ->
+      ((last level, 5.0) : {(l:float) * (f:float) | f *. f = 25.0})

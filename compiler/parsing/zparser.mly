@@ -88,7 +88,7 @@ let block l lo eq_list startpos endpos =
    expressions must be evaluated once for the whole tuple. *)
 let tuple_derivative_counter = ref 0
 
-let tuple_derivative p e init resets startpos endpos =
+let tuple_derivative ?ty p e init resets startpos endpos =
   let rec check names p =
     match p.desc with
     | Evarpat n ->
@@ -106,7 +106,39 @@ let tuple_derivative p e init resets startpos endpos =
      scalar memories ordinary, fresh identifiers before code generation. *)
   let n = "#derivative_tuple" ^ string_of_int !tuple_derivative_counter in
   let eq desc = make desc startpos endpos in
-  EQand [eq (EQder(n, None, e, init, resets));
+  (* The component aliases are values, not memories. Read [last n] once and
+     destructure that initialized continuous memory for component-wise [last]
+     reads in reset expressions. Keep the user's outer invariant annotation. *)
+  let rec old_pattern p = match p.desc with
+    | Evarpat source ->
+        let old = n ^ "_pre_" ^ source in
+        {p with desc = Evarpat old}, [source, old]
+    | Etuplepat ps ->
+        let ps, names = List.split (List.map old_pattern ps) in
+        {p with desc = Etuplepat ps}, List.concat names
+    | _ -> assert false in
+  let old_p, old_names = old_pattern p in
+  let rec snapshot e = match e.desc with
+    | Etypeconstraint (inner, ann) ->
+        {e with desc = Etypeconstraint (snapshot inner, ann)}
+    | _ ->
+        let used = ref false in
+        let rec rewrite e =
+          let desc = match e.desc with
+            | Elast source when List.mem_assoc source old_names ->
+                used := true; Evar (Name (List.assoc source old_names))
+            | Etuple es -> Etuple (List.map rewrite es)
+            | Eop (op, es) -> Eop (op, List.map rewrite es)
+            | Eapp (ai, f, es) -> Eapp (ai, rewrite f, List.map rewrite es)
+            | Etypeconstraint (inner, ann) -> Etypeconstraint (rewrite inner, ann)
+            | desc -> desc in
+          {e with desc} in
+        let body = rewrite e in
+        if !used then
+          {e with desc = Elet (false, [eq (EQeq (old_p, eq (Elast n)))], body)}
+        else body in
+  let resets = List.map (fun h -> {h with p_body = snapshot h.p_body}) resets in
+  EQand [eq (EQder(n, ty, e, init, resets));
          eq (EQeq(p, eq (Evar(Name n))))]
 
 %}
@@ -687,6 +719,17 @@ equation_desc:
   | DER LPAREN ps = derivative_comma_list RPAREN EQUAL e = seq_expression
     opt = optional_init RESET opt_bar pe = present_handlers(expression)
       { tuple_derivative (make (Etuplepat(List.rev ps)) $startpos(ps) $endpos(ps))
+          e opt (List.rev pe) $startpos $endpos }
+  | DER LPAREN LPAREN ps = derivative_comma_list RPAREN COLON
+    ty = type_expression RPAREN EQUAL e = seq_expression opt = optional_init
+      { tuple_derivative ~ty
+          (make (Etuplepat(List.rev ps)) $startpos(ps) $endpos(ps))
+          e opt [] $startpos $endpos }
+  | DER LPAREN LPAREN ps = derivative_comma_list RPAREN COLON
+    ty = type_expression RPAREN EQUAL e = seq_expression opt = optional_init
+    RESET opt_bar pe = present_handlers(expression)
+      { tuple_derivative ~ty
+          (make (Etuplepat(List.rev ps)) $startpos(ps) $endpos(ps))
           e opt (List.rev pe) $startpos $endpos }
   | NEXT i = ide EQUAL e = seq_expression
       { EQnext(i, e, None) }

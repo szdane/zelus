@@ -1,0 +1,7 @@
+(* T1-establish *)
+(* The impossible auxiliary invariant has a tautological derivative, but must
+   fail establishment at the actual entry vector. *)
+let hybrid bad () = position where
+  rec der ((position, velocity) : {(p:float) * (q:float) |
+    globally (p <= 1.0)}) = (1.0, 0.0)
+    init ((0.0, 0.0) : {(p:float) * (q:float) | p = p +. 1.0})

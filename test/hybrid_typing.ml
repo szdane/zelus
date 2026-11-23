@@ -28,10 +28,14 @@ let run directory =
   Zmisc.load_path := directory :: !Zmisc.load_path;
   Zmisc.verify := true;
   let count = ref 0 in
-  List.iter (fun category ->
-    let path = Filename.concat test_root category in
+  let examples_root = if test_root = "." then "../verification_examples/hybrid"
+    else "verification_examples/hybrid" in
+  let suites = List.map (fun category -> category, Filename.concat test_root category)
+    ["hybrid_good"; "hybrid_bad"] @ ["paper_examples", examples_root] in
+  List.iter (fun (category, path) ->
     Array.to_list (Sys.readdir path)
-    |> List.filter (fun name -> Filename.check_suffix name ".zls")
+    |> List.filter (fun name -> Filename.check_suffix name ".zls" &&
+        (category <> "paper_examples" || List.mem name ["bouncing_ball.zls"; "cruise_control.zls"]))
     |> List.sort String.compare
     |> List.iter (fun filename ->
       let source = read (Filename.concat path filename) in
@@ -45,7 +49,7 @@ let run directory =
       Hashtbl.clear Liquidrefinement.hybrid_init_table;
       let compile () = Compiler.compile
         (String.capitalize_ascii (Filename.basename prefix)) prefix in
-      if category = "hybrid_good" then compile ()
+      if category <> "hybrid_bad" then compile ()
       else begin
         let ending = Str.search_forward (Str.regexp_string " *)") source 0 in
         let expected = String.sub source 3 (ending - 3) in
@@ -55,8 +59,8 @@ let run directory =
             (try ignore (Str.search_forward (Str.regexp_string expected) message 0)
              with Not_found -> failwith (filename ^ ": wrong rejection: " ^ message))
       end;
-      incr count)) ["hybrid_good"; "hybrid_bad"];
-  Printf.printf "%d scalar T-DER-FIN compiler/solver tests passed.\n" !count
+      incr count)) suites;
+  Printf.printf "%d T-DER-FIN compiler/solver tests passed.\n" !count
 
 let () =
   if not (Lazy.force Liquidrefinement.fixpoint_available) then

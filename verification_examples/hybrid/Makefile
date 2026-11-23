@@ -6,11 +6,11 @@ INCLUDE=-I /usr/local/include
 CCLIB="-g `pkg-config --libs --cflags lcm`"
 MLFLAGS=-linkpkg -package zelus
 
-EXAMPLES= simple sawtooth sawtooth_bad watertank01 p
+EXAMPLES= simple sawtooth sawtooth_bad watertank01 watertank_vector bouncing_ball cruise_control p
 
 .PHONY: sim all clean $(EXAMPLES)
 
-sim: simple sawtooth sawtooth_bad watertank01 p
+sim: simple sawtooth sawtooth_bad watertank01 watertank_vector bouncing_ball cruise_control p
 
 all: $(EXAMPLES)
 

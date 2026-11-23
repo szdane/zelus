@@ -1,0 +1,5 @@
+let hybrid three () : {r:float | globally (0.0 <= r)} = elapsed where
+  rec der ((position, velocity, elapsed) : {(p:float) * (q:float) * (t:float) |
+    globally (p *. p +. q *. q <= 1.0 && 0.0 <= t)}) = (velocity, -. position, 1.0)
+    init ((1.0, 0.0, 0.0) : {(p:float) * (q:float) * (t:float) |
+      p *. p +. q *. q <= 1.0 && 0.0 <= t})

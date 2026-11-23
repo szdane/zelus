@@ -1,0 +1,21 @@
+(* Appendix E.3: falling under gravity and bouncing with restitution 0.8.
+   The energy inequality is preserved by the complete vector field; the
+   active ground detector supplies the lower height bound. *)
+let gravity : {r:float | r = 9.81} = 9.81
+let initial_height : {r:float | r = 10.0} = 10.0
+
+let hybrid ball () : {r:float | globally (0.0 <= r && r <= initial_height)} = height where
+  rec der ((height, velocity) : {(h:float) * (w:float) |
+    globally (0.0 <= h && h <= initial_height &&
+      2.0 *. gravity *. h +. w *. w <= 2.0 *. gravity *. initial_height)}) =
+    (velocity, -. gravity)
+    init ((initial_height, 0.0) : {(h:float) * (w:float) |
+      2.0 *. gravity *. h +. w *. w <= 2.0 *. gravity *. initial_height})
+    reset up (-. height) ->
+      ((last height, -0.8 *. last velocity) : {(h:float) * (w:float) |
+        2.0 *. gravity *. h +. w *. w <= 2.0 *. gravity *. initial_height})
+
+let hybrid main () = () where
+  rec height = ball ()
+  and trigger = period (0.1)
+  and _ = present trigger -> (print_float height; print_newline ())

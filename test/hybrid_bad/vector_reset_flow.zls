@@ -1,0 +1,12 @@
+(* T2-1-flow *)
+(* The first reset reverses the entry velocity at position zero. Its lower
+   guard is then inactive; neither the old guard equality nor the pre-state
+   safety may constrain the arbitrary next-flow vector. *)
+let hybrid bad () = position where
+  rec der ((position, velocity) : {(p:float) * (q:float) |
+    globally (0.0 <= p && p <= 1.0)}) = (velocity, 0.0)
+    init ((0.0, 1.0) : {(p:float) * (q:float) | true})
+    reset up (position -. 1.0) ->
+      ((0.0, -1.0) : {(p:float) * (q:float) | 0.0 <= p})
+      | up (-. position) ->
+      ((0.0, 1.0) : {(p:float) * (q:float) | true})

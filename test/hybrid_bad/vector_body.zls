@@ -1,0 +1,5 @@
+(* return alias *)
+let hybrid bad () : {r:float | globally (r >= 2.0)} = position where
+  rec der ((position, velocity) : {(p:float) * (q:float) |
+    globally (p *. p +. q *. q <= 1.0)}) = (velocity, -. position)
+    init ((1.0, 0.0) : {(p:float) * (q:float) | p *. p +. q *. q <= 1.0})

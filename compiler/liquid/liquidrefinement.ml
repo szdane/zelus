@@ -760,10 +760,18 @@ let nf_match_and_check ?(last_t0=false) ?(later=false) ~cid ~(name:string) ~(bin
        "first instant vs later" at all — the fby TAIL check compares a
        shifted NF, whose [phi] slot is not a t=0 obligation and whose
        [last_*] names must keep their facts. *)
+    (* The t=0 treatment is needed not only when [phi] names a [last_*]
+       directly but whenever ANY [last_*] fact is in scope: the obligation can
+       reach [last_y] indirectly through another variable's head fact (e.g.
+       [a = last b] then [b = a - 1]), and leaving [last_y]'s t>=1 invariant in
+       the environment would then discharge [b]'s t=0 obligation against it
+       instead of against [init y] — unsound. *)
+    let is_last_name s = String.length s >= 5 && String.sub s 0 5 = "last_" in
     let phi_mentions_last =
       last_t0
       && (collect_last_vars_zpt phi_lhs [] <> []
-          || collect_last_vars_zpt phi_rhs [] <> [])
+          || collect_last_vars_zpt phi_rhs [] <> []
+          || List.exists (fun (nm, _) -> is_last_name nm) (Env.bindings !gamma))
     in
     let ok_now =
       if not phi_mentions_last then
@@ -789,6 +797,24 @@ let nf_match_and_check ?(last_t0=false) ?(later=false) ~cid ~(name:string) ~(bin
           | _ -> e
         in
         let saved_t0_gamma = neutralize_stream_facts_for_t0 [] in
+        (* At t=0 [last_y] IS [init y]: pin each such ghost to its initializer
+           (neutralized to [true] above) so obligations reaching it through
+           other variables' head facts see the real first-instant value. *)
+        List.iter
+          (fun (nm, ty) ->
+             match ty.desc with
+             | Zparsetree.Erefinement ((vb, base_ty), _) when is_last_name nm ->
+                 (match init_of_last nm with
+                  | Some e0 ->
+                      gamma :=
+                        Env.add nm
+                          { desc = Zparsetree.Erefinement
+                                     ((vb, base_ty), mk_eq (mk_v ()) e0);
+                            loc = dummy_loc }
+                          !gamma
+                  | None -> ())
+             | _ -> ())
+          (Env.bindings !gamma);
         let r =
           run_subtyping_pred ~cid ~name:(name ^ ":t0") ~binder ~base
             (subst_last phi_lhs) (subst_last phi_rhs)
@@ -2367,10 +2393,10 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
        this covers every other shape (ITE, calls, plain synthesis). *)
     List.iter ensure_last_of_bound_var (collect_last_vars rhs);
 
-    (* Does this equation's own t=0 obligation involve a [last]? If so the
-       checks below must discharge it against [init y] rather than against
-       [y]'s invariant (see the "now" part of [nf_match_and_check]). *)
-    let rhs_reads_last = collect_last_vars rhs <> [] in
+    (* Every check below passes [~last_t0:true]: the "now" part of an
+       equation's own check is its t=0 obligation, which must see [last y] as
+       [init y] — even when the RHS reaches [last y] only through another
+       variable's fact (see the "now" part of [nf_match_and_check]). *)
 
     (* {v | true} fast-path *)
     (match pred_zpt.desc with
@@ -2399,7 +2425,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
               failwith "Base mismatch between RHS variable and annotation";
             let ok =
               nf_match_and_check
-                ~cid:5 ~name:("alias:" ^ x) ~binder:ret_binder ~base:base_name
+                ~last_t0:true ~cid:5 ~name:("alias:" ^ x) ~binder:ret_binder ~base:base_name
                 rhs_nf ann_nf
             in
             if ok then (
@@ -2438,7 +2464,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
         
               let ok =
                 nf_match_and_check
-                  ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                  ~last_t0:true ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                   lhs_nf ann_nf
               in
         
@@ -2492,7 +2518,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                         (pp_nf_as_type ~binder:ret_binder ~base:base_name ann_nf)); *)
                 let ok =
                   nf_match_and_check
-                    ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                    ~last_t0:true ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                     lhs_nf ann_nf
                 in
                 if ok then
@@ -2512,7 +2538,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
             | Zelus.Eop (Zelus.Eifthenelse, i :: t_then :: t_else :: []) ->
                 let ok =
                   ite_check_via_nf
-                    ~last_t0:rhs_reads_last
+                    ~last_t0:true
                     ~name:x ~binder:ret_binder ~base:base_name
                     ~ann_nf ~cond:i ~t_then ~t_else
                 in
@@ -2577,7 +2603,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
               (* 5) Subtyping: (callee_ret_nf  caller_ann_nf') in NF *)
               let ok =
                 nf_match_and_check
-                  ~last_t0:rhs_reads_last ~cid:5 ~name:(fname ^ ":call-ret")
+                  ~last_t0:true ~cid:5 ~name:(fname ^ ":call-ret")
                   ~binder:ret_binder ~base:ret_base_name
                   callee_ret_nf caller_ann_nf'
               in
@@ -2608,7 +2634,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                         failwith "Base mismatch between RHS variable and annotation"; *)
                       let ok =
                         nf_match_and_check
-                          ~cid:5 ~name:("alias:" ^ x) ~binder:ret_binder ~base:base_name
+                          ~last_t0:true ~cid:5 ~name:("alias:" ^ x) ~binder:ret_binder ~base:base_name
                           rhs_nf ann_nf
                       in
                       if ok then
@@ -2629,7 +2655,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                       let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
                       let ok_nf =
                         nf_match_and_check
-                          ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                          ~last_t0:true ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                           lhs_nf ann_nf
                       in
                       let rhs_ty_zpt =
@@ -2647,7 +2673,7 @@ let process_scalar_eq base_pat ty_ann_zelus rhs =
                   let lhs_nf   = mk_and v_eq_rhs (mk_X (mk_G v_eq_rhs)) in
                   let ok_nf =
                         nf_match_and_check
-                          ~last_t0:rhs_reads_last ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
+                          ~last_t0:true ~cid:5 ~name:x ~binder:ret_binder ~base:base_name
                           lhs_nf ann_nf
                       in
                   let rhs_ty_zpt =
@@ -3389,21 +3415,68 @@ let process_unannotated_scalar_eq (x : string) (rhs : Zelus.exp) : unit =
                (pp_nf_as_type ~binder:value_var ~base:base_name pred)); *)
       add_binding x (mk_refine value_var (String.lowercase_ascii base_name) pred)
 
-(* Scalar T-DER-FIN (NFM manuscript, Fig. 5, pp. 14--15).
+let rec flatten_equation_group eqs =
+  List.concat_map (fun (eq : Zelus.eq) -> match eq.eq_desc with
+    | EQand es | EQbefore es -> flatten_equation_group es
+    | _ -> [eq]) eqs
+
+(* Tuple derivatives retain one product memory until Aform. The parser exposes
+   its components with a separate equation [(x, y) = memory]. Collect these
+   aliases before checking the unordered recursive group. Never infer an alias
+   from a scalar equation: arbitrary local computations are not constants. *)
+let derivative_tuple_aliases eqs =
+  List.filter_map (fun (eq : Zelus.eq) ->
+    match eq.eq_desc with
+    | EQeq ({p_desc = Etuplepat ps; _}, {e_desc = Elocal id; _}) ->
+        let rec components = function
+          | [] -> Some []
+          | {p_desc = Evarpat x; _} :: ps ->
+              Option.map (fun xs -> x :: xs) (components ps)
+          | _ -> None in
+        Option.map (fun xs -> id.Zident.num, xs) (components ps)
+    | _ -> None) (flatten_equation_group eqs)
+
+(* T-DER-FIN (NFM manuscript, Fig. 5, pp. 14--15).
    The derivative annotation supplies safety phi; the refinement on each
    initializer/reset expression supplies its user-chosen differential invariant.
    Segment entry, pre-reset state and arbitrary flow state are DISTINCT symbols.
    In particular, neither safety nor the candidate invariant at the arbitrary
    flow state may be assumed while proving the differential obligation. *)
-let process_scalar_derivative (eq : Zelus.eq) : unit =
+let process_derivative ~aliases (eq : Zelus.eq) : unit =
   match eq.eq_desc, eq.eq_der_type with
   | EQder (id, rhs, init, handlers), Some safety_type ->
-      let name = zident_pretty id in
+      let name = match List.assoc_opt id.Zident.num aliases with
+        | Some xs -> "(" ^ String.concat "," (List.map zident_pretty xs) ^ ")"
+        | None -> zident_pretty id in
       let fail message =
         Format.eprintf "%aT-DER-FIN (%s): %s@."
           Zlocation.output_location eq.eq_loc name message;
         failwith ("T-DER-FIN: " ^ message) in
-      let state = "#hybrid_state" in
+      let fields (annotation : Zelus.type_expression) =
+        let fields, pred = match annotation.desc with
+          | Zelus.Erefinement ((binder, base), pred) -> [binder, base], pred
+          | Zelus.Erefinementlabeledtuple (fields, pred) -> fields, pred
+          | _ -> fail "a user-supplied scalar or labeled-tuple refinement is required" in
+        if fields = [] then fail "the continuous state must not be empty";
+        let names = List.map fst fields in
+        if List.length (List.sort_uniq String.compare names) <> List.length names then
+          fail "refinement component binders must be distinct";
+        List.iter (fun (_, base) -> match base.Zelus.desc with
+          | Zelus.Etypeconstr (Name ("float" | "real"), []) -> ()
+          | _ -> fail "each continuous state component must be a scalar float") fields;
+        names, pred in
+      let binders, _ = fields safety_type in
+      let arity = List.length binders in
+      let scalar = match safety_type.desc with
+        | Zelus.Erefinement _ -> true | _ -> false in
+      let components =
+        if scalar then [id]
+        else match List.assoc_opt id.Zident.num aliases with
+          | Some xs when List.length xs = arity -> xs
+          | _ -> fail "a tuple derivative must be destructured into its scalar components" in
+      let states = List.mapi (fun i _ ->
+        if scalar then "#hybrid_state" else "#hybrid_state_" ^ string_of_int i) binders in
+      let component_states = List.map2 (fun x s -> x.Zident.num, s) components states in
       let constants = ref Zmisc.S.empty in
       let zero = { desc = Econst (Efloat 0.0); loc = dummy_loc } in
       let binary op a b = mk_app (mk_var op) [a; b] in
@@ -3417,16 +3490,22 @@ let process_scalar_derivative (eq : Zelus.eq) : unit =
             constants := Zmisc.S.add n !constants;
             mk_var n
         | None -> fail ("no verified constant binding for " ^ n) in
-      let rec convert ?binder ?(last=false) ?(self=true) (e : Zelus.exp) =
-        let recur = convert ?binder ~last ~self in
+      let rec convert ?(binders=[]) ?(locals=[]) ?(last=false) ?(self=true) (e : Zelus.exp) =
+        let recur = convert ~binders ~locals ~last ~self in
         match e.e_desc with
         | Zelus.Econst (Efloat _ | Eint _ | Ebool _ as c) ->
             { desc = Econst (fst (literal_and_base c)); loc = e.e_loc }
-        | Zelus.Elocal x when Zident.compare x id = 0 ->
+        | Zelus.Elocal x when List.mem_assoc x.Zident.source binders ->
+            mk_var (List.assoc x.Zident.source binders)
+        | Zelus.Elocal x when List.mem_assoc x.Zident.num locals ->
+            mk_var (List.assoc x.Zident.num locals)
+        | Zelus.Elocal x when List.mem_assoc x.Zident.num component_states ->
             if not self then fail "initializer cannot read the current state";
-            mk_var state
-        | Zelus.Elast x when last && Zident.compare x id = 0 -> mk_var state
-        | Zelus.Eglobal { lname = Name n } when Some n = binder -> mk_var state
+            mk_var (List.assoc x.Zident.num component_states)
+        | Zelus.Elast x when last && List.mem_assoc x.Zident.num component_states ->
+            mk_var (List.assoc x.Zident.num component_states)
+        | Zelus.Eglobal { lname = Name n } when List.mem_assoc n binders ->
+            mk_var (List.assoc n binders)
         | Zelus.Eglobal { lname = Name n } -> global n
         | Zelus.Eglobal { lname = Modname {qual; id = n} }
             when qual = Modules.current.name -> global n
@@ -3445,22 +3524,36 @@ let process_scalar_derivative (eq : Zelus.eq) : unit =
                | "<" | "<=" | ">" | ">=" | "=" | "&&" | "||"), [_; _]
              | "not", [_] | "globally", [_] -> mk_app (mk_var op) args
              | _ -> fail ("unsupported hybrid expression: " ^ op))
-        | _ -> fail "this scalar rule supports polynomial expressions in the derivative state and verified global constants" in
+        | _ -> fail "this rule supports polynomial expressions in the derivative state and verified global constants" in
       let predicate annotation =
-        match annotation.Zelus.desc with
-        | Zelus.Erefinement ((binder, base), pred) ->
-            (match base.desc with
-             | Zelus.Etypeconstr (Name ("float" | "real"), []) -> ()
-             | _ -> fail "a scalar float refinement is required");
-            let pred = convert ~binder pred in
-            (* A derivative annotation denotes a continuous invariant. Accept
-               either a plain predicate or one outer globally wrapper only. *)
-            (match pred.desc with
-             | Eapp (_, {desc = Evar (Name "globally")}, [p]) -> p
-             | _ -> pred)
-        | _ -> fail "a user-supplied scalar refinement is required" in
+        let binders, pred = fields annotation in
+        if List.length binders <> arity then fail "segment refinement arity mismatch";
+        let pred = convert ~binders:(List.combine binders states) pred in
+        (* A derivative annotation denotes a continuous invariant. Accept
+           either a plain predicate or one outer globally wrapper only. *)
+        match pred.desc with
+        | Eapp (_, {desc = Evar (Name "globally")}, [p]) -> p
+        | _ -> pred in
+      let values ?(last=false) ~initial expression =
+        let rec unpack locals expression =
+          match expression.Zelus.e_desc with
+          | Zelus.Elet ({l_rec = false; l_eq = [
+              {eq_desc = EQeq ({p_desc = Etuplepat ps; _},
+                {e_desc = Elast old; _}); _}]; _}, body)
+              when not scalar && last && not initial && Zident.compare old id = 0 ->
+              if List.length ps <> arity then fail "pre-reset snapshot arity mismatch";
+              let locals = List.map2 (fun p state -> match p.Zelus.p_desc with
+                | Evarpat x -> x.Zident.num, state
+                | _ -> fail "expected scalar components in the pre-reset snapshot") ps states in
+              unpack locals body
+          | _ ->
+              let es = if scalar then [expression] else match expression.Zelus.e_desc with
+                | Zelus.Etuple es when List.length es = arity -> es
+                | _ -> fail "expected a tuple expression with one value per state component" in
+              List.map (convert ~locals ~self:(not initial) ~last) es in
+        unpack [] expression in
       let safety = predicate safety_type in
-      let rhs = convert rhs in
+      let rhs = values ~initial:false rhs in
       let guards = List.map (fun (h : Zelus.exp Zelus.present_handler) ->
         match h.p_cond.desc with
         | Zelus.Econdexp {e_desc = Zelus.Eop (Zelus.Eup, [u])} ->
@@ -3476,7 +3569,7 @@ let process_scalar_derivative (eq : Zelus.eq) : unit =
         match expression.Zelus.e_desc with
         | Zelus.Etypeconstraint (value, annotation) ->
             let invariant = predicate annotation in
-            let value = convert ~self:(not initial) ~last:(not initial) value in
+            let value = values ~last:(not initial) ~initial value in
             label, precondition, value, invariant
         | _ -> fail (label ^ " requires an expression refinement specifying its inductive invariant") in
       let segments =
@@ -3485,7 +3578,7 @@ let process_scalar_derivative (eq : Zelus.eq) : unit =
           segment (Printf.sprintf "T2-%d" (i + 1))
             (mk_and safety (mk_eq (List.nth guards i) zero))
             ~initial:false h.p_body) handlers in
-      let derivatives = (Name state, rhs) ::
+      let derivatives = List.map2 (fun state rhs -> Name state, rhs) states rhs @
         List.map (fun n -> Name n, zero) (Zmisc.S.elements !constants) in
       let derivative p =
         try differentiate_predicate ~derivatives p with
@@ -3496,21 +3589,42 @@ let process_scalar_derivative (eq : Zelus.eq) : unit =
         | Eapp (_, _, [dt; _]) -> dt
         | _ -> assert false in
       ignore (derivative safety);
-      ignore (term_derivative rhs);
+      List.iter (fun r -> ignore (term_derivative r)) rhs;
       List.iter (fun (_, pre, value, invariant) ->
-        ignore (derivative pre); ignore (term_derivative value);
+        ignore (derivative pre); List.iter (fun v -> ignore (term_derivative v)) value;
         ignore (derivative invariant)) segments;
       let guard_derivatives = List.map term_derivative guards in
+      (* At a genuine upward crossing of a C^2 guard, du >= 0. If du = 0,
+         ddu must also be zero: a nonzero quadratic leading term has the same
+         sign on both sides and cannot be an upward crossing. A zero plateau
+         also has du = ddu = 0 at its endpoint by C^2 continuity. Polynomial
+         guards/vector fields provide this regularity. Keep the degenerate
+         case: cubic crossings need not have du > 0. These facts concern only
+         the pre-reset state, never an arbitrary state of the next flow. *)
+      let crossing_conditions = List.map (fun du ->
+        mk_or (binary ">" du zero)
+          (mk_and (mk_eq du zero) (mk_eq (term_derivative du) zero))) guard_derivatives in
       let fresh prefix =
         let rec next () =
           let n = gensym prefix in
           if Zmisc.S.mem n !constants || n = name then next () else n in
         next () in
-      let pre_name = fresh "hybrid_pre" and start_name = fresh "hybrid_start"
-      and flow_name = fresh "hybrid_flow" in
-      let pre = mk_var pre_name and start = mk_var start_name
-      and flow = mk_var flow_name in
-      let at value p = subst_var state value p in
+      let pre_names = List.map (fun _ -> fresh "hybrid_pre") states in
+      let start_names = List.map (fun _ -> fresh "hybrid_start") states in
+      let flow_names = List.map (fun _ -> fresh "hybrid_flow") states in
+      let pre = List.map mk_var pre_names and start = List.map mk_var start_names
+      and flow = List.map mk_var flow_names in
+      (* Simultaneous substitution prevents a component's replacement from
+         being interpreted as another component of the vector field. *)
+      let at values p =
+        let renaming = List.combine states values in
+        let rec replace (p : Zparsetree.exp) =
+          match p.desc with
+          | Evar (Name n) -> (match List.assoc_opt n renaming with
+              | Some v -> v | None -> p)
+          | Eapp (ai, f, args) -> {p with desc = Eapp (ai, f, List.map replace args)}
+          | _ -> p in
+        replace p in
       (* Conditional domain facts retain uncertainty about activity at entry.
          Never infer activation from safety or from u <= 0 alone. The prose
          on p. 14 requires u=0 AND du<0 (the displayed implication is a typo). *)
@@ -3521,12 +3635,15 @@ let process_scalar_derivative (eq : Zelus.eq) : unit =
       (* Build an isolated solver environment. In particular, existing local
          aliases or last_* ghosts must not pin the arbitrary flow state. *)
       let env = List.map (fun n -> mk_refine n "float" mk_true)
-          [pre_name; start_name; flow_name] @
+          (pre_names @ start_names @ flow_names) @
         List.map (fun n -> match find_binding n with
           | Some ty -> invariant_only_type ty
           | None -> assert false) (Zmisc.S.elements !constants) in
-      List.iter (fun (label, source, value, invariant) ->
-        let assumptions = mk_and (at pre source) (mk_eq start (at pre value)) in
+      List.iteri (fun segment_index (label, source, value, invariant) ->
+        let source = if segment_index = 0 then source else
+          mk_and source (List.nth crossing_conditions (segment_index - 1)) in
+        let assignments = List.map2 (fun s value -> mk_eq s (at pre value)) start value in
+        let assumptions = mk_big_and (at pre source :: assignments) in
         let check suffix lhs goal =
           match goal.desc with
           | Econst (Ebool true) -> ()
@@ -3544,20 +3661,37 @@ let process_scalar_derivative (eq : Zelus.eq) : unit =
               if not (fixpoint_is_safe ~label query) then fail (label ^ " obligation failed") in
         check "establish" assumptions
           (mk_and (at start safety) (at start invariant));
-        check "flow" (mk_big_and [assumptions; at start invariant; domain])
-          (at flow (derivative invariant));
+        (* Differential cuts, in annotation order. Every conjunct is
+           established at entry above, and may constrain the flow state only
+           AFTER its own preservation check succeeds. Neither the conjunct
+           currently being checked nor any later conjunct is assumed. *)
+        let rec conjuncts p = match p.desc with
+          | Eapp (_, {desc = Evar (Name "&&"); _}, [p; q]) ->
+              conjuncts p @ conjuncts q
+          | _ -> [p] in
+        let parts = conjuncts invariant in
+        let proven = ref [] in
+        List.iteri (fun i part ->
+          let suffix = if List.length parts = 1 then "flow" else
+            Printf.sprintf "flow-%d" (i + 1) in
+          check suffix (mk_big_and
+            [assumptions; at start invariant; domain; mk_big_and !proven])
+            (at flow (derivative part));
+          proven := at flow part :: !proven) parts;
         check "bridge" (mk_big_and [assumptions; domain; at flow invariant])
           (at flow safety)) segments;
       (* T3: only the verified safety invariant is exported to the body. *)
-      add_binding name (mk_refine value_var "float"
-        (mk_G (at (mk_v ()) safety)))
-  | _ -> invalid_arg "process_scalar_derivative: expected an annotated derivative"
+      let names = List.map zident_pretty components in
+      List.iteri (fun i component ->
+        let values = List.mapi (fun j n -> if i = j then mk_v () else mk_var n) names in
+        add_binding component (mk_refine value_var "float" (mk_G (at values safety)))) names
+  | _ -> invalid_arg "process_derivative: expected an annotated derivative"
 
-let rec process_let_eq (eq : Zelus.eq) : unit =
+let rec process_let_eq ?(aliases=[]) (eq : Zelus.eq) : unit =
       match eq.eq_desc with
       | EQder _ when eq.eq_der_type <> None ->
-          process_scalar_derivative eq
-      | EQand eqs | EQbefore eqs -> List.iter process_let_eq eqs
+          process_derivative ~aliases eq
+      | EQand eqs | EQbefore eqs -> List.iter (process_let_eq ~aliases) eqs
       | EQeq (pat, rhs) -> begin
           match pat.p_desc with
           | Etypeconstraintpat (bp, ty_ann_zelus) -> begin
@@ -3608,6 +3742,15 @@ let rec process_let_eq (eq : Zelus.eq) : unit =
       | EQautomaton(_,_,_) -> ()
       | _ -> ()
     ;;
+
+let process_equation_group eqs =
+  let eqs = flatten_equation_group eqs in
+  let aliases = derivative_tuple_aliases eqs in
+  (* Verified continuous facts must be available to the tuple destructuring
+     and to downstream algebraic equations, irrespective of source order. *)
+  let derivatives, rest = List.partition (fun (eq : Zelus.eq) ->
+    match eq.eq_desc with EQder _ -> eq.eq_der_type <> None | _ -> false) eqs in
+  List.iter (process_let_eq ~aliases) (derivatives @ rest)
 
 (* Inventory derivatives even under syntax this first implementation cannot
    verify. This prevents unsupported placements (and the main fast path) from
@@ -3673,11 +3816,6 @@ and hybrid_equations_state_exp (s : Zelus.state_exp) =
   | Zelus.Estate1 (_, es) -> List.concat_map hybrid_equations_exp es
 
 let has_annotated_hybrid eqs = List.exists (fun eq -> eq.Zelus.eq_der_type <> None) eqs
-
-let rec flatten_equation_group eqs =
-  List.concat_map (fun (eq : Zelus.eq) -> match eq.eq_desc with
-    | EQand es | EQbefore es -> flatten_equation_group es
-    | _ -> [eq]) eqs
 
 let rec validate_hybrid_placement (e : Zelus.exp) =
   let unsupported eqs =
@@ -3986,7 +4124,7 @@ let check_return ~(fname:string)
              unordered, so [last y] may be read before [y] is bound. *)
           preload_block_lasts (flatten_equation_group l_block.l_eq);
           (* handle “let ... and ... and ...” *)
-          List.iter process_let_eq l_block.l_eq;
+          process_equation_group l_block.l_eq;
           (* continue into the body; handles further nested lets too *)
           check_fun_body ~fname ~ret_binder ~ret_base ~ret_pred r_exp rettype
         )
@@ -3997,7 +4135,7 @@ let check_return ~(fname:string)
           | Zelus.Elet (l_block, r_exp) ->
               with_env_snapshot (fun () ->
                 preload_block_lasts (flatten_equation_group l_block.l_eq);
-                List.iter process_let_eq l_block.l_eq;
+                process_equation_group l_block.l_eq;
                 process_lets_only r_exp)
           | Zelus.Eseq (a,b) -> process_lets_only a; process_lets_only b
           | _ -> ()
@@ -4132,7 +4270,7 @@ let rec implementation (impl : Zelus.implementation_desc Zelus.localized) =
 
             let hybrid_eqs = hybrid_equations_exp f_body in
             if has_annotated_hybrid hybrid_eqs && List.length hybrid_eqs <> 1 then
-              failwith "T-DER-FIN: this implementation supports one scalar derivative per function";
+              failwith "T-DER-FIN: this implementation supports one derivative group per function; combine coupled states in a tuple";
             if has_annotated_hybrid hybrid_eqs then validate_hybrid_placement f_body;
             if n = "main" && not (has_annotated_hybrid hybrid_eqs) then (
               debug "skipping main function";

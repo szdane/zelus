@@ -1,0 +1,7 @@
+(* Refinement binders are positional and shadow program names, even when their
+   spelling reverses the tuple's component names. *)
+let hybrid shadow () : {r:float | globally (r = 1.0)} = difference where
+  rec der ((position, velocity) : {(velocity:float) * (position:float) |
+    globally (position -. velocity = 1.0)}) = (1.0, 1.0)
+    init ((1.0, 2.0) : {(a:float) * (b:float) | b -. a = 1.0})
+  and (difference : {r:float | globally (r = 1.0)}) = velocity -. position

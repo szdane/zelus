@@ -8,10 +8,6 @@ in level
 
 
 
-
-
-
-
 let hybrid main () =
   let rec trigger = (period (0.1))
   and level = exec ()

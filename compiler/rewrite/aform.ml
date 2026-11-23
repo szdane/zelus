@@ -199,6 +199,21 @@ and equation subst eq_list ({ eq_desc = desc } as eq) =
      (* [x] should not be renamed as it is a multi-write variable *)
      returns eq (EQpluseq(name_of_name x subst,
 			  expression subst e)) eq_list
+  | EQreset([{ eq_desc = EQinit(x, initial) }], condition)
+      when (match (pat_of_name x subst).p_desc with
+            | Etuplepat _ -> true | _ -> false) ->
+     (* Reset has already guarded dynamic initialization. Keep evaluation and
+        every component assignment inside that guard: splitting it into several
+        dynamic EQinit equations would put their assignments in the step code
+        of a generic EQreset, where only initialization code is guarded. *)
+     let assignments =
+       state_matching
+         (fun name value -> EQeq(Zaux.varpat name value.e_typ, value))
+         (pat_of_name x subst) (expression subst initial) in
+     let guarded = Zaux.eq_ifthenelse (expression subst condition)
+       (Zaux.make_block Env.empty assignments)
+       (Zaux.make_block Env.empty []) in
+     returns eq guarded.eq_desc eq_list
   | EQreset(reset_eq_list, e) ->
      returns eq (EQreset(equation_list subst reset_eq_list,
 			 expression subst e)) eq_list

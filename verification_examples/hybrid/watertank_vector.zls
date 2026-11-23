@@ -1,0 +1,15 @@
+(* A coupled state vector: level' = rate and rate' = 0. The guards bound the
+   level, while the differential invariant preserves the rate's magnitude. *)
+let hybrid tank () : {r:float | globally (1.0 <= r && r <= 9.0)} = level where
+  rec der ((level, rate) : {(l:float) * (f:float) |
+    globally (1.0 <= l && l <= 9.0)}) = (rate, 0.0)
+    init ((5.0, 5.0) : {(l:float) * (f:float) | true})
+    reset up (level -. 9.0) ->
+      ((last level, -5.0) : {(l:float) * (f:float) | true})
+      | up (1.0 -. level) ->
+      ((last level, 5.0) : {(l:float) * (f:float) | true})
+
+let hybrid main () = () where
+  rec level = tank ()
+  and trigger = period (0.1)
+  and _ = present trigger -> (print_float level; print_newline ())

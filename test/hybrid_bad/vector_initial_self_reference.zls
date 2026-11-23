@@ -1,0 +1,4 @@
+(* initializer cannot read the current state *)
+let hybrid bad () = position where
+  rec der ((position, velocity) : {(p:float) * (q:float) | true}) = (1.0, 0.0)
+    init ((position, 0.0) : {(p:float) * (q:float) | true})
